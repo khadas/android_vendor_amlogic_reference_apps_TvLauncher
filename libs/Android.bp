@@ -1,0 +1,41 @@
+	android_library_import {
+	   name: "leanback17",
+	   aars: ["leanback-v17-27.0.0.aar"],
+	   sdk_version: "current",
+	}	
+		
+	
+	java_import {
+		name: "supports-v4-jar",
+		jars: ["supports-v4.jar"],
+		host_supported: true,
+		sdk_version: "current",
+	}
+
+	java_import {
+		name: "appcompat-jar",
+		jars: ["appcompat7.jar"],
+		host_supported: true,
+		sdk_version: "current",
+	}
+
+	java_import {
+		name: "leanback-jar",
+		jars: ["leanback17.jar"],
+		host_supported: true,
+		sdk_version: "current",
+	}
+	
+	java_import {
+		name: "preference-leanback-jar",
+		jars: ["preference-leanback.jar"],
+		host_supported: true,
+		sdk_version: "current",
+	}
+
+	java_import {
+		name: "glide-3.4.0-jar",
+		jars: ["glide-3.4.0.jar"],
+		host_supported: true,
+		sdk_version: "current",
+	}

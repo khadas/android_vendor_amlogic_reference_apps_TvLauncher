@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+
+    <string name="app_header_photo_name">照片</string>
+    <string name="app_header_video_name">直播</string>
+    <string name="app_header_app_name">应用</string>
+    <string name="app_header_input_name">输入源</string>
+    <string name="app_header_function_name">功能</string>
+
+    <string name="function_app_uninstall">应用卸载</string>
+    <string name="function_system_setting">系统设置</string>
+
+    <string name="tv_no_channel">无节目</string>
+    <string name="tv_search_channel">请先搜索节目</string>
+
+    <string name="str_audio_only">广播</string>
+    <string name="str_blocked">频道加锁</string>
+    <string name="str_no_channel">无频道</string>
+    <string name="str_no_signal">无信号</string>
+    <string name="str_nospace">快捷栏没有空间了！</string>
+    <string name="str_recommend">推荐</string>
+    <string name="str_scrambeled">频道加密</string>
+    <string name="str_setting">设置</string>
+    <string name="str_tvapp">电视</string>
+    <string name="str_video">在线视频</string>
+    <string name="toast_otp_input_change">电视收到请求并切换通道</string>
+
+</resources>

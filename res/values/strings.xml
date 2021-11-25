@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">Launcher</string>
+    <string name="app_header_photo_name">Photo</string>
+    <string name="app_header_video_name">Live</string>
+    <string name="app_header_app_name">App</string>
+    <string name="app_header_input_name">Input</string>
+    <string name="app_header_function_name">Function</string>
+
+    <string name="function_app_uninstall">APP Uninstall</string>
+    <string name="function_system_setting">System Settings</string>
+
+    <string name="tv_no_channel">No Channel</string>
+    <string name="tv_search_channel">Please Search Channel</string>
+
+    <string name="str_audio_only">Audio Only</string>
+    <string name="str_blocked">Program is blocked</string>
+    <string name="str_no_channel">No channel</string>
+    <string name="str_no_signal">No signal</string>
+    <string name="str_nospace">Shortcuts no space!</string>
+    <string name="str_recommend">Recommend</string>
+    <string name="str_scrambeled">Scrambled</string>
+    <string name="str_setting">Settings</string>
+    <string name="str_tvapp">LiveTv</string>
+    <string name="str_video">Online Video</string>
+    <string name="toast_livetv_warn">LiveTv is releasing, please wait</string>
+    <string name="toast_otp_input_change">TV has received request to switch source</string>
+
+    <string name="input_long_label_for_tuner">TV (antenna/cable)</string>
+    <string name="input_atv">ATV</string>
+    <string name="input_dtv">DTV</string>
+    <string name="input_dtv_kit">DTVKit</string>
+    <string name="input_google_channel">Live Channels</string>
+
+    <string name="input_tuner">Tuner</string>
+    <string name="input_other">Other</string>
+    <string name="input_composite">COMPOSITE</string>
+    <string name="input_svideo">SVIDEO</string>
+    <string name="input_scart">SCART</string>
+    <string name="input_component">COMPONENT</string>
+    <string name="input_vga">VGA</string>
+    <string name="input_dvi">DVI</string>
+    <string name="input_hdmi">HDMI</string>
+    <string name="input_display_port">DISPLAY_PORT</string>
+
+</resources>
