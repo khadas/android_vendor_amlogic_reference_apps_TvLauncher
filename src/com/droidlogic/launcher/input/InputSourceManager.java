@@ -154,7 +154,7 @@ public class InputSourceManager {
         TvInputInfo currentInfo = null;
         InputInfo input;
         for (TvInputInfo tvInput : input_list) {
-            Log.d(TAG, "input:" + tvInput.getType());
+            //Log.d(TAG, "input:" + tvInput.getType());
 
             if (tvInput.isHidden(mContext)) {
                 Log.d(TAG, "this input hidden");
@@ -170,7 +170,7 @@ public class InputSourceManager {
 
             CharSequence name = getTitle(mContext, tvInput, audioSystem, hdmiList);
             boolean   connect = isInputEnabled(tvInput);
-            Log.d(TAG, "input:" + name + " connect:"+connect);
+            //Log.d(TAG, "input:" + name + " connect:"+connect);
             int icon = getIcon(tvInput, connect);
             input = new InputInfo(tvInput.getId(),name.toString(), icon);
             InputInfos.add(input);
@@ -218,7 +218,7 @@ public class InputSourceManager {
         } else {
             title = customLabel;
         }
-        Log.d(TAG, "getTitle default " + title + ", label = " + label + ", customLabel = " + customLabel);
+        //Log.d(TAG, "getTitle default " + title + ", label = " + label + ", customLabel = " + customLabel);
         if (input.isPassthroughInput()) {
             int portId = DroidLogicTvUtils.getPortId(input);
             if (audioSystem != null && audioSystem.getPortId() == portId) {
@@ -236,7 +236,7 @@ public class InputSourceManager {
         } else if (TextUtils.isEmpty(title)) {
             title = input.getServiceInfo().name;
         }
-        Log.d(TAG, "getTitle " + title);
+        //Log.d(TAG, "getTitle " + title);
         return title;
     }
 
@@ -254,7 +254,7 @@ public class InputSourceManager {
             }
         }
 
-        Log.d(TAG, "getTitleForTuner title " + title + " for package " + packageName);
+        //Log.d(TAG, "getTitleForTuner title " + title + " for package " + packageName);
         return title;
     }
 

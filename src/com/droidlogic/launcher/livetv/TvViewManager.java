@@ -30,6 +30,7 @@ public class TvViewManager {
     private TvView   mTvView;
     private int      mTvViewMode;
     private TvPrompt mTvPrompt;
+    private TextView mTvViewBg;
     private Rect mRect;
 
 
@@ -40,6 +41,7 @@ public class TvViewManager {
         TextView prompt =  (TextView)activity.findViewById(R.id.tx_tv_prompt);
         mTvPrompt = new TvPrompt(prompt);
 
+        mTvViewBg = (TextView) activity.findViewById(R.id.tv_view_bg);
         mTvView   =  (TvView)activity.findViewById(R.id.tv_view);
         if(mTvView != null) {
             mTvView.setVisibility(View.VISIBLE);
@@ -102,6 +104,10 @@ public class TvViewManager {
                     .start();
         }
 
+        if (mTvViewBg != null){
+            setViewPosition(mTvViewBg, new Rect(left-4, top-4, right+4, bottom+4));
+        }
+
         mTvPrompt.setPosition(mRect);
 
 //        mTvPromptView.animate()
@@ -146,8 +152,14 @@ public class TvViewManager {
         if (mTvView != null){
             if(enable){
                 mTvView.setVisibility(View.VISIBLE);
+                if (mTvViewBg!=null){
+                    mTvViewBg.setVisibility(View.VISIBLE);
+                }
             }
             else{
+                if (mTvViewBg!=null){
+                    mTvViewBg.setVisibility(View.GONE);
+                }
                 mTvView.setVisibility(View.GONE);
                 mTvView.reset();
             }

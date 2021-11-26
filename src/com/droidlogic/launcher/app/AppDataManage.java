@@ -24,6 +24,7 @@ public class AppDataManage {
     private final Context mContext;
 
     private String []mHideAppName = {
+            "com.droidlogic.exoplayer2.demo",
             "com.droidlogic.launcher",
             "com.droidlogic.appinstall",
     };
@@ -91,7 +92,7 @@ public class AppDataManage {
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            Log.d("APP", "GET APP:" + localAppBean.getPackageName());
+            //Log.d("APP", "GET APP:" + localAppBean.getPackageName());
             if (!isHideApp(localAppBean.getPackageName())){
                 localArrayList.add(localAppBean);
             }
@@ -135,7 +136,7 @@ public class AppDataManage {
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            Log.d("APP", "GET APP:" + localAppBean.getPackageName());
+            //Log.d("APP", "GET APP:" + localAppBean.getPackageName());
             return localAppBean;
         }
         return null;

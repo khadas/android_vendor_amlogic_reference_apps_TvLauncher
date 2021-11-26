@@ -50,6 +50,8 @@ import java.util.List;
 public class MainActivity extends Activity {
     private String TAG = "MainLaunch";
 
+    private final int MSG_LOAD_DATA   =  100;
+
     private BrowseFragment mBrowseFragment;
     private ArrayObjectAdapter rowsAdapter;
     private BackgroundManager mBackgroundManager;
@@ -93,8 +95,8 @@ public class MainActivity extends Activity {
         super.onResume();
         initTime();
         registerAppReceiver();
-        mLoadHandler.sendEmptyMessageDelayed(100, 1000);
-        Log.d(TAG, "--onresume");
+        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
+        //Log.d(TAG, "--onresume");
         //===this is for live tv
         updateVideo();
         mTvControl.resume();
@@ -199,9 +201,8 @@ public class MainActivity extends Activity {
 
     private void updateVideo(){
         int i;
-        boolean update = false;
+
         List<MediaModel> list = MediaModel.getDTVModels(mContext);
-        Log.d(TAG, "video :" + list.size());
 
         int curSize = mTvListRowAdapter.size();
         int newSize = list.size();
@@ -211,7 +212,6 @@ public class MainActivity extends Activity {
                 MediaModel model2 = (MediaModel) list.get(i);
                 mTvListRowAdapter.add(model2);
             }
-            update = true;
         }
         else {
             for (i = 0; i < newSize; i++) {
@@ -219,7 +219,6 @@ public class MainActivity extends Activity {
                 MediaModel model2 = (MediaModel) list.get(i);
                 if (model1.getId() != model2.getId()) {
                     mTvListRowAdapter.replace(i, model2);
-                    update = true;
                 }
             }
         }
@@ -229,7 +228,6 @@ public class MainActivity extends Activity {
         int i;
 
         List<InputModel> list = InputModel.getInputList(mInputSource);
-        Log.d(TAG, "input :" + list.size());
 
         int curSize = mInputListRowAdapter.size();
         int newSize = list.size();
@@ -339,7 +337,7 @@ public class MainActivity extends Activity {
             for(i=0; i<mAppListRowAdapter.size();i++){
                 AppModel model = (AppModel)mAppListRowAdapter.get(i);
                 if (model.getPackageName().equals(packageName)){
-                    mAppListRowAdapter.remove(model);
+                    mAppListRowAdapter.removeItems(i, 1);
                     break;
                 }
             }
@@ -362,22 +360,21 @@ public class MainActivity extends Activity {
                 }
             }
         }
+
     }
 
     private int mLoadCount = 0;
     private Handler mLoadHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case 100:
+                case MSG_LOAD_DATA:
                     if (mLoadCount < 10) {
                         mLoadCount++;
-                        Log.d(TAG, "start get app.....");
                         updateVideo();
                         updateInput();
-                        mLoadHandler.sendEmptyMessageDelayed(100, 1000);
+                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
                     }
                     break;
-
             }
         }
     };
