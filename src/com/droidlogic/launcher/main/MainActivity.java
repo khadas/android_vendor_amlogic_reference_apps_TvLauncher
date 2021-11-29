@@ -95,6 +95,7 @@ public class MainActivity extends Activity {
         super.onResume();
         initTime();
         registerAppReceiver();
+        updataApp();
         mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
         //Log.d(TAG, "--onresume");
         //===this is for live tv
