@@ -31,6 +31,7 @@ public class InputSourceManager {
     private static final String PACKAGE_GOOGLE_VIDEOS      = "com.google.android.videos";
     private static final String COMMANDACTION              = "action.startlivetv.settingui";
     private static final String DTVKITSOURCE               = "com.droidlogic.dtvkit.inputsource/.DtvkitTvInput/HW19";
+    private static final String TVSOURCE                   = "com.droidlogic.tvinput/.services.ADTVInputService/HW16";
 
     private static final int LOGICAL_ADDRESS_AUDIO_SYSTEM  = 5;
     private final boolean DEBUG = true;
@@ -98,6 +99,15 @@ public class InputSourceManager {
         if (inputList == null){
             return;
         }
+
+        if (id == null){
+            id = TVSOURCE;
+        }
+
+        if (name == null){
+            name = "DTV";
+        }
+
         for (TvInputInfo input : inputList) {
             if (input.getId().equals(id)) {
                 DroidLogicTvUtils.setCurrentInputId(mContext, id);
@@ -124,18 +134,24 @@ public class InputSourceManager {
                     mSystemControlManager.SetDtvKitSourceEnable(0);
                 }
 
-                try {
-                    Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
-                    intent.putExtra("from_tv_source", true);
-                    intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, input.getId());
-
-                    mContext.startActivity(intent);
-                } catch (ActivityNotFoundException e) {
-                    Log.e(TAG, " can't start LiveTv:" + e);
-                }
-
                 break;
             }
+        }
+    }
+
+    public void startInputAPP(String id){
+        try {
+            if (id == null){
+                id = TVSOURCE;
+            }
+
+            Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
+            intent.putExtra("from_tv_source", true);
+            intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, id);
+
+            mContext.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, " can't start LiveTv:" + e);
         }
     }
 

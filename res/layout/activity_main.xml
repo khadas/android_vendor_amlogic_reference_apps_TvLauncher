@@ -53,12 +53,6 @@
 
     </FrameLayout>
 
-    <FrameLayout
-        android:id="@+id/layout_black"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="@color/black_ground"
-        android:visibility="gone">
-    </FrameLayout>
+
 
 </LinearLayout>

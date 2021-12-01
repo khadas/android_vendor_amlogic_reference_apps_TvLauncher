@@ -4,7 +4,6 @@ package com.droidlogic.launcher.livetv;
 import java.util.ArrayList;
 import java.util.List;
 import android.content.Context;
-import android.util.Log;
 
 import com.droidlogic.launcher.R;
 
@@ -14,20 +13,20 @@ public class MediaModel {
     private int icon;
     private String title;
     private String content;
-    private String imageUrl;
+    private String inputId;
     private String videoUrl;
 
     private MediaModel(
             final long   id,
             final String title,
             final String content,
-            final String imageUrl,
+            final String inputId,
             final String videoUrl) {
         this.id       = id;
         this.icon     = 0;
         this.title    = title;
         this.content  = content;
-        this.imageUrl = imageUrl;
+        this.inputId = inputId;
         this.videoUrl = videoUrl;
     }
 
@@ -64,12 +63,12 @@ public class MediaModel {
         this.content = content;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getInputId() {
+        return inputId;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setInputId(String inputId) {
+        this.inputId = inputId;
     }
 
     public String getVideoUrl() {
@@ -101,8 +100,9 @@ public class MediaModel {
                 titles    = channel.getDisplayName();
                 contents  = channel.getDescription();
                 id        = channel.getId();
+                inputid   = channel.getInputId();
                 //Log.d("Media", "input id:" + channel.getInputId() + " " + inputid);
-                MediaModel mediaModel = new MediaModel(id, titles, contents, null, null);
+                MediaModel mediaModel = new MediaModel(id, titles, contents, inputid, null);
                 mediaModel.setIcon(icon);
                 mediaModels.add(mediaModel);
             }

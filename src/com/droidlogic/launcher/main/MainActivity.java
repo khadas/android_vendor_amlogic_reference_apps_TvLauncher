@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
-    private String TAG = "MainLaunch";
+    private static final String TAG = "MainLaunch";
 
     private final int MSG_LOAD_DATA   =  100;
 
@@ -58,6 +58,8 @@ public class MainActivity extends Activity {
     private DisplayMetrics mMetrics;
     private Context mContext;
     private TimeDisplay mTimeDisplay;
+    private boolean mActivityResumed = false;
+    private boolean mBroadcastsRegistered = false;
 
     private ArrayObjectAdapter mAppListRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
 
@@ -68,7 +70,6 @@ public class MainActivity extends Activity {
     private ArrayObjectAdapter mInputListRowAdapter  = new ArrayObjectAdapter(new InputCardPresenter());
     private ChannelObserver mChannelObserver;
     //================================
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,20 +89,25 @@ public class MainActivity extends Activity {
 
         prepareBackgroundManager();
         buildRowsAdapter();
+        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (mActivityResumed)
+            return;
+
         initTime();
         registerAppReceiver();
-        updataApp();
-        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
-        //Log.d(TAG, "--onresume");
+
         //===this is for live tv
         updateVideo();
         mTvControl.resume();
         //=====================
+
+        mActivityResumed = true;
     }
 
 
@@ -109,6 +115,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         mTvControl.pause();   //===this is for live tv
+        mActivityResumed = false;
     }
 
     @Override
@@ -123,8 +130,16 @@ public class MainActivity extends Activity {
         //==============================
     }
 
-    private void startTvApp(long id){
-        mTvControl.launchTvApp(id);  //=======this is for live tv
+    private void startTvApp(long id, String inputId){
+        //=======this is for live tv
+        mInputSource.switchInput(inputId, null);
+        if (id == -1 && inputId == null){
+            mInputSource.startInputAPP(inputId);
+        }
+        else {
+            mTvControl.launchTvApp(id);
+        }
+        //==========================
     }
 
 
@@ -165,7 +180,7 @@ public class MainActivity extends Activity {
             public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
                 if (item instanceof MediaModel) {
                     MediaModel model = (MediaModel) item;
-                    startTvApp(model.getId());
+                    startTvApp(model.getId(), model.getInputId());
                 } else if (item instanceof AppModel) {
                     AppModel appBean = (AppModel) item;
                     Intent launchIntent = mContext.getPackageManager().getLaunchIntentForPackage(appBean.getPackageName());
@@ -183,6 +198,7 @@ public class MainActivity extends Activity {
                     //====this is for live tv===========
                     mTvControl.releasePlayingTv();
                     mInputSource.switchInput(model.getId(), model.getName());
+                    mInputSource.startInputAPP(model.getId());
                     //===================================
                 }
             }
@@ -250,7 +266,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
     private void addVideoRow() {
         String headerName = getResources().getString(R.string.app_header_video_name);
         mTvListRowAdapter = new ArrayObjectAdapter(new TvCardPresenter());
@@ -307,15 +322,46 @@ public class MainActivity extends Activity {
 
 
     private void registerAppReceiver(){
-        IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
-        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
-        filter.addDataScheme("package");
-        registerReceiver(appReceiver, filter);
+        if (!mBroadcastsRegistered) {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
+            filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+            filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+            filter.addDataScheme("package");
+            registerReceiver(appReceiver, filter);
+            mBroadcastsRegistered = true;
+        }
     }
 
     private void unregisterAppReceiver() {
-        unregisterReceiver(appReceiver);
+        if (mBroadcastsRegistered) {
+            unregisterReceiver(appReceiver);
+            mBroadcastsRegistered = false;
+        }
+    }
+
+    private void updataApp(){
+        int i;
+
+        ArrayList<AppModel> list = new AppDataManage(mContext).getAppsList();
+
+        int curSize = mAppListRowAdapter.size();
+        int newSize = list.size();
+        if (curSize != newSize){
+            mAppListRowAdapter.clear();
+            for (i = 0; i < newSize; i++) {
+                AppModel model2 = (AppModel) list.get(i);
+                mAppListRowAdapter.add(model2);
+            }
+        }
+        else {
+            for (i = 0; i < newSize; i++) {
+                AppModel model1 = (AppModel) mAppListRowAdapter.get(i);
+                AppModel model2 = (AppModel) list.get(i);
+                if (!model1.getPackageName().equals(model2.getPackageName())) {
+                    mAppListRowAdapter.replace(i, model2);
+                }
+            }
+        }
     }
 
     private void updateAppList(Intent intent){

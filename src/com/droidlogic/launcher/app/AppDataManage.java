@@ -30,6 +30,9 @@ public class AppDataManage {
             "com.droidlogic.exoplayer2.demo",
             "com.droidlogic.launcher",
             "com.droidlogic.appinstall",
+            "com.droidlogic.android.tv",
+            "org.chromium.webview_shell",
+            "com.android.deskclock",
     };
 
     public AppDataManage(Context context) {

@@ -1,5 +1,6 @@
 package com.droidlogic.launcher.livetv;
 
+import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -38,11 +39,9 @@ public class TvControl {
     public static final String PROP_TV_PREVIEW = "vendor.tv.is.preview.window";
     public static final String DTVKIT_PACKAGE  = "org.dtvkit.inputsource";
 
-    public static String COMPONENT_TV_SOURCE   = "com.android.tv.settings/com.android.tv.settings.TvSourceActivity";
     public static String COMPONENT_TV_APP      = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
     public static String COMPONENT_LIVE_TV     = "com.droidlogic.android.tv/com.android.tv.TvActivity";
-    public static String COMPONENT_TV_SETTINGS = "com.android.tv.settings/com.android.tv.settings.more.MorePrefFragmentActivity";
-    public static String DEFAULT_INPUT_ID      = "com.droidlogic.tvinput/.services.ATVInputService/HW0";
+    public static String PACKAGE_LIVE_TV       = "com.droidlogic.android.tv";
 
     private static final String ACTION_OTP_INPUT_SOURCE_CHANGE = "droidlogic.tv.action.OTP_INPUT_SOURCE_CHANGED";
 
@@ -116,7 +115,7 @@ public class TvControl {
             //need to init channel when tv provider is ready
             mViewManager.enable(true);
             if (!mTvStartPlaying) {
-                play(mChannelId);
+                play(-1);
             }
         }
 
@@ -161,13 +160,15 @@ public class TvControl {
             String inputid= "";
             Uri channelUri = TvContract.buildChannelUri(channelId);
             ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
-            if (currentChannel != null) {
-                inputid = currentChannel.getInputId();
-                String cur_inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
-                if (inputid != null && !inputid.equals(cur_inputid)) {
-                    DroidLogicTvUtils.setCurrentInputId(mContext, inputid);
-                }
-            }
+//            if (currentChannel != null && mChannelId != -1) {
+//                inputid = currentChannel.getInputId();
+//                String cur_inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
+//                if (inputid != null && !inputid.equals(cur_inputid)) {
+//                    DroidLogicTvUtils.setCurrentInputId(mContext, inputid);
+//                }
+//            }
+
+            inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
 
             if (currentChannel != null && isTunerSource(inputid)
                     && currentChannel.isLocked() && mTvInputManager.isParentalControlsEnabled()) {
@@ -300,22 +301,12 @@ public class TvControl {
         int device_id;
         long channel_id;
         device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-        if (mChannelId >= 0)
-            channel_id = mChannelId;
-        else
-            channel_id = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
+        channel_id = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
         isRadioChannel = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO, 0) == 1 ? true : false;
         Log.d(TAG, "TV get device_id=" + device_id + " dtv=" + channel_id );
 
-        Uri channelUri = TvContract.buildChannelUri(channel_id);
-        ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
-        if (currentChannel == null)
-            return;
-
-        String inputid = currentChannel.getInputId();
-
+        String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
         List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
-        //String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
         Log.d(TAG , "----input id:" + inputid);
         TvInputInfo currentInfo = null;
         for (TvInputInfo info : input_list) {
@@ -373,31 +364,17 @@ public class TvControl {
             setTvPrompt(TvPrompt.TV_PROMPT_SPDIF);
         }
 
-        //if (mChannelObserver == null)
-        //    mChannelObserver = new ChannelObserver();
-        //mContext.getContentResolver().registerContentObserver(TvContract.Channels.CONTENT_URI, true, mChannelObserver);
         mTvStartPlaying = true;
     }
 
-    private void releaseTvView() {
-        Log.d(TAG, "releaseTvView:" + mChannelUri);
-
-        mViewManager.enable(false);
-        if (mTvHandler.hasMessages(TV_MSG_PLAY_TV)) {
-            mTvHandler.removeMessages(TV_MSG_PLAY_TV);
-        }
-
-//        if (mChannelObserver != null) {
-//            getContentResolver().unregisterContentObserver(mChannelObserver);
-//            mChannelObserver = null;
-//        }
-    }
 
     public void releasePlayingTv() {
-        Log.d(TAG, "------releasePlayingTv");
+        Log.d(TAG, "releasePlayingTv");
         isChannelBlocked = false;
+        if (mTvStartPlaying) {
+            mViewManager.enable(false);
+        }
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
-        releaseTvView();
         mTvStartPlaying = false;
     }
 
@@ -406,6 +383,7 @@ public class TvControl {
         if (mTvStartPlaying) {
             releasePlayingTv();
         }
+
         try {
             mContext.startActivity(intent);
         } catch (ActivityNotFoundException e) {
@@ -651,6 +629,12 @@ public class TvControl {
         mBroadcastsRegistered = false;
     }
 
+    private void killTvApp(){
+        //tv app can not play tv when source is HDMI,we must kill it
+        ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.killBackgroundProcesses(PACKAGE_LIVE_TV);
+    }
+
     private Handler mTvHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -662,6 +646,7 @@ public class TvControl {
                         } else {
                             Log.d(TAG, "screen blocked and no need start tv play");
                         }
+                        killTvApp();
                     } else {
                         //Log.d(TAG, "bootvideo is not stopped, or tvapp not released, wait it");
                         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
@@ -679,8 +664,6 @@ public class TvControl {
                             return;
                         } else {
                             startTvApp();
-                            //Activity act = (Activity)mContext;
-                            //act.finish();
                         }
                     } else {
                         //Log.d(TAG, "bootvideo is not stopped, wait it");
