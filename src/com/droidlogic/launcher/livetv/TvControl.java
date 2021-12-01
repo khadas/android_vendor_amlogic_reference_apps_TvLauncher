@@ -178,8 +178,11 @@ public class TvControl {
             }
         } else {
             isChannelBlocked = false;
-            setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
-            return false;
+            String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
+            if (isTunerSource(inputid)){
+                setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
+                return false;
+            }
         }
         Log.d(TAG, "initChannelWhenChannelReady isChannelBlocked = " + isChannelBlocked + ", isCurrentChannelBlockBlocked = " + isCurrentChannelBlockBlocked());
         if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
