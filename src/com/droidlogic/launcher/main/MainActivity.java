@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -49,6 +50,7 @@ import java.util.List;
 
 public class MainActivity extends Activity {
     private static final String TAG = "MainLaunch";
+    private static final String TV_USER_SETUP_COMPLETE = "tv_user_setup_complete";
 
     private final int MSG_LOAD_DATA   =  100;
 
@@ -75,6 +77,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        skipUserSetup();
 
         mContext = this;
         mBrowseFragment = (BrowseFragment) getFragmentManager().findFragmentById(R.id.browse_fragment);
@@ -148,6 +151,16 @@ public class MainActivity extends Activity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    //we have not user setup APK, force skip it , or we can't use home key
+    private void skipUserSetup() {
+        if (Settings.Secure.getInt(getContentResolver(), TV_USER_SETUP_COMPLETE, 0) == 0) {
+            Log.d(TAG, "force skip user setup");
+            Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
+            Settings.Secure.putInt(getContentResolver(), TV_USER_SETUP_COMPLETE, 1);
+        }
     }
 
     private void  initTime(){
