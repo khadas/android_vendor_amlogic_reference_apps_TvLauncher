@@ -31,6 +31,7 @@ import android.view.KeyEvent;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppCardPresenter;
 import com.droidlogic.launcher.app.AppDataManage;
@@ -52,7 +53,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "MainLaunch";
     private static final String TV_USER_SETUP_COMPLETE = "tv_user_setup_complete";
 
-    private final int MSG_LOAD_DATA   =  100;
+    private final int MSG_LOAD_DATA = 100;
 
     private BrowseFragment mBrowseFragment;
     private ArrayObjectAdapter rowsAdapter;
@@ -66,12 +67,40 @@ public class MainActivity extends Activity {
     private ArrayObjectAdapter mAppListRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
 
     //===this is for live tv===========
-    private TvControl     mTvControl;
+    private TvControl mTvControl;
     private InputSourceManager mInputSource;
     private ArrayObjectAdapter mTvListRowAdapter = new ArrayObjectAdapter(new TvCardPresenter());
-    private ArrayObjectAdapter mInputListRowAdapter  = new ArrayObjectAdapter(new InputCardPresenter());
+    private ArrayObjectAdapter mInputListRowAdapter = new ArrayObjectAdapter(new InputCardPresenter());
     private ChannelObserver mChannelObserver;
     //================================
+    private int mLoadCount = 0;
+    private Handler mLoadHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_LOAD_DATA:
+                    if (mLoadCount < 10) {
+                        mLoadCount++;
+                        updateVideo();
+                        updateInput();
+                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
+                    }
+                    break;
+            }
+        }
+    };
+    private BroadcastReceiver appReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            final String action = intent.getAction();
+            Log.d(TAG, "appReceiver receive " + action);
+            if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
+                    || Intent.ACTION_PACKAGE_REMOVED.equals(action)
+                    || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+                updateAppList(intent);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,8 +113,8 @@ public class MainActivity extends Activity {
         mBrowseFragment.setHeadersState(BrowseFragment.HEADERS_DISABLED);
 
         //===this is for live tv=================
-        mTvControl   = new TvControl(this);
-        mInputSource = new InputSourceManager(this);
+        mTvControl = new TvControl(this);
+        mInputSource = new InputSourceManager(this, new SourceConnectListener());
         mChannelObserver = new ChannelObserver();
         getContentResolver().registerContentObserver(TvContract.Channels.CONTENT_URI, true, mChannelObserver);
         //=======================================
@@ -113,7 +142,6 @@ public class MainActivity extends Activity {
         mActivityResumed = true;
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -133,18 +161,16 @@ public class MainActivity extends Activity {
         //==============================
     }
 
-    private void startTvApp(long id, String inputId){
+    private void startTvApp(long id, String inputId) {
         //=======this is for live tv
         mInputSource.switchInput(inputId, null);
-        if (id == -1 && inputId == null){
+        if (id == -1 && inputId == null) {
             mInputSource.startInputAPP(inputId);
-        }
-        else {
+        } else {
             mTvControl.launchTvApp(id);
         }
         //==========================
     }
-
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -163,20 +189,19 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void  initTime(){
+    private void initTime() {
         TextView view = (TextView) findViewById(R.id.tx_date);
         mTimeDisplay = new TimeDisplay(this, view);
         mTimeDisplay.init();
         mTimeDisplay.update();
     }
 
-
     private void prepareBackgroundManager() {
         mBackgroundManager = BackgroundManager.getInstance(this);
         mBackgroundManager.attach(this.getWindow());
         mMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
-        mBackgroundManager.setThemeDrawableResourceId (R.drawable.bg1);
+        mBackgroundManager.setThemeDrawableResourceId(R.drawable.bg1);
     }
 
     private void buildRowsAdapter() {
@@ -229,21 +254,20 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void updateVideo(){
+    private void updateVideo() {
         int i;
 
         List<MediaModel> list = MediaModel.getDTVModels(mContext);
 
         int curSize = mTvListRowAdapter.size();
         int newSize = list.size();
-        if (curSize != newSize){
+        if (curSize != newSize) {
             mTvListRowAdapter.clear();
             for (i = 0; i < newSize; i++) {
                 MediaModel model2 = (MediaModel) list.get(i);
                 mTvListRowAdapter.add(model2);
             }
-        }
-        else {
+        } else {
             for (i = 0; i < newSize; i++) {
                 MediaModel model1 = (MediaModel) mTvListRowAdapter.get(i);
                 MediaModel model2 = (MediaModel) list.get(i);
@@ -254,25 +278,24 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void updateInput(){
+    private void updateInput() {
         int i;
 
         List<InputModel> list = InputModel.getInputList(mInputSource);
 
         int curSize = mInputListRowAdapter.size();
         int newSize = list.size();
-        if (curSize != newSize){
+        if (curSize != newSize) {
             mInputListRowAdapter.clear();
             for (i = 0; i < newSize; i++) {
                 InputModel model2 = (InputModel) list.get(i);
                 mInputListRowAdapter.add(model2);
             }
-        }
-        else {
+        } else {
             for (i = 0; i < newSize; i++) {
                 InputModel model1 = (InputModel) mInputListRowAdapter.get(i);
                 InputModel model2 = (InputModel) list.get(i);
-                if (model1.getId() != model2.getId()) {
+                if (model1.getId() != model2.getId() || model1.getIcon() != model2.getIcon()) {
                     mInputListRowAdapter.replace(i, model2);
                 }
             }
@@ -289,7 +312,7 @@ public class MainActivity extends Activity {
         rowsAdapter.add(new ListRow(header, mTvListRowAdapter));
     }
 
-    private void loadAppData(){
+    private void loadAppData() {
         ArrayList<AppModel> appDataList = new AppDataManage(mContext).getAppsList();
         int cardCount = appDataList.size();
 
@@ -320,7 +343,6 @@ public class MainActivity extends Activity {
         rowsAdapter.add(new ListRow(header, mInputListRowAdapter));
     }
 
-
     private void addFunctionRow() {
         String headerName = getResources().getString(R.string.app_header_function_name);
         ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new FunctionCardPresenter());
@@ -333,8 +355,7 @@ public class MainActivity extends Activity {
         rowsAdapter.add(new ListRow(header, listRowAdapter));
     }
 
-
-    private void registerAppReceiver(){
+    private void registerAppReceiver() {
         if (!mBroadcastsRegistered) {
             IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
             filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
@@ -352,21 +373,20 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void updataApp(){
+    private void updataApp() {
         int i;
 
         ArrayList<AppModel> list = new AppDataManage(mContext).getAppsList();
 
         int curSize = mAppListRowAdapter.size();
         int newSize = list.size();
-        if (curSize != newSize){
+        if (curSize != newSize) {
             mAppListRowAdapter.clear();
             for (i = 0; i < newSize; i++) {
                 AppModel model2 = (AppModel) list.get(i);
                 mAppListRowAdapter.add(model2);
             }
-        }
-        else {
+        } else {
             for (i = 0; i < newSize; i++) {
                 AppModel model1 = (AppModel) mAppListRowAdapter.get(i);
                 AppModel model2 = (AppModel) list.get(i);
@@ -377,7 +397,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void updateAppList(Intent intent){
+    private void updateAppList(Intent intent) {
         String packageName = null;
         String action = intent.getAction();
 
@@ -392,67 +412,33 @@ public class MainActivity extends Activity {
         //com.farproc.wifi.analyzer
         Log.d(TAG, "---update app:" + packageName);
 
-        if (Intent.ACTION_PACKAGE_REMOVED.equals(action)){
+        if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
             int i;
-            for(i=0; i<mAppListRowAdapter.size();i++){
-                AppModel model = (AppModel)mAppListRowAdapter.get(i);
-                if (model.getPackageName().equals(packageName)){
+            for (i = 0; i < mAppListRowAdapter.size(); i++) {
+                AppModel model = (AppModel) mAppListRowAdapter.get(i);
+                if (model.getPackageName().equals(packageName)) {
                     mAppListRowAdapter.removeItems(i, 1);
                     break;
                 }
             }
-        }
-        else if (Intent.ACTION_PACKAGE_ADDED.equals(action)){
+        } else if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
             AppModel model = new AppDataManage(mContext).getLaunchAppModel(packageName);
-            if (model != null){
+            if (model != null) {
                 mAppListRowAdapter.add(model);
             }
-        }
-        else if (Intent.ACTION_PACKAGE_CHANGED.equals(action)){
+        } else if (Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
             int i;
             AppModel newModel = new AppDataManage(mContext).getLaunchAppModel(packageName);
 
-            for(i=0; i<mAppListRowAdapter.size();i++){
-                AppModel model = (AppModel)mAppListRowAdapter.get(i);
-                if (model.getPackageName().equals(packageName)){
+            for (i = 0; i < mAppListRowAdapter.size(); i++) {
+                AppModel model = (AppModel) mAppListRowAdapter.get(i);
+                if (model.getPackageName().equals(packageName)) {
                     mAppListRowAdapter.replace(i, newModel);
                     break;
                 }
             }
         }
-
     }
-
-    private int mLoadCount = 0;
-    private Handler mLoadHandler = new Handler() {
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_LOAD_DATA:
-                    if (mLoadCount < 10) {
-                        mLoadCount++;
-                        updateVideo();
-                        updateInput();
-                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
-                    }
-                    break;
-            }
-        }
-    };
-
-
-    private BroadcastReceiver appReceiver = new BroadcastReceiver(){
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            final String action = intent.getAction();
-            Log.d(TAG,"appReceiver receive " + action);
-            if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
-                    || Intent.ACTION_PACKAGE_REMOVED.equals(action)
-                    || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-                updateAppList(intent);
-            }
-        }
-    };
 
     private class ChannelObserver extends ContentObserver {
         private static final String TAG = "ChannelObserver";
@@ -468,4 +454,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    //====this is for live tv===========
+    private class SourceConnectListener implements TvControlManager.StatusSourceConnectListener {
+        public void onSourceConnectChange(TvControlManager.SourceInput source, int connectionState) {
+            //Log.d(TAG, "source " + source.name() + " connect:" + connectionState);
+            updateInput();
+        }
+    }
+    //==================================
 }

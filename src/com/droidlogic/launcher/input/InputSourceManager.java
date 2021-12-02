@@ -24,24 +24,24 @@ import java.util.Comparator;
 import java.util.List;
 
 public class InputSourceManager {
-    private static  String TAG = "InputSourceManager";
+    private static String TAG = "InputSourceManager";
 
     private static final String PACKAGE_DROIDLOGIC_TVINPUT = "com.droidlogic.tvinput";
-    private static final String PACKAGE_DROIDLOGIC_DTVKIT  = "com.droidlogic.dtvkit.inputsource";
-    private static final String PACKAGE_GOOGLE_VIDEOS      = "com.google.android.videos";
-    private static final String COMMANDACTION              = "action.startlivetv.settingui";
-    private static final String DTVKITSOURCE               = "com.droidlogic.dtvkit.inputsource/.DtvkitTvInput/HW19";
-    private static final String TVSOURCE                   = "com.droidlogic.tvinput/.services.ADTVInputService/HW16";
+    private static final String PACKAGE_DROIDLOGIC_DTVKIT = "com.droidlogic.dtvkit.inputsource";
+    private static final String PACKAGE_GOOGLE_VIDEOS = "com.google.android.videos";
+    private static final String COMMANDACTION = "action.startlivetv.settingui";
+    private static final String DTVKITSOURCE = "com.droidlogic.dtvkit.inputsource/.DtvkitTvInput/HW19";
+    private static final String TVSOURCE = "com.droidlogic.tvinput/.services.ADTVInputService/HW16";
 
-    private static final int LOGICAL_ADDRESS_AUDIO_SYSTEM  = 5;
-    private final boolean DEBUG = true;
+    private static final int LOGICAL_ADDRESS_AUDIO_SYSTEM = 5;
+    private final boolean DEBUG = false;
 
 
-    private Context             mContext;
+    private Context mContext;
     private static HdmiTvClient mTvClient;
-    private TvInputManager      mTvInputManager;
-    private TvControlManager    mTvControlManager;
-    private HdmiControlManager  mHdmiControlManager;
+    private TvInputManager mTvInputManager;
+    private TvControlManager mTvControlManager;
+    private HdmiControlManager mHdmiControlManager;
 
     private static int inputId[] = {
             TvInputInfo.TYPE_TUNER,
@@ -82,29 +82,45 @@ public class InputSourceManager {
             R.drawable.input_display_port,
     };
 
+    private static int inputConnectIconId[] = {
+            R.drawable.input_tuner,
+            R.drawable.input_other,
+            R.drawable.input_composite_in,
+            R.drawable.input_svideo,
+            R.drawable.input_scart,
+            R.drawable.input_component,
+            R.drawable.input_vga,
+            R.drawable.input_dvi,
+            R.drawable.input_hdmi_in,
+            R.drawable.input_display_port,
+    };
 
-    public InputSourceManager(Context context){
+
+    public InputSourceManager(Context context, TvControlManager.StatusSourceConnectListener listener) {
         mContext = context;
 
-        mTvInputManager     = (TvInputManager)context.getSystemService(Context.TV_INPUT_SERVICE);
-        mTvControlManager   = TvControlManager.getInstance();
+        mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
+        mTvControlManager = TvControlManager.getInstance();
+        if (mTvControlManager != null) {
+            mTvControlManager.SetSourceConnectListener(listener);
+        }
         mHdmiControlManager = (HdmiControlManager) context.getSystemService(Context.HDMI_CONTROL_SERVICE);
         if (mHdmiControlManager != null) {
             mTvClient = mHdmiControlManager.getTvClient();
         }
     }
 
-    public void switchInput(String id, String name){
+    public void switchInput(String id, String name) {
         List<TvInputInfo> inputList = mTvInputManager.getTvInputList();
-        if (inputList == null){
+        if (inputList == null) {
             return;
         }
 
-        if (id == null){
+        if (id == null) {
             id = TVSOURCE;
         }
 
-        if (name == null){
+        if (name == null) {
             name = "DTV";
         }
 
@@ -139,9 +155,9 @@ public class InputSourceManager {
         }
     }
 
-    public void startInputAPP(String id){
+    public void startInputAPP(String id) {
         try {
-            if (id == null){
+            if (id == null) {
                 id = TVSOURCE;
             }
 
@@ -156,11 +172,11 @@ public class InputSourceManager {
     }
 
 
-    public  List<InputInfo> getInputList() {
+    public List<InputInfo> getInputList() {
         List<InputInfo> InputInfos = new ArrayList<>();
 
         List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
-        if (input_list == null){
+        if (input_list == null) {
             return InputInfos;
         }
         Collections.sort(input_list, new InputsComparator());
@@ -185,10 +201,10 @@ public class InputSourceManager {
             }
 
             CharSequence name = getTitle(mContext, tvInput, audioSystem, hdmiList);
-            boolean   connect = isInputEnabled(tvInput);
+            boolean connect = isInputEnabled(tvInput);
             //Log.d(TAG, "input:" + name + " connect:"+connect);
             int icon = getIcon(tvInput, connect);
-            input = new InputInfo(tvInput.getId(),name.toString(), icon);
+            input = new InputInfo(tvInput.getId(), name.toString(), icon);
             InputInfos.add(input);
         }
         return InputInfos;
@@ -205,11 +221,15 @@ public class InputSourceManager {
 //        return inputStringId[1]; //other
 //    }
 
-    private static int getInputIcon(int id){
+    private int getInputIcon(int id, boolean isConnected) {
         int i;
-        for(i=0; i<inputId.length; i++){
-            if(id == inputId[i]){
-                return inputIconId[i];
+        for (i = 0; i < inputId.length; i++) {
+            if (id == inputId[i]) {
+                if (isConnected) {
+                    return inputConnectIconId[i];
+                } else {
+                    return inputIconId[i];
+                }
             }
         }
 
@@ -218,14 +238,11 @@ public class InputSourceManager {
 
 
     public int getIcon(TvInputInfo info, boolean isConnected) {
-        int icon = getInputIcon(info.getType());
-        if (info.isPassthroughInput()) {
-            //icon = getIconForPassthrough(info, isConnected);
-        }
+        int icon = getInputIcon(info.getType(), isConnected);
         return icon;
     }
 
-    public CharSequence  getTitle(Context themedContext, TvInputInfo input, HdmiDeviceInfo audioSystem, List<HdmiDeviceInfo> hdmiList) {
+    public CharSequence getTitle(Context themedContext, TvInputInfo input, HdmiDeviceInfo audioSystem, List<HdmiDeviceInfo> hdmiList) {
         CharSequence title = "";
         CharSequence label = input.loadLabel(themedContext);
         CharSequence customLabel = input.loadCustomLabel(themedContext);
@@ -256,7 +273,7 @@ public class InputSourceManager {
         return title;
     }
 
-    private  CharSequence  getTitleForTuner(Context themedContext, String packageName, CharSequence label, TvInputInfo input) {
+    private CharSequence getTitleForTuner(Context themedContext, String packageName, CharSequence label, TvInputInfo input) {
         CharSequence title = label;
         if (PACKAGE_DROIDLOGIC_TVINPUT.equals(packageName)) {
             title = themedContext.getString(DroidLogicTvUtils.isChina(themedContext) ? R.string.input_atv : R.string.input_long_label_for_tuner);
@@ -274,7 +291,7 @@ public class InputSourceManager {
         return title;
     }
 
-    private  List<HdmiDeviceInfo> getHdmiList() {
+    private List<HdmiDeviceInfo> getHdmiList() {
         if (mTvClient == null) {
             Log.e(TAG, "mTvClient null!");
             return null;
@@ -401,4 +418,5 @@ public class InputSourceManager {
             }
         }
     }
+
 }
