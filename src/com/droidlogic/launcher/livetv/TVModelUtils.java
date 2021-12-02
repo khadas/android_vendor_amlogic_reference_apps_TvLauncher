@@ -35,15 +35,12 @@ public final class TVModelUtils {
     private static final int INPUT_ID_LENGTH = 3;
 
     private static boolean compareInputId(String inputId, String infoInputId) {
-        if (null == inputId) {
-            return true;
-        }
-        if (null == infoInputId) {
+        if (TextUtils.isEmpty(infoInputId)) {
             return false;
         }
 
-        if (TextUtils.isEmpty(inputId) || TextUtils.isEmpty(infoInputId)) {
-            return false;
+        if (TextUtils.isEmpty(inputId)) {
+            return true;
         }
 
         if (TextUtils.equals(inputId, infoInputId)) {
