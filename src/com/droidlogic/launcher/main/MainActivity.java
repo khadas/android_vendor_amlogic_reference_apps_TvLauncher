@@ -39,12 +39,16 @@ import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.input.InputCardPresenter;
 import com.droidlogic.launcher.input.InputModel;
 import com.droidlogic.launcher.input.InputSourceManager;
+import com.droidlogic.launcher.livetv.Channel;
 import com.droidlogic.launcher.livetv.ChannelObserver;
+import com.droidlogic.launcher.livetv.TVModelUtils;
 import com.droidlogic.launcher.livetv.TvCardPresenter;
 import com.droidlogic.launcher.livetv.MediaModel;
 import com.droidlogic.launcher.function.FunctionCardPresenter;
 import com.droidlogic.launcher.function.FunctionModel;
 import com.droidlogic.launcher.livetv.TvControl;
+import com.droidlogic.launcher.recommend.RecommendCardPresenter;
+import com.droidlogic.launcher.recommend.RecommendModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -210,6 +214,7 @@ public class MainActivity extends Activity {
         addVideoRow();
         addAppRow();
         addInputRow();
+        //addRecommendRow();
         addFunctionRow();
 
         mBrowseFragment.setAdapter(rowsAdapter);
@@ -342,6 +347,21 @@ public class MainActivity extends Activity {
         HeaderItem header = new HeaderItem(0, headerName);
         rowsAdapter.add(new ListRow(header, mInputListRowAdapter));
     }
+
+    private void addRecommendRow(){
+        List<Channel> channels = TVModelUtils.getPreviewChannels(getContentResolver());
+
+        for(Channel ch : channels){
+            ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new RecommendCardPresenter());
+            HeaderItem header = new HeaderItem(0, ch.getDisplayName());
+            List<RecommendModel> models = RecommendModel.getProgramList(this, ch.getId());
+            for(RecommendModel model:models){
+                listRowAdapter.add(model);
+            }
+            rowsAdapter.add(new ListRow(header, listRowAdapter));
+        }
+    }
+
 
     private void addFunctionRow() {
         String headerName = getResources().getString(R.string.app_header_function_name);

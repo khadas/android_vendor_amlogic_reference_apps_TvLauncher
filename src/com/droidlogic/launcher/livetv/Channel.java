@@ -407,7 +407,7 @@ public final class Channel {
                         TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA,
                         TvContract.Channels.COLUMN_NETWORK_AFFILIATION,
                         TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID,
-                        //TvContract.Channels.COLUMN_PACKAGE_NAME,
+                        TvContract.Channels.COLUMN_PACKAGE_NAME,
                         TvContract.Channels.COLUMN_SEARCHABLE,
                         TvContract.Channels.COLUMN_SERVICE_ID,
                         TvContract.Channels.COLUMN_SERVICE_TYPE,

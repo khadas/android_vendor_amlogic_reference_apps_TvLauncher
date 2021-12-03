@@ -19,7 +19,9 @@ package com.droidlogic.launcher.livetv;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -90,6 +92,61 @@ public final class TVModelUtils {
         }
         return channels;
     }
+
+
+    public static List<Channel> getPreviewChannels(ContentResolver resolver) {
+        List<Channel> channels = new ArrayList<>();
+
+        Cursor cursor = null;
+        try {
+            String selection = "type=?";
+            String args[] = {"TYPE_PREVIEW"};
+            cursor = resolver.query(Channels.CONTENT_URI, Channel.PROJECTION, selection, args, null);
+            if (cursor == null || cursor.getCount() == 0) {
+                return channels;
+            }
+
+            while (cursor.moveToNext()) {
+                Channel ch = Channel.fromCursor(cursor);
+                channels.add(ch);
+                //Log.d("channel", "get channel:" + ch.getDisplayName());
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to get channels", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return channels;
+    }
+
+
+    public static List<PreviewProgram> getPreviewPrograms(ContentResolver resolver, long channelId) {
+        List<PreviewProgram> programs = new ArrayList<>();
+
+        Uri uri = TvContract.buildPreviewProgramsUriForChannel(channelId);
+
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(uri, PreviewProgram.PROJECTION, null, null, null);
+            if (cursor == null || cursor.getCount() == 0) {
+                return programs;
+            }
+            while (cursor.moveToNext()) {
+                programs.add(PreviewProgram.fromCursor(cursor));
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to get programs for " + uri, e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return programs;
+    }
+
 
     private TVModelUtils() {}
 }
