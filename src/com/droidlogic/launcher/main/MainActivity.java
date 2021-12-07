@@ -6,9 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.ContentObserver;
-import android.media.tv.TvContract;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -16,8 +13,6 @@ import android.provider.Settings;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnItemViewClickedListener;
 import android.support.v17.leanback.widget.OnItemViewSelectedListener;
@@ -29,29 +24,20 @@ import android.util.Log;
 
 import android.view.KeyEvent;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.launcher.R;
-import com.droidlogic.launcher.app.AppCardPresenter;
-import com.droidlogic.launcher.app.AppDataManage;
 import com.droidlogic.launcher.app.AppModel;
-import com.droidlogic.launcher.input.InputCardPresenter;
+import com.droidlogic.launcher.app.AppRow;
+import com.droidlogic.launcher.function.FunctionRow;
 import com.droidlogic.launcher.input.InputModel;
+import com.droidlogic.launcher.input.InputRow;
 import com.droidlogic.launcher.input.InputSourceManager;
-import com.droidlogic.launcher.livetv.Channel;
-import com.droidlogic.launcher.livetv.ChannelObserver;
-import com.droidlogic.launcher.livetv.TVModelUtils;
-import com.droidlogic.launcher.livetv.TvCardPresenter;
 import com.droidlogic.launcher.livetv.MediaModel;
-import com.droidlogic.launcher.function.FunctionCardPresenter;
 import com.droidlogic.launcher.function.FunctionModel;
 import com.droidlogic.launcher.livetv.TvControl;
-import com.droidlogic.launcher.recommend.RecommendCardPresenter;
-import com.droidlogic.launcher.recommend.RecommendModel;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.droidlogic.launcher.livetv.TvRow;
+import com.droidlogic.launcher.recommend.RecommendRow;
 
 public class MainActivity extends Activity {
     private static final String TAG = "MainLaunch";
@@ -60,7 +46,7 @@ public class MainActivity extends Activity {
     private final int MSG_LOAD_DATA = 100;
 
     private BrowseFragment mBrowseFragment;
-    private ArrayObjectAdapter rowsAdapter;
+    private ArrayObjectAdapter mRowsAdapter;
     private BackgroundManager mBackgroundManager;
     private DisplayMetrics mMetrics;
     private Context mContext;
@@ -68,43 +54,16 @@ public class MainActivity extends Activity {
     private boolean mActivityResumed = false;
     private boolean mBroadcastsRegistered = false;
 
-    private ArrayObjectAdapter mAppListRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
+    private AppRow       mAppRow;
+    private RecommendRow mRecommendRow;
+    private FunctionRow  mFunctionRow;
 
     //===this is for live tv===========
+    private TvRow     mTvRow;
+    private InputRow  mInputRow;
     private TvControl mTvControl;
     private InputSourceManager mInputSource;
-    private ArrayObjectAdapter mTvListRowAdapter = new ArrayObjectAdapter(new TvCardPresenter());
-    private ArrayObjectAdapter mInputListRowAdapter = new ArrayObjectAdapter(new InputCardPresenter());
-    private ChannelObserver mChannelObserver;
     //================================
-    private int mLoadCount = 0;
-    private Handler mLoadHandler = new Handler() {
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_LOAD_DATA:
-                    if (mLoadCount < 10) {
-                        mLoadCount++;
-                        updateVideo();
-                        updateInput();
-                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
-                    }
-                    break;
-            }
-        }
-    };
-    private BroadcastReceiver appReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            final String action = intent.getAction();
-            Log.d(TAG, "appReceiver receive " + action);
-            if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
-                    || Intent.ACTION_PACKAGE_REMOVED.equals(action)
-                    || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-                updateAppList(intent);
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,10 +76,8 @@ public class MainActivity extends Activity {
         mBrowseFragment.setHeadersState(BrowseFragment.HEADERS_DISABLED);
 
         //===this is for live tv=================
-        mTvControl = new TvControl(this);
+        mTvControl   = new TvControl(this);
         mInputSource = new InputSourceManager(this, new SourceConnectListener());
-        mChannelObserver = new ChannelObserver();
-        getContentResolver().registerContentObserver(TvContract.Channels.CONTENT_URI, true, mChannelObserver);
         //=======================================
 
         prepareBackgroundManager();
@@ -161,7 +118,6 @@ public class MainActivity extends Activity {
 
         //===this is for live tv=======
         mTvControl.stop();
-        getContentResolver().unregisterContentObserver(mChannelObserver);
         //==============================
     }
 
@@ -209,7 +165,7 @@ public class MainActivity extends Activity {
     }
 
     private void buildRowsAdapter() {
-        rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
+        mRowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
 
         addVideoRow();
         addAppRow();
@@ -217,7 +173,7 @@ public class MainActivity extends Activity {
         //addRecommendRow();
         addFunctionRow();
 
-        mBrowseFragment.setAdapter(rowsAdapter);
+        mBrowseFragment.setAdapter(mRowsAdapter);
         mBrowseFragment.setOnItemViewClickedListener(new OnItemViewClickedListener() {
             @Override
             public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
@@ -252,127 +208,34 @@ public class MainActivity extends Activity {
             public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
                 if (item instanceof MediaModel) {
                     //MediaModel mediaModel = (MediaModel) item;
-                    //Log.d(TAG, "channel id: " + mediaModel.getId());
-                    //mTvControl.play(mediaModel.getId());
                 }
             }
         });
     }
 
-    private void updateVideo() {
-        int i;
-
-        List<MediaModel> list = MediaModel.getDTVModels(mContext);
-
-        int curSize = mTvListRowAdapter.size();
-        int newSize = list.size();
-        if (curSize != newSize) {
-            mTvListRowAdapter.clear();
-            for (i = 0; i < newSize; i++) {
-                MediaModel model2 = (MediaModel) list.get(i);
-                mTvListRowAdapter.add(model2);
-            }
-        } else {
-            for (i = 0; i < newSize; i++) {
-                MediaModel model1 = (MediaModel) mTvListRowAdapter.get(i);
-                MediaModel model2 = (MediaModel) list.get(i);
-                if (model1.getId() != model2.getId()) {
-                    mTvListRowAdapter.replace(i, model2);
-                }
-            }
-        }
-    }
-
-    private void updateInput() {
-        int i;
-
-        List<InputModel> list = InputModel.getInputList(mInputSource);
-
-        int curSize = mInputListRowAdapter.size();
-        int newSize = list.size();
-        if (curSize != newSize) {
-            mInputListRowAdapter.clear();
-            for (i = 0; i < newSize; i++) {
-                InputModel model2 = (InputModel) list.get(i);
-                mInputListRowAdapter.add(model2);
-            }
-        } else {
-            for (i = 0; i < newSize; i++) {
-                InputModel model1 = (InputModel) mInputListRowAdapter.get(i);
-                InputModel model2 = (InputModel) list.get(i);
-                if (model1.getId() != model2.getId() || model1.getIcon() != model2.getIcon()) {
-                    mInputListRowAdapter.replace(i, model2);
-                }
-            }
-        }
-    }
-
     private void addVideoRow() {
         String headerName = getResources().getString(R.string.app_header_video_name);
-        mTvListRowAdapter = new ArrayObjectAdapter(new TvCardPresenter());
-        for (MediaModel mediaModel : MediaModel.getDTVModels(mContext)) {
-            mTvListRowAdapter.add(mediaModel);
-        }
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, mTvListRowAdapter));
-    }
-
-    private void loadAppData() {
-        ArrayList<AppModel> appDataList = new AppDataManage(mContext).getAppsList();
-        int cardCount = appDataList.size();
-
-        for (int i = 0; i < cardCount; i++) {
-            mAppListRowAdapter.add(appDataList.get(i));
-        }
+        mTvRow = new TvRow(this, headerName, mRowsAdapter);
     }
 
     private void addAppRow() {
         String headerName = getResources().getString(R.string.app_header_app_name);
-        mAppListRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
-
-        loadAppData();
-
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, mAppListRowAdapter));
+        mAppRow = new AppRow(this, headerName, mRowsAdapter);
     }
 
     private void addInputRow() {
         String headerName = getResources().getString(R.string.app_header_input_name);
-
-        List<InputModel> inputModels = InputModel.getInputList(mInputSource);
-        int cardCount = inputModels.size();
-        for (int i = 0; i < cardCount; i++) {
-            mInputListRowAdapter.add(inputModels.get(i));
-        }
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, mInputListRowAdapter));
+        mInputRow = new InputRow(this, headerName, mRowsAdapter, mInputSource);
     }
 
     private void addRecommendRow(){
-        List<Channel> channels = TVModelUtils.getPreviewChannels(getContentResolver());
-
-        for(Channel ch : channels){
-            ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new RecommendCardPresenter());
-            HeaderItem header = new HeaderItem(0, ch.getDisplayName());
-            List<RecommendModel> models = RecommendModel.getProgramList(this, ch.getId());
-            for(RecommendModel model:models){
-                listRowAdapter.add(model);
-            }
-            rowsAdapter.add(new ListRow(header, listRowAdapter));
-        }
+        mRecommendRow = new RecommendRow(this, mRowsAdapter);
     }
 
 
     private void addFunctionRow() {
         String headerName = getResources().getString(R.string.app_header_function_name);
-        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new FunctionCardPresenter());
-        List<FunctionModel> functionModels = FunctionModel.getFunctionList(mContext);
-        int cardCount = functionModels.size();
-        for (int i = 0; i < cardCount; i++) {
-            listRowAdapter.add(functionModels.get(i));
-        }
-        HeaderItem header = new HeaderItem(0, headerName);
-        rowsAdapter.add(new ListRow(header, listRowAdapter));
+        mFunctionRow = new FunctionRow (this, headerName, mRowsAdapter);
     }
 
     private void registerAppReceiver() {
@@ -393,28 +256,12 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void updataApp() {
-        int i;
+    private void updateVideo() {
+        mTvRow.update();
+    }
 
-        ArrayList<AppModel> list = new AppDataManage(mContext).getAppsList();
-
-        int curSize = mAppListRowAdapter.size();
-        int newSize = list.size();
-        if (curSize != newSize) {
-            mAppListRowAdapter.clear();
-            for (i = 0; i < newSize; i++) {
-                AppModel model2 = (AppModel) list.get(i);
-                mAppListRowAdapter.add(model2);
-            }
-        } else {
-            for (i = 0; i < newSize; i++) {
-                AppModel model1 = (AppModel) mAppListRowAdapter.get(i);
-                AppModel model2 = (AppModel) list.get(i);
-                if (!model1.getPackageName().equals(model2.getPackageName())) {
-                    mAppListRowAdapter.replace(i, model2);
-                }
-            }
-        }
+    private void updateInput() {
+        mInputRow.update();
     }
 
     private void updateAppList(Intent intent) {
@@ -423,56 +270,54 @@ public class MainActivity extends Activity {
 
         if (intent.getData() != null) {
             packageName = intent.getData().getSchemeSpecificPart();
-            if (packageName == null || packageName.length() == 0) {
-                return;
-            }
-            if (packageName.equals("com.android.provision"))
-                return;
         }
-        //com.farproc.wifi.analyzer
+
+        if (packageName == null || packageName.length() == 0) {
+            return;
+        }
+
+        if (packageName.equals("com.android.provision")) {
+            return;
+        }
+
         Log.d(TAG, "---update app:" + packageName);
-
         if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
-            int i;
-            for (i = 0; i < mAppListRowAdapter.size(); i++) {
-                AppModel model = (AppModel) mAppListRowAdapter.get(i);
-                if (model.getPackageName().equals(packageName)) {
-                    mAppListRowAdapter.removeItems(i, 1);
-                    break;
-                }
-            }
+            mAppRow.remove(packageName);
         } else if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-            AppModel model = new AppDataManage(mContext).getLaunchAppModel(packageName);
-            if (model != null) {
-                mAppListRowAdapter.add(model);
-            }
+            mAppRow.add(packageName);
         } else if (Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
-            int i;
-            AppModel newModel = new AppDataManage(mContext).getLaunchAppModel(packageName);
+            mAppRow.update(packageName);
+        }
+    }
 
-            for (i = 0; i < mAppListRowAdapter.size(); i++) {
-                AppModel model = (AppModel) mAppListRowAdapter.get(i);
-                if (model.getPackageName().equals(packageName)) {
-                    mAppListRowAdapter.replace(i, newModel);
-                    break;
-                }
+    private BroadcastReceiver appReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            //Log.d(TAG, "appReceiver receive " + action);
+            if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
+                    || Intent.ACTION_PACKAGE_REMOVED.equals(action)
+                    || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+                updateAppList(intent);
             }
         }
-    }
+    };
 
-    private class ChannelObserver extends ContentObserver {
-        private static final String TAG = "ChannelObserver";
-
-        public ChannelObserver() {
-            super(new Handler());
+    private int mLoadCount = 0;
+    private Handler mLoadHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_LOAD_DATA:
+                    if (mLoadCount < 10) {
+                        mLoadCount++;
+                        updateVideo();
+                        updateInput();
+                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
+                    }
+                    break;
+            }
         }
-
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-            Log.d(TAG, "detect channel changed =" + uri);
-            //updateVideo();
-        }
-    }
+    };
 
     //====this is for live tv===========
     private class SourceConnectListener implements TvControlManager.StatusSourceConnectListener {
