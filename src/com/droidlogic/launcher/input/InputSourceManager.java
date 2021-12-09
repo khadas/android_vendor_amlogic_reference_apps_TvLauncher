@@ -206,8 +206,28 @@ public class InputSourceManager {
             int icon = getIcon(tvInput, connect);
             input = new InputInfo(tvInput.getId(), name.toString(), icon);
             InputInfos.add(input);
+
+            input = getSpecificDtv(mContext, tvInput);
+            if (input != null){
+                InputInfos.add(input);
+            }
         }
         return InputInfos;
+    }
+
+    private InputInfo getSpecificDtv(Context themedContext, TvInputInfo input) {
+        if (DroidLogicTvUtils.isChina(themedContext)
+                && input.getType() == TvInputInfo.TYPE_TUNER
+                && PACKAGE_DROIDLOGIC_TVINPUT.equals(input.getServiceInfo().packageName)) {
+
+            String name = themedContext.getString(R.string.input_dtv);
+            boolean connect = isInputEnabled(input);
+            Log.d(TAG, "input:" + name + " connect:"+connect);
+            int icon = getIcon(input, connect);
+            InputInfo info = new InputInfo(input.getId(), name.toString(), icon);
+            return info;
+        }
+        return null;
     }
 
 //    private static int getInputString(int id){

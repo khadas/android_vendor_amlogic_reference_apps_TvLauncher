@@ -97,6 +97,7 @@ public class MainActivity extends Activity {
 
         //===this is for live tv
         updateVideo();
+        updateInput();
         mTvControl.resume();
         //=====================
 
