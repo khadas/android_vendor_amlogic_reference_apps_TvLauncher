@@ -41,7 +41,6 @@ public class TvControl {
 
     public static String COMPONENT_TV_APP      = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
     public static String COMPONENT_LIVE_TV     = "com.droidlogic.android.tv/com.android.tv.TvActivity";
-    public static String PACKAGE_LIVE_TV       = "com.droidlogic.android.tv";
 
     private static final String ACTION_OTP_INPUT_SOURCE_CHANGE = "droidlogic.tv.action.OTP_INPUT_SOURCE_CHANGED";
 
@@ -406,6 +405,7 @@ public class TvControl {
             if (mChannelId >= 0){
                 Uri channelUri = TvContract.buildChannelUri(mChannelId);
                 Intent intent  = new Intent(Intent.ACTION_VIEW, channelUri);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(intent);
             }
             else {
@@ -632,12 +632,6 @@ public class TvControl {
         mBroadcastsRegistered = false;
     }
 
-    private void killTvApp(){
-        //tv app can not play tv when source is HDMI,we must kill it
-        ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
-        activityManager.killBackgroundProcesses(PACKAGE_LIVE_TV);
-    }
-
     private Handler mTvHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -649,7 +643,6 @@ public class TvControl {
                         } else {
                             Log.d(TAG, "screen blocked and no need start tv play");
                         }
-                        killTvApp();
                     } else {
                         //Log.d(TAG, "bootvideo is not stopped, or tvapp not released, wait it");
                         mTvHandler.removeMessages(TV_MSG_PLAY_TV);

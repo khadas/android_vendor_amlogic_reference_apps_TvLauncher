@@ -2,6 +2,7 @@
 package com.droidlogic.launcher.main;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +43,7 @@ import com.droidlogic.launcher.recommend.RecommendRow;
 public class MainActivity extends Activity {
     private static final String TAG = "MainLaunch";
     private static final String TV_USER_SETUP_COMPLETE = "tv_user_setup_complete";
+    private static final String PACKAGE_LIVE_TV        = "com.droidlogic.android.tv";
 
     private final int MSG_LOAD_DATA = 100;
 
@@ -122,16 +124,37 @@ public class MainActivity extends Activity {
         //==============================
     }
 
-    private void startTvApp(long id, String inputId) {
-        //=======this is for live tv
-        mInputSource.switchInput(inputId, null);
+    //=======this is for live tv
+    private void startTvApp(long id, String inputId, String type) {
         if (id == -1 && inputId == null) {
+            mInputSource.switchInput(inputId, null);
             mInputSource.startInputAPP(inputId);
         } else {
+            String name = mInputSource.getInputName(inputId);
+            if (name == null){
+                name = "ATV";
+            }
+            if (!type.equals("TYPE_PAL") && !type.equals("TYPE_NTSC") && !type.equals("TYPE_SECAM")) {
+                name = "DTV";
+            }
+            if (name.equals("ATV")&& !mInputSource.isAtvSearch()) {
+                killTvApp(); // for atv no channel
+            }
+            mInputSource.setSearchType(name);
             mTvControl.launchTvApp(id);
         }
-        //==========================
     }
+
+    private void startInputSourceApp(String inputId, String name){
+        if (name.equals("ATV") && !mInputSource.isAtvSearch()) {
+            killTvApp(); // for atv no channel
+        }
+        mTvControl.releasePlayingTv();
+        mInputSource.switchInput(inputId, name);
+        mInputSource.startInputAPP(inputId);
+    }
+    //==========================
+
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -180,7 +203,7 @@ public class MainActivity extends Activity {
             public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item, RowPresenter.ViewHolder rowViewHolder, Row row) {
                 if (item instanceof MediaModel) {
                     MediaModel model = (MediaModel) item;
-                    startTvApp(model.getId(), model.getInputId());
+                    startTvApp(model.getId(), model.getInputId(), model.getType());
                 } else if (item instanceof AppModel) {
                     AppModel appBean = (AppModel) item;
                     Intent launchIntent = mContext.getPackageManager().getLaunchIntentForPackage(appBean.getPackageName());
@@ -196,9 +219,7 @@ public class MainActivity extends Activity {
                 } else if (item instanceof InputModel) {
                     InputModel model = (InputModel) item;
                     //====this is for live tv===========
-                    mTvControl.releasePlayingTv();
-                    mInputSource.switchInput(model.getId(), model.getName());
-                    mInputSource.startInputAPP(model.getId());
+                    startInputSourceApp(model.getId(), model.getName());
                     //===================================
                 }
             }
@@ -290,6 +311,12 @@ public class MainActivity extends Activity {
             mAppRow.update(packageName);
         }
     }
+
+    private void killTvApp(){
+        ActivityManager activityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.killBackgroundProcesses(PACKAGE_LIVE_TV);
+    }
+
 
     private BroadcastReceiver appReceiver = new BroadcastReceiver() {
         @Override

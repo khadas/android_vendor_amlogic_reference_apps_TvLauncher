@@ -110,6 +110,44 @@ public class InputSourceManager {
         }
     }
 
+    public void setSearchType(String name){
+        if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_atv))) {
+            DroidLogicTvUtils.setSearchInputId(mContext, name, false); //just for force update channel
+            DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
+        } else {//if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
+            DroidLogicTvUtils.setSearchInputId(mContext, name, false); //just for force update channel
+            String country = DroidLogicTvUtils.getCountry(mContext);
+            ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
+            DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
+        }
+    }
+
+    public boolean isAtvSearch(){
+        String atv  = TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX);
+        String type = DroidLogicTvUtils.getSearchType(mContext);
+        return TextUtils.equals(atv, type);
+    }
+
+
+    public String getInputName(String id){
+        List<TvInputInfo> inputList = mTvInputManager.getTvInputList();
+        if (inputList == null) {
+            return null;
+        }
+
+        List<HdmiDeviceInfo> hdmiList = getHdmiList();
+        HdmiDeviceInfo audioSystem = getOrigHdmiDevice(LOGICAL_ADDRESS_AUDIO_SYSTEM, hdmiList);
+
+        for (TvInputInfo input : inputList) {
+            if (input.getId().equals(id)) {
+                CharSequence name = getTitle(mContext, input, audioSystem, hdmiList);
+                return name.toString();
+            }
+        }
+
+        return null;
+    }
+
     public void switchInput(String id, String name) {
         List<TvInputInfo> inputList = mTvInputManager.getTvInputList();
         if (inputList == null) {
@@ -127,11 +165,11 @@ public class InputSourceManager {
         for (TvInputInfo input : inputList) {
             if (input.getId().equals(id)) {
                 DroidLogicTvUtils.setCurrentInputId(mContext, id);
+                DroidLogicTvUtils.setSearchInputId(mContext, input.getId(), false);
                 if (!input.isPassthroughInput()) {
-                    DroidLogicTvUtils.setSearchInputId(mContext, input.getId(), false);
                     if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_atv))) {
                         DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
-                    } else if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
+                    } else {//if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
                         String country = DroidLogicTvUtils.getCountry(mContext);
                         ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
                         DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
@@ -164,7 +202,6 @@ public class InputSourceManager {
             Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
             intent.putExtra("from_tv_source", true);
             intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, id);
-
             mContext.startActivity(intent);
         } catch (ActivityNotFoundException e) {
             Log.e(TAG, " can't start LiveTv:" + e);

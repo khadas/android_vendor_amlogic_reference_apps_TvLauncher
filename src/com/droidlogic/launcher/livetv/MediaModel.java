@@ -14,20 +14,20 @@ public class MediaModel {
     private String title;
     private String content;
     private String inputId;
-    private String videoUrl;
+    private String type; //TYPE_PAL
 
     private MediaModel(
             final long   id,
             final String title,
             final String content,
             final String inputId,
-            final String videoUrl) {
+            final String type) {
         this.id       = id;
         this.icon     = 0;
         this.title    = title;
         this.content  = content;
-        this.inputId = inputId;
-        this.videoUrl = videoUrl;
+        this.inputId  = inputId;
+        this.type     = type;
     }
 
 
@@ -71,12 +71,12 @@ public class MediaModel {
         this.inputId = inputId;
     }
 
-    public String getVideoUrl() {
-        return videoUrl;
+    public String getType() {
+        return type;
     }
 
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public static List<MediaModel> getDTVModels(Context context) {
@@ -84,6 +84,7 @@ public class MediaModel {
 
         String titles;
         String contents;
+        String type;
         int icon = 0;
         icon = R.drawable.live_tv;
 
@@ -101,8 +102,9 @@ public class MediaModel {
                 contents  = channel.getDescription();
                 id        = channel.getId();
                 inputid   = channel.getInputId();
+                type      = channel.getType();
                 //Log.d("Media", "input id:" + channel.getInputId() + " " + inputid);
-                MediaModel mediaModel = new MediaModel(id, titles, contents, inputid, null);
+                MediaModel mediaModel = new MediaModel(id, titles, contents, inputid, type);
                 mediaModel.setIcon(icon);
                 mediaModels.add(mediaModel);
             }
