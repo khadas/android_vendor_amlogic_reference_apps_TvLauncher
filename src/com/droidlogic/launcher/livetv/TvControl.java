@@ -252,6 +252,8 @@ public class TvControl {
                         setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
                     }
                 }
+            }else{
+                mChannelUri = TvContract.buildChannelUri(channelId);
             }
         } else {
             ArrayList<ChannelInfo> channelList =  mTvDataBaseManager.getChannelList(mTvInputId, ChannelInfo.COMMON_PROJECTION, null, null);
