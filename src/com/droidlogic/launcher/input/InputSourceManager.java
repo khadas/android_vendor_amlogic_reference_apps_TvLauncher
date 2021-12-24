@@ -43,7 +43,7 @@ public class InputSourceManager {
     private TvControlManager mTvControlManager;
     private HdmiControlManager mHdmiControlManager;
 
-    private static int inputId[] = {
+    private static final int[] inputId = {
             TvInputInfo.TYPE_TUNER,
             TvInputInfo.TYPE_OTHER,
             TvInputInfo.TYPE_COMPOSITE,
@@ -69,7 +69,7 @@ public class InputSourceManager {
 //            R.string.input_display_port,
 //    };
 
-    private static int inputIconId[] = {
+    private static final int[] inputIconId = {
             R.drawable.input_tuner,
             R.drawable.input_other,
             R.drawable.input_composite,
@@ -82,8 +82,8 @@ public class InputSourceManager {
             R.drawable.input_display_port,
     };
 
-    private static int inputConnectIconId[] = {
-            R.drawable.input_tuner,
+    private static final int[] inputConnectIconId = {
+            R.drawable.input_tuner_in,
             R.drawable.input_other,
             R.drawable.input_composite_in,
             R.drawable.input_svideo,

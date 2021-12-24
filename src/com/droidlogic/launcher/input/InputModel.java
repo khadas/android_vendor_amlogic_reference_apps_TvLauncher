@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InputModel {
+
     public static  String TAG = "InputModel";
 
     private int icon;
     private String id;
     private String name;
-
 
     public int getIcon() {
         return icon;
@@ -33,7 +33,6 @@ public class InputModel {
         this.name = name;
     }
 
-
     public static List<InputModel> getInputList(InputSourceManager manager) {
         List<InputModel> InputModels = new ArrayList<>();
 
@@ -42,7 +41,6 @@ public class InputModel {
 
         for (InputInfo info : input_list) {
             int icon    = info.getIcon();
-
             func = new InputModel();
             func.setName(info.getName());
             func.setIcon(icon);

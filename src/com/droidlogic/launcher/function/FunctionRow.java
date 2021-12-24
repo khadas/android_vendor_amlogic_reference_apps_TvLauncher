@@ -2,27 +2,24 @@ package com.droidlogic.launcher.function;
 
 import android.content.Context;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
 
+
+import com.droidlogic.launcher.leanback.presenter.content.SystemFunctionPresenter;
 
 import java.util.List;
 
 public class FunctionRow {
-    private String  mTitle;
-    private Context mContext;
-    private ArrayObjectAdapter mGridAdapter;
-    private ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new FunctionCardPresenter());
 
-    public FunctionRow(Context context, String title, ArrayObjectAdapter gridAdapter){
+    private final Context mContext;
+    private final ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new SystemFunctionPresenter());
+
+    public FunctionRow(Context context){
         mContext = context;
-        mTitle   = title;
-        mGridAdapter = gridAdapter;
-
         load();
+    }
 
-        HeaderItem header = new HeaderItem(0, mTitle);
-        mGridAdapter.add(new ListRow(header, mListRowAdapter));
+    public ArrayObjectAdapter getListRowAdapter() {
+        return mListRowAdapter;
     }
 
     public void load(){

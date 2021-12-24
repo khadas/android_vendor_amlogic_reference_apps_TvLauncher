@@ -7,6 +7,8 @@
     <string name="app_header_input_name">输入源</string>
     <string name="app_header_function_name">功能</string>
 
+    <string name="function_app_filebrowser">文件浏览器</string>
+    <string name="function_app_tvcast">TV Cast</string>
     <string name="function_app_uninstall">应用卸载</string>
     <string name="function_system_setting">系统设置</string>
 
@@ -24,5 +26,8 @@
     <string name="str_tvapp">电视</string>
     <string name="str_video">在线视频</string>
     <string name="toast_otp_input_change">电视收到请求并切换通道</string>
+
+    <string name="fun_name_app">应用</string>
+    <string name="fun_name_recommend">推荐</string>
 
 </resources>

@@ -1,32 +1,23 @@
 package com.droidlogic.launcher.input;
 
-import android.content.Context;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
+
+import com.droidlogic.launcher.leanback.model.IRowSignalSourceProvider;
+import com.droidlogic.launcher.leanback.presenter.content.InputSourcePresenter;
 
 import java.util.List;
 
-public class InputRow {
-    private String  mTitle;
-    private Context mContext;
-    private ArrayObjectAdapter mGridAdapter;
-    private ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new InputCardPresenter());
-    private InputSourceManager mInputSource;
+public class InputRow implements IRowSignalSourceProvider {
 
-    public InputRow(Context context, String title, ArrayObjectAdapter gridAdapter, InputSourceManager sourceManager){
-        mContext = context;
-        mTitle   = title;
-        mGridAdapter = gridAdapter;
+    private final ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new InputSourcePresenter());
+    private final InputSourceManager mInputSource;
+
+    public InputRow(InputSourceManager sourceManager) {
         mInputSource = sourceManager;
-
         load();
-
-        HeaderItem header = new HeaderItem(0, mTitle);
-        mGridAdapter.add(new ListRow(header, mListRowAdapter));
     }
 
-    public void load(){
+    public void load() {
         List<InputModel> inputModels = InputModel.getInputList(mInputSource);
         int cardCount = inputModels.size();
         for (int i = 0; i < cardCount; i++) {
@@ -34,7 +25,13 @@ public class InputRow {
         }
     }
 
-    public void update(){
+    @Override
+    public ArrayObjectAdapter getListRowAdapter() {
+        return mListRowAdapter;
+    }
+
+    @Override
+    public void update() {
         int i;
 
         List<InputModel> list = InputModel.getInputList(mInputSource);

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:paddingLeft="60dp"
+    android:paddingTop="10dp"
+    android:paddingRight="60dp"
+    android:paddingBottom="20dp"
+    tools:ignore="RtlHardcoded,RtlSymmetry">
+
+    <com.droidlogic.launcher.leanback.view.BorderEffectLayout
+        android:id="@+id/border_view_holder"
+        android:layout_width="480dp"
+        android:layout_height="320dp"
+        android:background="#000"
+        app:animEnable="false">
+
+        <TextView
+            android:id="@+id/tx_tv_prompt"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:textStyle="bold"
+            tools:text="DTVKit2" />
+
+        <android.media.tv.TvView
+            android:id="@+id/tv_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
+
+    <android.support.v17.leanback.widget.VerticalGridView
+        android:id="@+id/vtl_view_source_list"
+        android:layout_width="227dp"
+        android:layout_height="320dp"
+        android:layout_toRightOf="@+id/border_view_holder"
+        android:background="#1A3865"
+        android:padding="0dp"
+        app:focusOutEnd="true"
+        app:focusOutFront="true" />
+
+    <android.support.v17.leanback.widget.VerticalGridView
+        android:id="@+id/vtl_view_system_function"
+        android:layout_width="439dp"
+        android:layout_height="320dp"
+        android:layout_marginLeft="13dp"
+        android:layout_toRightOf="@id/vtl_view_source_list"
+        android:padding="0dp"
+        app:focusOutEnd="true"
+        app:focusOutFront="true" />
+
+</RelativeLayout>

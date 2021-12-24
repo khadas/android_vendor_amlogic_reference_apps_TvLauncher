@@ -1,12 +1,16 @@
 
 package com.droidlogic.launcher.app;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.view.View;
 
 public class AppModel {
 
     private String dataDir;
     private Drawable icon;
+    private Drawable banner;
     private String id;
     private String name;
     private String launcherName;
@@ -21,6 +25,10 @@ public class AppModel {
 
     public Drawable getIcon() {
         return this.icon;
+    }
+
+    public Drawable getBanner() {
+        return banner;
     }
 
     public String getId() {
@@ -49,6 +57,10 @@ public class AppModel {
 
     public void setIcon(Drawable paramDrawable) {
         this.icon = paramDrawable;
+    }
+
+    public void setBanner(Drawable banner) {
+        this.banner = banner;
     }
 
     public void setId(String paramString) {
@@ -90,4 +102,13 @@ public class AppModel {
     public void setLauncherName(String launcherName) {
         this.launcherName = launcherName;
     }
+
+    public void onClickModel(View view) {
+        Context context = view.getContext();
+        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+        if (launchIntent != null) {
+            context.startActivity(launchIntent);
+        }
+    }
+
 }

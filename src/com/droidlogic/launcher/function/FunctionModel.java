@@ -3,7 +3,9 @@ package com.droidlogic.launcher.function;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.provider.Settings;
+import android.view.View;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppUninstall;
@@ -13,7 +15,12 @@ import java.util.List;
 
 public class FunctionModel {
 
+    public static final String PKG_NAME_FILE_BROWSER = "com.droidlogic.FileBrower";
+    public static final String PKG_NAME_TV = "com.droidlogic.android.tv";
+    public static final String PKG_NAME_MIRACAST = "com.droidlogic.miracast";
+
     private int icon;
+    private int bgColor;
     private String id;
     private int name;
     private Intent mIntent;
@@ -26,6 +33,14 @@ public class FunctionModel {
         this.icon = icon;
     }
 
+    public int getBgColor() {
+        return bgColor;
+    }
+
+    public void setBgColor(int bgColor) {
+        this.bgColor = bgColor;
+    }
+
     public String getId() {
         return id;
     }
@@ -34,7 +49,9 @@ public class FunctionModel {
         this.id = id;
     }
 
-    public int getName() { return name; }
+    public int getName() {
+        return name;
+    }
 
     public void setName(int name) {
         this.name = name;
@@ -53,18 +70,44 @@ public class FunctionModel {
         FunctionModel func;
 
         func = new FunctionModel();
+        func.setName(R.string.function_app_filebrowser);
+        func.setIcon(R.drawable.icon_file_browser);
+        func.setBgColor(Color.parseColor("#1E3F76"));
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(PKG_NAME_FILE_BROWSER);
+        func.setIntent(intent);
+        functionModels.add(func);
+
+        func = new FunctionModel();
+        func.setName(R.string.function_app_tvcast);
+        func.setIcon(R.drawable.icon_tv_cast);
+        func.setBgColor(Color.parseColor("#325568"));
+        intent = context.getPackageManager().getLaunchIntentForPackage(PKG_NAME_MIRACAST);
+        func.setIntent(intent);
+        functionModels.add(func);
+
+        func = new FunctionModel();
         func.setName(R.string.function_system_setting);
         func.setIcon(R.drawable.settings);
-        Intent intent = new Intent(Settings.ACTION_SETTINGS);
+        func.setBgColor(Color.parseColor("#304F7D"));
+        intent = new Intent(Settings.ACTION_SETTINGS);
         func.setIntent(intent);
         functionModels.add(func);
 
         func = new FunctionModel();
         func.setName(R.string.function_app_uninstall);
         func.setIcon(R.drawable.app_uninstall);
+        func.setBgColor(Color.parseColor("#3A4070"));
         func.setIntent(new Intent(context, AppUninstall.class));
         functionModels.add(func);
 
         return functionModels;
     }
+
+    public void onClickModel(View view) {
+        Context context = view.getContext();
+        if (mIntent != null) {
+            context.startActivity(mIntent);
+        }
+    }
+
 }

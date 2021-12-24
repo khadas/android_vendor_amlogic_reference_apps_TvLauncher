@@ -6,8 +6,10 @@
     <string name="app_header_input_name">Input</string>
     <string name="app_header_function_name">Function</string>
 
-    <string name="function_app_uninstall">APP Uninstall</string>
-    <string name="function_system_setting">System Settings</string>
+    <string name="function_app_filebrowser">File Browser</string>
+    <string name="function_app_tvcast">TV Cast</string>
+    <string name="function_app_uninstall">Uninstall</string>
+    <string name="function_system_setting">Settings</string>
 
     <string name="tv_no_channel">No Channel</string>
     <string name="tv_search_channel">Please Search Channel</string>
@@ -41,5 +43,8 @@
     <string name="input_dvi">DVI</string>
     <string name="input_hdmi">HDMI</string>
     <string name="input_display_port">DISPLAY_PORT</string>
+
+    <string name="fun_name_app">App</string>
+    <string name="fun_name_recommend">Recommend</string>
 
 </resources>

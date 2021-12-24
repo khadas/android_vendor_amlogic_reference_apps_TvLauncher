@@ -4,6 +4,9 @@ import android.content.Context;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ListRow;
+
+import com.droidlogic.launcher.leanback.presenter.content.AppCardPresenter;
+
 import java.util.ArrayList;
 
 

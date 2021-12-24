@@ -2,9 +2,27 @@
 	   name: "leanback17",
 	   aars: ["leanback-v17-27.0.0.aar"],
 	   sdk_version: "current",
-	}	
-		
-	
+	}
+
+	android_library_import {
+	   name: "palette-v7-27",
+	   aars: ["palette-v7-27.1.1.aar"],
+	   sdk_version: "current",
+	}
+
+	android_library_import {
+	   name: "constraint-layout2",
+	   aars: ["constraint-layout-2.0.4.aar"],
+	   sdk_version: "current",
+    }
+
+	java_import {
+		name: "constraint-layout-solver2",
+		jars: ["constraint-layout-solver-2.0.4.jar"],
+		host_supported: true,
+		sdk_version: "current",
+	}
+
 	java_import {
 		name: "supports-v4-jar",
 		jars: ["supports-v4.jar"],

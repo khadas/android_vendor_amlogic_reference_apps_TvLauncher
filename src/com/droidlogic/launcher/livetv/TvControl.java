@@ -1,13 +1,11 @@
 package com.droidlogic.launcher.livetv;
 
-import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.ContentObserver;
 import android.graphics.drawable.Drawable;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
@@ -21,6 +19,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.droidlogic.app.DataProviderManager;
@@ -28,35 +27,34 @@ import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvDataBaseManager;
+import com.droidlogic.launcher.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.droidlogic.launcher.R;
-
 public class TvControl {
+
     private static final String TAG = "TvControl";
     public static final String PROP_TV_PREVIEW = "vendor.tv.is.preview.window";
-    public static final String DTVKIT_PACKAGE  = "org.dtvkit.inputsource";
+    public static final String DTVKIT_PACKAGE = "org.dtvkit.inputsource";
 
-    public static String COMPONENT_TV_APP      = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
-    public static String COMPONENT_LIVE_TV     = "com.droidlogic.android.tv/com.android.tv.TvActivity";
+    public static String COMPONENT_TV_APP = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
+    public static String COMPONENT_LIVE_TV = "com.droidlogic.android.tv/com.android.tv.TvActivity";
 
     private static final String ACTION_OTP_INPUT_SOURCE_CHANGE = "droidlogic.tv.action.OTP_INPUT_SOURCE_CHANGED";
 
     private static final int INPUT_ID_LENGTH = 3;
 
-    private static final int TV_MSG_PLAY_TV                    = 0;
-    private static final int TV_MSG_BOOTUP_TO_TVAPP            = 1;
+    private static final int TV_MSG_PLAY_TV = 0;
+    private static final int TV_MSG_BOOTUP_TO_TVAPP = 1;
 
     private TvViewManager mViewManager;
-    private TvConfig      mTvConfig;
-    private Context       mContext;
+    private TvConfig mTvConfig;
+    private Context mContext;
 
     private SystemControlManager mSystemControlManager = SystemControlManager.getInstance();
-    private TvDataBaseManager    mTvDataBaseManager;
-    private TvInputManager       mTvInputManager;
-
+    private TvDataBaseManager mTvDataBaseManager;
+    private TvInputManager mTvInputManager;
 
     private boolean isRadioChannel = false;
     private boolean isChannelBlocked = false;
@@ -65,40 +63,39 @@ public class TvControl {
     private boolean mTvStartPlaying = false;
 
     private String mTvInputId;
-    private Uri    mChannelUri;
-    private long   mChannelId = -1;
+    private Uri mChannelUri;
+    private long mChannelId = -1;
 
-    private boolean  mActivityResumed;
+    private boolean mActivityResumed;
 
-    public TvControl(Context context)
-    {
-        mContext     = context;
-        mViewManager = new TvViewManager(context);
-        mTvConfig    = new TvConfig(context);
-
+    public TvControl(Context context, TvView mTvView, TextView prompt) {
+        mContext = context;
+        mViewManager = new TvViewManager(context, mTvView, prompt);
+        mTvConfig = new TvConfig(context);
         mTvInputManager = (TvInputManager) mContext.getSystemService(Context.TV_INPUT_SERVICE);
         mTvDataBaseManager = new TvDataBaseManager(mContext);
-
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-            COMPONENT_TV_APP = COMPONENT_LIVE_TV;
-        //}
+        COMPONENT_TV_APP = COMPONENT_LIVE_TV;
 
         mViewManager.setCallback(new TvViewInputCallback());
     }
 
-    public void play(long id){
+    public void setTvViewPosition(int left, int top, int right, int bottom, int transY, int duration) {
+        mViewManager.setTvViewPosition(left, top, right, bottom, transY, duration);
+    }
+
+    public void play(long id) {
         mChannelId = id;
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
         mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
     }
 
-    public void launchTvApp(long id){
+    public void launchTvApp(long id) {
         mChannelId = id;
         mTvHandler.removeMessages(TV_MSG_BOOTUP_TO_TVAPP);
         mTvHandler.sendEmptyMessage(TV_MSG_BOOTUP_TO_TVAPP);
     }
 
-    public void resume(){
+    public void resume() {
         if (mTvConfig.checkNeedStartTvApp(true, mDelayedSourceChange != null)) {
             launchTvApp(-1);
             return;
@@ -121,7 +118,7 @@ public class TvControl {
         mActivityResumed = true;
     }
 
-    public void pause(){
+    public void pause() {
         mActivityResumed = false;
 
         if (mTvConfig.needPreviewFeture()) {
@@ -129,12 +126,12 @@ public class TvControl {
         }
     }
 
-    public void stop(){
+    public void stop() {
         pause();
         unregisterTvBroadcasts();
     }
 
-    private boolean isTunerSource (String inputId) {
+    private boolean isTunerSource(String inputId) {
         return !mTvInputManager.getTvInputInfo(inputId).isPassthroughInput();
     }
 
@@ -146,17 +143,16 @@ public class TvControl {
         return DataProviderManager.getBooleanValue(mContext, DroidLogicTvUtils.TV_CURRENT_CHANNELBLOCK_STATUS, false);
     }
 
-    public void setCurrentChannelBlocked(boolean blocked){
+    public void setCurrentChannelBlocked(boolean blocked) {
         DataProviderManager.putBooleanValue(mContext, DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, blocked);
     }
-
 
     public boolean initChannelWhenChannelReady() {
         boolean result = false;
         long channelId = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
         //int deviceId = DataProviderManager.getIntValue(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
         if (channelId != -1) {
-            String inputid= "";
+            String inputid = "";
             Uri channelUri = TvContract.buildChannelUri(channelId);
             ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
 //            if (currentChannel != null && mChannelId != -1) {
@@ -178,7 +174,7 @@ public class TvControl {
         } else {
             isChannelBlocked = false;
             String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
-            if (isTunerSource(inputid)){
+            if (isTunerSource(inputid)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
                 return false;
             }
@@ -193,7 +189,6 @@ public class TvControl {
         }
         return result;
     }
-
 
     private boolean compareInputId(String inputId, TvInputInfo info) {
         Log.d(TAG, "compareInputId currentInputId " + inputId + " info " + info);
@@ -222,8 +217,7 @@ public class TvControl {
         return false;
     }
 
-
-    private void setChannelUri (long channelId) {
+    private void setChannelUri(long channelId) {
         Uri channelUri = TvContract.buildChannelUri(channelId);
         ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
         String currentSignalType = DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
@@ -252,11 +246,11 @@ public class TvControl {
                         setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
                     }
                 }
-            }else{
+            } else {
                 mChannelUri = TvContract.buildChannelUri(channelId);
             }
         } else {
-            ArrayList<ChannelInfo> channelList =  mTvDataBaseManager.getChannelList(mTvInputId, ChannelInfo.COMMON_PROJECTION, null, null);
+            ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, ChannelInfo.COMMON_PROJECTION, null, null);
             if (channelList != null && channelList.size() > 0) {
                 for (int i = 0; i < channelList.size(); i++) {
                     ChannelInfo channel = channelList.get(i);
@@ -290,14 +284,13 @@ public class TvControl {
         }
     }
 
-
     public void tuneTvView() {
         stopMusicPlayer();
 
         //float window don't need load PQ
         mSystemControlManager.setProperty(PROP_TV_PREVIEW, "true");
 
-        mTvInputId  = null;
+        mTvInputId = null;
         mChannelUri = null;
 
         setTvPrompt(TvPrompt.TV_PROMPT_TUNING/*TV_PROMPT_GOT_SIGNAL*/);
@@ -307,11 +300,11 @@ public class TvControl {
         device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
         channel_id = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
         isRadioChannel = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO, 0) == 1 ? true : false;
-        Log.d(TAG, "TV get device_id=" + device_id + " dtv=" + channel_id );
+        Log.d(TAG, "TV get device_id=" + device_id + " dtv=" + channel_id);
 
         String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
         List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
-        Log.d(TAG , "----input id:" + inputid);
+        Log.d(TAG, "----input id:" + inputid);
         TvInputInfo currentInfo = null;
         for (TvInputInfo info : input_list) {
             /*if (parseDeviceId(info.getId()) == device_id) {
@@ -371,7 +364,6 @@ public class TvControl {
         mTvStartPlaying = true;
     }
 
-
     public void releasePlayingTv() {
         Log.d(TAG, "releasePlayingTv");
         isChannelBlocked = false;
@@ -387,7 +379,6 @@ public class TvControl {
         if (mTvStartPlaying) {
             releasePlayingTv();
         }
-
         try {
             mContext.startActivity(intent);
         } catch (ActivityNotFoundException e) {
@@ -397,20 +388,19 @@ public class TvControl {
 
     public void stopMusicPlayer() {
         Intent intent = new Intent();
-        intent.setAction ("com.android.music.pause");
-        intent.putExtra ("command", "stop");
-        mContext.sendBroadcast (intent);
+        intent.setAction("com.android.music.pause");
+        intent.putExtra("command", "stop");
+        mContext.sendBroadcast(intent);
     }
 
     public void startTvApp() {
         try {
-            if (mChannelId >= 0){
+            if (mChannelId >= 0) {
                 Uri channelUri = TvContract.buildChannelUri(mChannelId);
-                Intent intent  = new Intent(Intent.ACTION_VIEW, channelUri);
+                Intent intent = new Intent(Intent.ACTION_VIEW, channelUri);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(intent);
-            }
-            else {
+            } else {
                 Intent intent = new Intent();
                 intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
                 mContext.startActivity(intent);
@@ -422,7 +412,7 @@ public class TvControl {
     }
 
     public void setTvPrompt(int mode) {
-        String text         = null;
+        String text = null;
         Drawable background = null;
 
         switch (mode) {
@@ -456,21 +446,20 @@ public class TvControl {
                 break;
             case TvPrompt.TV_PROMPT_RADIO:
                 text = mContext.getResources().getString(R.string.str_audio_only);
-                background =mContext.getResources().getDrawable(R.drawable.black);
+                background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
             case TvPrompt.TV_PROMPT_TUNING:
-                background =mContext.getResources().getDrawable(R.drawable.black);
+                background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
         }
 
         mViewManager.setTvPrompt(text, background);
     }
 
-
     public class TvViewInputCallback extends TvView.TvInputCallback {
 
         public void onEvent(String inputId, String eventType, Bundle eventArgs) {
-            Log.d(TAG, "====onEvent==inputId =" + inputId +", ===eventType ="+ eventType);
+            Log.d(TAG, "====onEvent==inputId =" + inputId + ", ===eventType =" + eventType);
             if (eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_IS_SCRAMBLED);
             }
@@ -499,9 +488,9 @@ public class TvControl {
         @Override
         public void onConnectionFailed(String inputId) {
             Log.d(TAG, "====onConnectionFailed==inputId =" + inputId);
-            new Thread( new Runnable() {
+            new Thread(new Runnable() {
                 public void run() {
-                    try{
+                    try {
                         Thread.sleep(200);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -515,7 +504,7 @@ public class TvControl {
 
         @Override
         public void onVideoUnavailable(String inputId, int reason) {
-            Log.d(TAG, "====onVideoUnavailable==inputId =" + inputId +", ===reason ="+ reason);
+            Log.d(TAG, "====onVideoUnavailable==inputId =" + inputId + ", ===reason =" + reason);
             switch (reason) {
                 case TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN:
                 case TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING:
@@ -588,12 +577,12 @@ public class TvControl {
     }
 
     private Intent mDelayedSourceChange;
-    private BroadcastReceiver otherReceiver = new BroadcastReceiver(){
+    private BroadcastReceiver otherReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
             final String action = intent.getAction();
-            Log.d(TAG," receive " + action);
+            Log.d(TAG, " receive " + action);
             if (ACTION_OTP_INPUT_SOURCE_CHANGE.equals(action)) {
                 Intent i = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
                 i.putExtra("from_cec_otp", true);
@@ -607,7 +596,7 @@ public class TvControl {
                     Toast.makeText(mContext, R.string.toast_otp_input_change, Toast.LENGTH_LONG).show();
                     startOtpSource(i);
                 } else {
-                    Log.d(TAG," acitivity not resumed or bootvideo not finished, drop " + ACTION_OTP_INPUT_SOURCE_CHANGE);
+                    Log.d(TAG, " acitivity not resumed or bootvideo not finished, drop " + ACTION_OTP_INPUT_SOURCE_CHANGE);
                 }
             }
         }
@@ -615,6 +604,7 @@ public class TvControl {
 
 
     private boolean mBroadcastsRegistered = false;
+
     private void registerTvBroadcasts() {
         IntentFilter filter = new IntentFilter();
 

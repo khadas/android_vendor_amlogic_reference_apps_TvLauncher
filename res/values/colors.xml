@@ -27,4 +27,11 @@
 
     <color name="main_item_bg">#66000000</color>
 
+    <color name="source_item_focus">#425D8D</color>
+
+    <color name="common_card_item_focus">#2D4772</color>
+
+    <color name="common_card_item_name_normal">#182D53</color>
+    <color name="common_card_item_name_focus">#425D8D</color>
+
 </resources>

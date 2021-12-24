@@ -2,35 +2,35 @@ package com.droidlogic.launcher.livetv;
 
 import android.content.Context;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
+
+import com.droidlogic.launcher.leanback.model.IRowSignalSourceProvider;
+import com.droidlogic.launcher.leanback.presenter.content.TvCardPresenter;
 
 import java.util.List;
 
-public class TvRow {
-    private String  mTitle;
-    private Context mContext;
-    private ArrayObjectAdapter mGridAdapter;
-    private ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new TvCardPresenter());
+public class TvRow implements IRowSignalSourceProvider {
 
-    public TvRow(Context context, String title, ArrayObjectAdapter gridAdapter){
+    private final Context mContext;
+    private final ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new TvCardPresenter());
+
+    public TvRow(Context context) {
         mContext = context;
-        mTitle   = title;
-        mGridAdapter = gridAdapter;
-
         load();
-
-        HeaderItem header = new HeaderItem(0, mTitle);
-        mGridAdapter.add(new ListRow(header, mListRowAdapter));
     }
 
-    public void load(){
+    public void load() {
         for (MediaModel mediaModel : MediaModel.getDTVModels(mContext)) {
             mListRowAdapter.add(mediaModel);
         }
     }
 
-    public void update(){
+    @Override
+    public ArrayObjectAdapter getListRowAdapter() {
+        return mListRowAdapter;
+    }
+
+    @Override
+    public void update() {
         int i;
 
         List<MediaModel> list = MediaModel.getDTVModels(mContext);
@@ -53,4 +53,5 @@ public class TvRow {
             }
         }
     }
+
 }

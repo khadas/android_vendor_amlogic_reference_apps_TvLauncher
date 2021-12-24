@@ -1,20 +1,23 @@
 
 package com.droidlogic.launcher.app;
 
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
+
 import android.app.ActivityManager;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
+import android.content.pm.ActivityInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
-import android.util.Log;
+import android.graphics.drawable.Drawable;
 
+import java.lang.reflect.Field;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,13 +29,14 @@ import java.util.List;
 public class AppDataManage {
     private final Context mContext;
 
-    private String []mHideAppName = {
+    private final String[] mHideAppName = {
             "com.droidlogic.exoplayer2.demo",
             "com.droidlogic.launcher",
             "com.droidlogic.appinstall",
             "com.droidlogic.android.tv",
             "org.chromium.webview_shell",
             "com.android.deskclock",
+            PKG_NAME_MIRACAST
     };
 
     public AppDataManage(Context context) {
@@ -41,16 +45,16 @@ public class AppDataManage {
 
 
     public HashMap<String, Integer> getAPPUseList() {
-        final UsageStatsManager usageStatsManager = (UsageStatsManager)mContext.getSystemService(Context.USAGE_STATS_SERVICE);
-        if(usageStatsManager == null) {
+        final UsageStatsManager usageStatsManager = (UsageStatsManager) mContext.getSystemService(Context.USAGE_STATS_SERVICE);
+        if (usageStatsManager == null) {
             return null;
         }
 
-        long end   = System.currentTimeMillis() ;
+        long end = System.currentTimeMillis();
         HashMap<String, Integer> map = new HashMap();
         List<UsageStats> usageStatsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_COUNT, -1, end);
-        if (usageStatsList != null){
-            for (UsageStats stat : usageStatsList){
+        if (usageStatsList != null) {
+            for (UsageStats stat : usageStatsList) {
                 map.put(stat.getPackageName(), stat.mLaunchCount);
             }
         }
@@ -60,11 +64,11 @@ public class AppDataManage {
 
 
     public ArrayList<AppModel> getAppsList() {
-        LauncherApps mLauncherApps = (LauncherApps)mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
-        ActivityManager mActivityManager = (ActivityManager)mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        LauncherApps mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
+        ActivityManager mActivityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
         ArrayList<AppModel> localArrayList = new ArrayList<>();
         final List<LauncherActivityInfo> apps = mLauncherApps.getActivityList(null, android.os.Process.myUserHandle());
-        if(apps == null){
+        if (apps == null) {
             return localArrayList;
         }
         Collections.sort(apps, getAppNameComparator());
@@ -74,14 +78,23 @@ public class AppDataManage {
         if (apps != null) {
             for (int i = 0; i < apps.size(); i++) {
                 LauncherActivityInfo info = apps.get(i);
-
                 AppModel localAppBean = new AppModel();
+                Class<LauncherActivityInfo> cls = LauncherActivityInfo.class;
+                try {
+                    Field fileInfo = cls.getDeclaredField("mActivityInfo");
+                    fileInfo.setAccessible(true);
+                    ActivityInfo activityInfo = (ActivityInfo) fileInfo.get(info);
+                    Drawable banner = activityInfo.loadBanner(mContext.getPackageManager());
+                    localAppBean.setBanner(banner);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 localAppBean.setIcon(info.getBadgedIcon(iconDpi));
                 localAppBean.setName(info.getLabel().toString());
                 localAppBean.setPackageName(info.getComponentName().getPackageName());
                 localAppBean.setLauncherName(info.getComponentName().getPackageName());
                 //Log.d("APP", "---GET APP:" + localAppBean.getPackageName());
-                if (!isHideApp(localAppBean.getPackageName())){
+                if (!isHideApp(localAppBean.getPackageName())) {
                     localArrayList.add(localAppBean);
                 }
             }
@@ -107,6 +120,7 @@ public class AppDataManage {
                 break;
             ResolveInfo localResolveInfo = (ResolveInfo) localIterator.next();
             AppModel localAppBean = new AppModel();
+            localAppBean.setBanner(localResolveInfo.activityInfo.loadBanner(localPackageManager));
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
             localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
             localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
@@ -123,7 +137,7 @@ public class AppDataManage {
                 e.printStackTrace();
             }
             //Log.d("APP", "GET APP:" + localAppBean.getPackageName());
-            if (!isHideApp(localAppBean.getPackageName())){
+            if (!isHideApp(localAppBean.getPackageName())) {
                 localArrayList.add(localAppBean);
             }
         }
@@ -146,11 +160,12 @@ public class AppDataManage {
                 break;
             ResolveInfo localResolveInfo = (ResolveInfo) localIterator.next();
             String pkgName = localResolveInfo.activityInfo.packageName;
-            if (!packName.equals(pkgName)){
+            if (!packName.equals(pkgName)) {
                 continue;
             }
 
             AppModel localAppBean = new AppModel();
+            localAppBean.setBanner(localResolveInfo.activityInfo.loadBanner(localPackageManager));
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
             localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
             localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
@@ -189,6 +204,7 @@ public class AppDataManage {
                 break;
             ResolveInfo localResolveInfo = (ResolveInfo) localIterator.next();
             AppModel localAppBean = new AppModel();
+            localAppBean.setBanner(localResolveInfo.activityInfo.loadBanner(localPackageManager));
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
             localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
             localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
@@ -210,8 +226,8 @@ public class AppDataManage {
     }
 
 
-    private boolean isHideApp(String packName){
-        for(String name : mHideAppName){
+    private boolean isHideApp(String packName) {
+        for (String name : mHideAppName) {
             if (name.equals(packName))
                 return true;
         }
@@ -235,6 +251,7 @@ public class AppDataManage {
                 break;
             ResolveInfo localResolveInfo = localIterator.next();
             AppModel localAppBean = new AppModel();
+            localAppBean.setBanner(localResolveInfo.activityInfo.loadBanner(localPackageManager));
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
             localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
             localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
@@ -254,7 +271,7 @@ public class AppDataManage {
         return localArrayList;
     }
 
-    private  final Comparator<LauncherActivityInfo> getAppNameComparator() {
+    private final Comparator<LauncherActivityInfo> getAppNameComparator() {
         final Collator collator = Collator.getInstance();
         final HashMap<String, Integer> map = getAPPUseList();
 
@@ -267,10 +284,10 @@ public class AppDataManage {
                     Integer n1 = map.get(a.getComponentName().getPackageName());
                     Integer n2 = map.get(b.getComponentName().getPackageName());
 
-                    if (n1 != null){
+                    if (n1 != null) {
                         num1 = n1;
                     }
-                    if (n2 != null){
+                    if (n2 != null) {
                         num2 = n2;
                     }
 
