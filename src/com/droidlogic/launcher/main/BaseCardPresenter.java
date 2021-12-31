@@ -1,13 +1,10 @@
 package com.droidlogic.launcher.main;
 
 import android.content.Context;
-import android.support.v17.leanback.widget.ImageCardView;
-import android.support.v17.leanback.widget.Presenter;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import androidx.leanback.widget.ImageCardView;
+import androidx.leanback.widget.Presenter;
 
-import com.droidlogic.launcher.R;
+import android.view.ViewGroup;
 
 
 public class BaseCardPresenter extends Presenter {

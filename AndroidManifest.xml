@@ -14,12 +14,15 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.droidlogic.launcher"
-    android:sharedUserId="android.uid.system">
+    android:sharedUserId="android.uid.system"
+    tools:ignore="MissingLeanbackLauncher">
 
     <uses-sdk
-        android:minSdkVersion="26"
-        android:targetSdkVersion="27" />
+        android:minSdkVersion="30"
+        android:targetSdkVersion="30"
+        tools:ignore="GradleOverrides,OldTargetApi" />
 
     <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -55,7 +58,9 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme1">
+        android:theme="@style/AppTheme1"
+        android:appComponentFactory="@string/app_name"
+        tools:replace="android:appComponentFactory">
 
         <uses-library android:name="droidlogic.software.core" />
         <uses-library android:name="droidlogic.tv.software.core" />

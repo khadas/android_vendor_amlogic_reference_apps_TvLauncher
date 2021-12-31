@@ -1,8 +1,8 @@
 package com.droidlogic.launcher.leanback.listrow;
 
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.ListRow;
-import android.support.v17.leanback.widget.ObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.ObjectAdapter;
 
 import com.droidlogic.launcher.leanback.model.ITvHeader;
 import com.droidlogic.launcher.leanback.presenter.content.TvHeaderPresenter;

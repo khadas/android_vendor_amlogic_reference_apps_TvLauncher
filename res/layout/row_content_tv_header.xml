@@ -36,7 +36,7 @@
 
     </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
 
-    <android.support.v17.leanback.widget.VerticalGridView
+    <androidx.leanback.widget.VerticalGridView
         android:id="@+id/vtl_view_source_list"
         android:layout_width="227dp"
         android:layout_height="320dp"
@@ -46,7 +46,7 @@
         app:focusOutEnd="true"
         app:focusOutFront="true" />
 
-    <android.support.v17.leanback.widget.VerticalGridView
+    <androidx.leanback.widget.VerticalGridView
         android:id="@+id/vtl_view_system_function"
         android:layout_width="439dp"
         android:layout_height="320dp"

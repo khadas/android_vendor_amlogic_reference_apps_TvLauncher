@@ -1,8 +1,8 @@
 package com.droidlogic.launcher.leanback.view;
 
 import android.content.Context;
-import android.support.v17.leanback.widget.HorizontalGridView;
-import android.support.v7.widget.GridLayoutManager;
+import androidx.leanback.widget.HorizontalGridView;
+import androidx.recyclerview.widget.GridLayoutManager;
 import android.util.AttributeSet;
 import android.view.View;
 

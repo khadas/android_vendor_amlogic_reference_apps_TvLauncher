@@ -1,10 +1,10 @@
 package com.droidlogic.launcher.leanback.presenter.title;
 
 import android.graphics.Color;
-import android.support.v17.leanback.widget.HeaderItem;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.Row;
-import android.support.v17.leanback.widget.RowHeaderPresenter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.Row;
+import androidx.leanback.widget.RowHeaderPresenter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

@@ -1,59 +1,25 @@
 	android_library_import {
-	   name: "leanback17",
-	   aars: ["leanback-v17-27.0.0.aar"],
+	   name: "gifdecoder",
+	   aars: ["gifdecoder-4.12.0.aar"],
 	   sdk_version: "current",
 	}
 
 	android_library_import {
-	   name: "palette-v7-27",
-	   aars: ["palette-v7-27.1.1.aar"],
+	   name: "glidev4",
+	   aars: ["glide-4.12.0.aar"],
 	   sdk_version: "current",
 	}
 
-	android_library_import {
-	   name: "constraint-layout2",
-	   aars: ["constraint-layout-2.0.4.aar"],
-	   sdk_version: "current",
-    }
-
 	java_import {
-		name: "constraint-layout-solver2",
-		jars: ["constraint-layout-solver-2.0.4.jar"],
+		name: "glide-annotations",
+		jars: ["annotations-4.12.0.jar"],
 		host_supported: true,
 		sdk_version: "current",
 	}
 
 	java_import {
-		name: "supports-v4-jar",
-		jars: ["supports-v4.jar"],
-		host_supported: true,
-		sdk_version: "current",
-	}
-
-	java_import {
-		name: "appcompat-jar",
-		jars: ["appcompat7.jar"],
-		host_supported: true,
-		sdk_version: "current",
-	}
-
-	java_import {
-		name: "leanback-jar",
-		jars: ["leanback17.jar"],
-		host_supported: true,
-		sdk_version: "current",
-	}
-	
-	java_import {
-		name: "preference-leanback-jar",
-		jars: ["preference-leanback.jar"],
-		host_supported: true,
-		sdk_version: "current",
-	}
-
-	java_import {
-		name: "glide-3.4.0-jar",
-		jars: ["glide-3.4.0.jar"],
+		name: "disklrucache",
+		jars: ["disklrucache-4.12.0.jar"],
 		host_supported: true,
 		sdk_version: "current",
 	}

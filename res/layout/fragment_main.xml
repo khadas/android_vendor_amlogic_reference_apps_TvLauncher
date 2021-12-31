@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".main.MainFragment">
 
-    <android.support.v17.leanback.widget.VerticalGridView
+    <androidx.leanback.widget.VerticalGridView
         android:id="@+id/vtl_grid_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -1,6 +1,6 @@
 package com.droidlogic.launcher.leanback.model;
 
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.ArrayObjectAdapter;
 
 public interface IRowSignalSourceProvider {
 

@@ -1,6 +1,6 @@
 package com.droidlogic.launcher.input;
 
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.ArrayObjectAdapter;
 
 import com.droidlogic.launcher.leanback.model.IRowSignalSourceProvider;
 import com.droidlogic.launcher.leanback.presenter.content.InputSourcePresenter;

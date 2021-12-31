@@ -1,7 +1,7 @@
 package com.droidlogic.launcher.leanback.presenter.content;
 
 import android.graphics.drawable.Drawable;
-import android.support.v17.leanback.widget.Presenter;
+import androidx.leanback.widget.Presenter;
 import android.view.ViewGroup;
 import android.widget.TextView;
 

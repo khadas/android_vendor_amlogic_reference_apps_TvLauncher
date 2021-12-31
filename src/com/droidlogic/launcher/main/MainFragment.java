@@ -1,6 +1,5 @@
 package com.droidlogic.launcher.main;
 
-import static com.bumptech.glide.gifdecoder.GifHeaderParser.TAG;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -13,11 +12,11 @@ import android.media.tv.TvView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
-import android.support.v17.leanback.app.BackgroundManager;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
-import android.support.v17.leanback.widget.ItemBridgeAdapter;
-import android.support.v17.leanback.widget.VerticalGridView;
+import androidx.annotation.Nullable;
+import androidx.leanback.app.BackgroundManager;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.ItemBridgeAdapter;
+import androidx.leanback.widget.VerticalGridView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,6 +43,8 @@ import com.droidlogic.launcher.recommend.RecommendRow;
 import java.util.List;
 
 public class MainFragment extends Fragment {
+
+    private final String TAG=MainFragment.class.getName();
 
     private static final String PACKAGE_LIVE_TV = "com.droidlogic.android.tv";
 

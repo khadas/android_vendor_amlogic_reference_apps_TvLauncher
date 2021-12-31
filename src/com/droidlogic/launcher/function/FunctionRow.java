@@ -1,7 +1,7 @@
 package com.droidlogic.launcher.function;
 
 import android.content.Context;
-import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.ArrayObjectAdapter;
 
 
 import com.droidlogic.launcher.leanback.presenter.content.SystemFunctionPresenter;

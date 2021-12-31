@@ -14,16 +14,15 @@ android_app {
 	libs: [
 		"droidlogic",
 		"droidlogic-tv",
-		"glide-3.4.0-jar",	
-		"supports-v4-jar",
-		"appcompat-jar",		
-		"preference-leanback-jar",			
+		"glide-annotations",
+		"disklrucache",
 	],
 	static_libs: [
-		"leanback17",
-		"android-support-v4",
-		"android-support-v7-appcompat",
-		"android-support-v17-leanback",
+		"gifdecoder",
+		"glidev4",
+		"androidx.palette_palette",
+		"androidx.appcompat_appcompat",
+		"androidx.leanback_leanback",
 	],
 
     privileged: true,
