@@ -108,14 +108,16 @@ public class InputSourceManager {
     }
 
     public void setSearchType(String name){
-        if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_atv))) {
-            DroidLogicTvUtils.setSearchInputId(mContext, name, false); //just for force update channel
-            DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
-        } else {//if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
-            DroidLogicTvUtils.setSearchInputId(mContext, name, false); //just for force update channel
-            String country = DroidLogicTvUtils.getCountry(mContext);
-            ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
-            DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
+        if (DroidLogicTvUtils.isChina(mContext)) {
+            if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_atv))) {
+                DroidLogicTvUtils.setSearchInputId(mContext, name, false); //just for force update channel
+                DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
+            } else if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
+                DroidLogicTvUtils.setSearchInputId(mContext, name, false); //just for force update channel
+                String country = DroidLogicTvUtils.getCountry(mContext);
+                ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
+                DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
+            }
         }
     }
 
@@ -166,7 +168,7 @@ public class InputSourceManager {
                 if (!input.isPassthroughInput()) {
                     if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_atv))) {
                         DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
-                    } else {//if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
+                    } else if (TextUtils.equals(name, mContext.getResources().getString(R.string.input_dtv))) {
                         String country = DroidLogicTvUtils.getCountry(mContext);
                         ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
                         DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
