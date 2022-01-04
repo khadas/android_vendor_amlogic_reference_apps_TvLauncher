@@ -8,6 +8,7 @@ import android.hardware.hdmi.HdmiDeviceInfo;
 import android.hardware.hdmi.HdmiTvClient;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
+import android.os.Handler;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -95,15 +96,11 @@ public class InputSourceManager {
             R.drawable.input_display_port,
     };
 
-
-    public InputSourceManager(Context context, TvControlManager.StatusSourceConnectListener listener) {
+    public InputSourceManager(Context context, TvInputManager.TvInputCallback callback, Handler handle) {
         mContext = context;
 
         mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
-        mTvControlManager = TvControlManager.getInstance();
-        if (mTvControlManager != null) {
-            mTvControlManager.SetSourceConnectListener(listener);
-        }
+        mTvInputManager.registerCallback(callback, handle);
         mHdmiControlManager = (HdmiControlManager) context.getSystemService(Context.HDMI_CONTROL_SERVICE);
         if (mHdmiControlManager != null) {
             mTvClient = mHdmiControlManager.getTvClient();
@@ -400,14 +397,14 @@ public class InputSourceManager {
         TvControlManager.SourceInput tvSourceInput = DroidLogicTvUtils.parseTvSourceInputFromDeviceId(deviceId);
         int connectStatus = -1;
         if (tvSourceInput != null) {
-            connectStatus = mTvControlManager.GetSourceConnectStatus(tvSourceInput);
+            connectStatus = mTvInputManager.getInputState(input.getId());
         } else {
 //            if (DEBUG) {
 //                Log.w(TAG, "===== cannot find tvSourceInput");
 //            }
         }
 
-        return !input.isPassthroughInput() || 1 == connectStatus || deviceId == DroidLogicTvUtils.DEVICE_ID_SPDIF;
+        return !input.isPassthroughInput() || mTvInputManager.INPUT_STATE_CONNECTED == connectStatus || deviceId == DroidLogicTvUtils.DEVICE_ID_SPDIF;
     }
 
     private class InputsComparator implements Comparator<TvInputInfo> {

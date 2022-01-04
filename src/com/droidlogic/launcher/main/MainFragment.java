@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.tv.TvInputManager;
 import android.media.tv.TvView;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppRow;
@@ -91,13 +91,11 @@ public class MainFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         //===this is for live tv=================
-        mInputSource = new InputSourceManager(getActivity(), new SourceConnectListener());
+        mInputSource = new InputSourceManager(getActivity(), new SourceStatusListener(), mLoadHandler);
         //=======================================
         mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
         prepareBackgroundManager();
         initView(getView());
-
-        test();
     }
 
     @Override
@@ -340,9 +338,9 @@ public class MainFragment extends Fragment {
     };
 
     //====this is for live tv===========
-    private class SourceConnectListener implements TvControlManager.StatusSourceConnectListener {
-        public void onSourceConnectChange(TvControlManager.SourceInput source, int connectionState) {
-            Log.d(TAG, "source " + source.name() + " connect:" + connectionState);
+    private class SourceStatusListener extends TvInputManager.TvInputCallback {
+        public void onInputStateChanged(String inputId, int state) {
+            Log.d(TAG, "source :" + inputId + " connect:" + state);
             tvHeaderListRow.signalUpdate();
         }
     }
