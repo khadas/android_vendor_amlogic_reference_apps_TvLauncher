@@ -197,6 +197,15 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mInputSource.startInputAPP(inputId);
     }
 
+    private void startPlayInputSource(String inputId, String name) {
+        if (name.equals("ATV") && !mInputSource.isAtvSearch()) {
+            killTvApp(); // for atv no channel
+        }
+        mTvControl.releasePlayingTv();
+        mInputSource.switchInput(inputId, name);
+        mTvControl.play(inputId);
+    }
+
     private void initTime() {
         TextView view = (TextView) getView().findViewById(R.id.tv_date);
         mTimeDisplay = new TimeDisplay(getActivity(), view);
@@ -253,9 +262,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     }
                 } else if (item instanceof InputModel) {
                     InputModel model = (InputModel) item;
-                    startInputSourceApp(model.getId(), model.getName());
+                    //startInputSourceApp(model.getId(), model.getName());
+                    startPlayInputSource(model.getId(), model.getName());
                 } else if (item instanceof TvViewModel) {
-                    ((TvViewModel) item).lunch(getContext());
+                    //((TvViewModel) item).lunch(getContext());
+                    mTvControl.releasePlayingTv();
+                    mInputSource.startInputAPP(null);
                 }
             }
         }));

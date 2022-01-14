@@ -22,60 +22,55 @@ import android.text.TextUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.droidlogic.app.DataProviderManager;
 import com.droidlogic.app.SystemControlManager;
-import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
-import com.droidlogic.app.tv.TvDataBaseManager;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.util.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TvControl {
 
     private static final String TAG = "TvControl";
-    public static final String PROP_TV_PREVIEW = "vendor.tv.is.preview.window";
-    public static final String DTVKIT_PACKAGE = "org.dtvkit.inputsource";
+    public static final String PROP_TV_PREVIEW  = "vendor.tv.is.preview.window";
+    public static final String DTVKIT_PACKAGE   = "org.dtvkit.inputsource";
 
-    public static String COMPONENT_TV_APP = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
-    public static String COMPONENT_LIVE_TV = "com.droidlogic.android.tv/com.android.tv.TvActivity";
+    public static String COMPONENT_TV_APP       = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
+    public static String COMPONENT_LIVE_TV      = "com.droidlogic.android.tv/com.android.tv.TvActivity";
 
     private static final String ACTION_OTP_INPUT_SOURCE_CHANGE = "droidlogic.tv.action.OTP_INPUT_SOURCE_CHANGED";
 
-    private static final int INPUT_ID_LENGTH = 3;
-
-    private static final int TV_MSG_PLAY_TV = 0;
+    private static final int TV_MSG_PLAY_TV         = 0;
     private static final int TV_MSG_BOOTUP_TO_TVAPP = 1;
 
-    private TvViewManager mViewManager;
-    private TvConfig mTvConfig;
-    private Context mContext;
+    private TvViewManager   mViewManager;
+    private TvConfig        mTvConfig;
+    private Context         mContext;
 
     private SystemControlManager mSystemControlManager = SystemControlManager.getInstance();
-    private TvDataBaseManager mTvDataBaseManager;
-    private TvInputManager mTvInputManager;
 
-    private boolean isRadioChannel = false;
-    private boolean isChannelBlocked = false;
-    private boolean isAvNoSignal = false;
+    private TvInputManager      mTvInputManager;
+    private ChannelDataManager  mChannelDataManager;
 
-    private boolean mTvStartPlaying = false;
+    private boolean isRadioChannel      = false;
+    private boolean isChannelBlocked    = false;
+    private boolean isAvNoSignal        = false;
+    private boolean mTvStartPlaying     = false;
 
-    private String mTvInputId;
-    private Uri mChannelUri;
-    private long mChannelId = -1;
+    private String  mTvInputId;
+    private Uri     mChannelUri;
+    private long    mPlayChannelId = -1;
+    private String  mPlayInputId;
 
     private boolean mActivityResumed;
 
     public TvControl(Context context, TvView mTvView, TextView prompt) {
-        mContext = context;
-        mViewManager = new TvViewManager(context, mTvView, prompt);
-        mTvConfig = new TvConfig(context);
-        mTvInputManager = (TvInputManager) mContext.getSystemService(Context.TV_INPUT_SERVICE);
-        mTvDataBaseManager = new TvDataBaseManager(mContext);
-        COMPONENT_TV_APP = COMPONENT_LIVE_TV;
+        mContext            = context;
+        mViewManager        = new TvViewManager(context, mTvView, prompt);
+        mTvConfig           = new TvConfig(context);
+        mTvInputManager     = (TvInputManager) mContext.getSystemService(Context.TV_INPUT_SERVICE);
+		mChannelDataManager = new ChannelDataManager(context);
+        COMPONENT_TV_APP    = COMPONENT_LIVE_TV;
 
         mViewManager.setCallback(new TvViewInputCallback());
     }
@@ -84,14 +79,40 @@ public class TvControl {
         mViewManager.setTvViewPosition(left, top, right, bottom, transY, duration);
     }
 
+    /*
+     * play a channel in small window
+     * */
     public void play(long id) {
-        mChannelId = id;
+        mPlayInputId   = getCurrentInputSourceId();
+        if (id == -1){
+            mPlayChannelId = getPlayChannelId(mPlayInputId);
+        }
+        else{
+            mPlayChannelId = id;
+        }
+
+        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+        mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
+    }
+
+    /*
+    * play a source input channel in small window
+    * */
+    public void play(String inputId) {
+        mPlayInputId   = inputId;
+        if(isTunerSource(inputId)) {
+            mPlayChannelId = getPlayChannelId(inputId);
+        }
+        else{
+            mPlayChannelId = -1;
+        }
+
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
         mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
     }
 
     public void launchTvApp(long id) {
-        mChannelId = id;
+        mPlayChannelId = id;
         mTvHandler.removeMessages(TV_MSG_BOOTUP_TO_TVAPP);
         mTvHandler.sendEmptyMessage(TV_MSG_BOOTUP_TO_TVAPP);
     }
@@ -133,55 +154,40 @@ public class TvControl {
     }
 
     private boolean isTunerSource(String inputId) {
-        TvInputInfo tvInputInfo = mTvInputManager.getTvInputInfo(inputId);
-        return tvInputInfo != null && !tvInputInfo.isPassthroughInput();
+        return !mTvInputManager.getTvInputInfo(inputId).isPassthroughInput();
     }
 
     private boolean isCurrentChannelBlocked() {
-        return DataProviderManager.getBooleanValue(mContext, DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, false);
+        return mChannelDataManager.isCurrentChannelBlocked();
     }
 
     private boolean isCurrentChannelBlockBlocked() {
-        return DataProviderManager.getBooleanValue(mContext, DroidLogicTvUtils.TV_CURRENT_CHANNELBLOCK_STATUS, false);
+        return mChannelDataManager.isCurrentChannelBlockBlocked();
     }
 
     public void setCurrentChannelBlocked(boolean blocked) {
-        DataProviderManager.putBooleanValue(mContext, DroidLogicTvUtils.TV_CURRENT_BLOCK_STATUS, blocked);
+        mChannelDataManager.setCurrentChannelBlocked(blocked);
     }
 
-    public boolean initChannelWhenChannelReady() {
+    public boolean isChannelReady(String inputid, long channelId) {
         boolean result = false;
-        long channelId = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
-        //int deviceId = DataProviderManager.getIntValue(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-        if (channelId != -1) {
-            String inputid = "";
-            Uri channelUri = TvContract.buildChannelUri(channelId);
-            ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
-//            if (currentChannel != null && mChannelId != -1) {
-//                inputid = currentChannel.getInputId();
-//                String cur_inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
-//                if (inputid != null && !inputid.equals(cur_inputid)) {
-//                    DroidLogicTvUtils.setCurrentInputId(mContext, inputid);
-//                }
-//            }
 
-            inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
-
-            if (currentChannel != null && isTunerSource(inputid)
-                    && currentChannel.isLocked() && mTvInputManager.isParentalControlsEnabled()) {
-                isChannelBlocked = true;
-            } else {
-                isChannelBlocked = false;
-            }
-        } else {
-            isChannelBlocked = false;
-            String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
-            if (isTunerSource(inputid)) {
+        isChannelBlocked = false;
+        if (isTunerSource(inputid)){
+            if (channelId == -1) {
                 setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
                 return false;
             }
+
+            Uri channelUri = TvContract.buildChannelUri(channelId);
+            if (mChannelDataManager.isChennelLocked(channelUri) && mTvInputManager.isParentalControlsEnabled()) {
+                isChannelBlocked = true;
+            }
         }
-        Logger.d(TAG, "initChannelWhenChannelReady isChannelBlocked = " + isChannelBlocked + ", isCurrentChannelBlockBlocked = " + isCurrentChannelBlockBlocked());
+        else{
+            isChannelBlocked = false;
+        }
+
         if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
             result = true;
         } else {
@@ -192,182 +198,72 @@ public class TvControl {
         return result;
     }
 
-    private boolean compareInputId(String inputId, TvInputInfo info) {
-        Logger.d(TAG, "compareInputId currentInputId " + inputId + " info " + info);
-        if (null == info) {
-            Logger.d(TAG, "compareInputId info null");
-            return false;
-        }
-        String infoInputId = info.getId();
-        if (TextUtils.isEmpty(inputId) || TextUtils.isEmpty(infoInputId)) {
-            Logger.d(TAG, "inputId empty");
-            return false;
-        }
-        if (TextUtils.equals(inputId, infoInputId)) {
-            return true;
-        }
-
-        String[] inputIdArr = inputId.split("/");
-        String[] infoInputIdArr = infoInputId.split("/");
-        // InputId is like com.droidlogic.tvinput/.services.Hdmi1InputService/HW5
-        if (inputIdArr.length == INPUT_ID_LENGTH && infoInputIdArr.length == INPUT_ID_LENGTH) {
-            // For hdmi device inputId could change to com.droidlogic.tvinput/.services.Hdmi2InputService/HDMI200008
-            if (inputIdArr[0].equals(infoInputIdArr[0]) && inputIdArr[1].equals(infoInputIdArr[1])) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void setChannelUri(long channelId) {
-        Uri channelUri = TvContract.buildChannelUri(channelId);
-        ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
-        String currentSignalType = DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
-                ? TvContract.Channels.TYPE_ATSC_T : DroidLogicTvUtils.getCurrentSignalType(mContext);
-        Logger.d(TAG, "channelid = " + channelId + "   [currentChannel] =" + currentChannel);
-        if (currentChannel != null) {
-            if (!TvContract.Channels.TYPE_OTHER.equals(currentChannel.getType())) {
-                if (DroidLogicTvUtils.isAtscCountry(mContext)) {
-                    if (currentChannel.getSignalType().equals(currentSignalType)) {
-                        isRadioChannel = ChannelInfo.isRadioChannel(currentChannel);
-                        mChannelUri = channelUri;
-                        setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
-                    }
-                } else if (DroidLogicTvUtils.isATV(mContext) && currentChannel.isAnalogChannel()) {
-                    isRadioChannel = ChannelInfo.isRadioChannel(currentChannel);
-                    mChannelUri = channelUri;
-                    setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
-                } else if (DroidLogicTvUtils.isDTV(mContext) && currentChannel.isDigitalChannel()) {
-                    isRadioChannel = ChannelInfo.isRadioChannel(currentChannel);
-                    mChannelUri = channelUri;
-                    setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
-                } else {
-                    if (TextUtils.equals(DroidLogicTvUtils.getSearchInputId(mContext), currentChannel.getInputId())) {
-                        isRadioChannel = ChannelInfo.isRadioChannel(currentChannel);
-                        mChannelUri = channelUri;
-                        setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
-                    }
-                }
-            } else {
-                mChannelUri = TvContract.buildChannelUri(channelId);
+    private void setChannelUri(boolean isPassthroughtInput, long channelId) {
+        if (!isPassthroughtInput) {
+            mChannelUri = TvContract.buildChannelUri(channelId);
+            if (channelId != -1) {
+                isRadioChannel = mChannelDataManager.isRadioChannel(mChannelUri);
+                setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
             }
         } else {
-            ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(mTvInputId, ChannelInfo.COMMON_PROJECTION, null, null);
-            if (channelList != null && channelList.size() > 0) {
-                for (int i = 0; i < channelList.size(); i++) {
-                    ChannelInfo channel = channelList.get(i);
-                    if (TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
-                        if (TextUtils.equals(DroidLogicTvUtils.getSearchInputId(mContext), channel.getInputId())) {
-                            mChannelUri = channel.getUri();
-                            Logger.d(TAG, "current other type channel not exisit, find a new channel instead: " + mChannelUri);
-                            return;
-                        }
-                    } else if (DroidLogicTvUtils.isAtscCountry(mContext)) {
-                        if (channel.getSignalType().equals(currentSignalType)) {
-                            mChannelUri = channel.getUri();
-                            Logger.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
-                            return;
-                        }
-                    } else {
-                        if (DroidLogicTvUtils.isATV(mContext) && channel.isAnalogChannel()) {
-                            mChannelUri = channel.getUri();
-                            Logger.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
-                            return;
-                        } else if (DroidLogicTvUtils.isDTV(mContext) && channel.isDigitalChannel()) {
-                            mChannelUri = channel.getUri();
-                            Logger.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
-                            return;
-                        }
-                    }
-                }
-            } else {
-                mChannelUri = TvContract.buildChannelUri(-1);
-            }
+            mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
         }
     }
 
-    public void tuneTvView() {
-        stopMusicPlayer();
-
-        //float window don't need load PQ
-        mSystemControlManager.setProperty(PROP_TV_PREVIEW, "true");
-
+    public void tuneTvView(String inputid, long channelId) {
+        isRadioChannel = false;
         mTvInputId = null;
         mChannelUri = null;
 
-        setTvPrompt(TvPrompt.TV_PROMPT_TUNING/*TV_PROMPT_GOT_SIGNAL*/);
+        stopMusicPlayer();
+        //float window don't need load PQ
+        mSystemControlManager.setProperty(PROP_TV_PREVIEW, "true");
+        setTvPrompt(TvPrompt.TV_PROMPT_TUNING);
 
-        int device_id;
-        long channel_id;
-        device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-        channel_id = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
-        isRadioChannel = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO, 0) == 1 ? true : false;
-        Logger.d(TAG, "TV get device_id=" + device_id + " dtv=" + channel_id);
-
-        String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
-        List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
-        Logger.d(TAG, "----input id:" + inputid);
-        TvInputInfo currentInfo = null;
-        for (TvInputInfo info : input_list) {
-            /*if (parseDeviceId(info.getId()) == device_id) {
-                mTvInputId = info.getId();
-            }*/
-            if (compareInputId(inputid, info)) {
-                mTvInputId = info.getId();
-                currentInfo = info;
-                break;
-            }
-        }
-
-        if (TextUtils.isEmpty(mTvInputId)) {
-            Logger.i(TAG, "device" + device_id + " is not exist");
+        TvInputInfo currentInputInfo = getInputSourceInfo(inputid);
+        if (TextUtils.isEmpty(inputid) || currentInputInfo == null) {
+            Logger.i(TAG, "input " + inputid + " is not exist");
             setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
             return;
-        } else {
-            if (isTunerSource(inputid)) {
-                setChannelUri(channel_id);
-            } else {
-                mChannelUri = TvContract.buildChannelUriForPassthroughInput(mTvInputId);
-            }
         }
 
-        Logger.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
-        if (mChannelUri != null && (DroidLogicTvUtils.getChannelId(mChannelUri) > 0
-                || (currentInfo != null && currentInfo.isPassthroughInput()))) {
-            mViewManager.tune(mTvInputId, mChannelUri);
-        }
+        mTvInputId = inputid;
+        boolean isPassthroughtInput = currentInputInfo.isPassthroughInput();
 
-        if (mChannelUri != null && !TvContract.isChannelUriForPassthroughInput(mChannelUri)) {
-            ChannelInfo current = mTvDataBaseManager.getChannelInfo(mChannelUri);
-            if (current != null/* && (!mTvInputManager.isParentalControlsEnabled() ||
-                        (mTvInputManager.isParentalControlsEnabled() && !current.isLocked()))*/) {
-                if (isCurrentChannelBlocked() && !current.getInputId().startsWith(DTVKIT_PACKAGE)) {
-                    Logger.d(TAG, "current channel is blocked");
-                    setTvPrompt(TvPrompt.TV_PROMPT_BLOCKED);
-                } else {
-                    setTvPrompt(TvPrompt.TV_PROMPT_TUNING);
-                    Logger.d(TAG, "TV play tune continue as no channel blocks");
-                }
-            } else {
-                setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
-                mViewManager.setStreamVolume(0);
-                Logger.d(TAG, "TV play not tune as channel blocked");
-            }
-        } else if (mChannelUri == null) {
+        setChannelUri(isPassthroughtInput, channelId);
+        if (mChannelUri == null) {
             Logger.d(TAG, "TV play not tune as mChannelUri null");
             setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
             mViewManager.setStreamVolume(0);
+            return;
         }
 
-        if (device_id == DroidLogicTvUtils.DEVICE_ID_SPDIF) {
-            setTvPrompt(TvPrompt.TV_PROMPT_SPDIF);
+        Logger.d(TAG, "TV play tune inputId=" + inputid + " uri=" + mChannelUri);
+        if (mChannelDataManager.getChannelId(mChannelUri) > 0 || isPassthroughtInput) {
+            mViewManager.enable(true);
+            mViewManager.tune(inputid, mChannelUri);
+        }
+
+        if (!isPassthroughtInput) {
+            if (isCurrentChannelBlocked() && !inputid.startsWith(DTVKIT_PACKAGE)) {
+                Logger.d(TAG, "current channel is blocked");
+                setTvPrompt(TvPrompt.TV_PROMPT_BLOCKED);
+            } else {
+                setTvPrompt(TvPrompt.TV_PROMPT_TUNING);
+                Logger.d(TAG, "TV play tune continue");
+            }
+        }
+        else{
+            if (isSpdifDevice(inputid)) {
+                setTvPrompt(TvPrompt.TV_PROMPT_SPDIF);
+            }
         }
 
         mTvStartPlaying = true;
     }
 
     public void releasePlayingTv() {
-        Logger.d(TAG, "releasePlayingTv");
+        //Logger.d(TAG, "releasePlayingTv");
         isChannelBlocked = false;
         if (mTvStartPlaying) {
             mViewManager.enable(false);
@@ -397,8 +293,8 @@ public class TvControl {
 
     public void startTvApp() {
         try {
-            if (mChannelId >= 0) {
-                Uri channelUri = TvContract.buildChannelUri(mChannelId);
+            if (mPlayChannelId >= 0) {
+                Uri channelUri = TvContract.buildChannelUri(mPlayChannelId);
                 Intent intent = new Intent(Intent.ACTION_VIEW, channelUri);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(intent);
@@ -470,8 +366,8 @@ public class TvControl {
         @Override
         public void onVideoAvailable(String inputId) {
             mViewManager.invalidate();
-            int device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-            if (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2) {
+
+            if (isAVDevice(inputId)) {
                 isAvNoSignal = false;
             }
             if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
@@ -507,18 +403,10 @@ public class TvControl {
         @Override
         public void onVideoUnavailable(String inputId, int reason) {
             Logger.d(TAG, "====onVideoUnavailable==inputId =" + inputId + ", ===reason =" + reason);
-            switch (reason) {
-                case TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN:
-                case TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING:
-                case TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING:
-                    break;
-                default:
-                    break;
-            }
-            int device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-            if (device_id == DroidLogicTvUtils.DEVICE_ID_SPDIF) {
+
+            if (isSpdifDevice(inputId)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_SPDIF);
-            } else if (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2) {
+            } else if (isAVDevice(inputId)) {
                 isAvNoSignal = true;
                 setTvPrompt(TvPrompt.TV_PROMPT_NO_SIGNAL);
             } else if (reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY &&
@@ -543,9 +431,9 @@ public class TvControl {
         public void onContentBlocked(String inputId, TvContentRating rating) {
             Logger.d(TAG, "====onContentBlocked");
             setCurrentChannelBlocked(true);
-            int device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+
             isChannelBlocked = true;
-            if (isAvNoSignal && (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2)) {
+            if (isAvNoSignal && isAVDevice(inputId)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_NO_SIGNAL);
             } else {
                 setTvPrompt(TvPrompt.TV_PROMPT_BLOCKED);
@@ -557,8 +445,8 @@ public class TvControl {
         public void onContentAllowed(String inputId) {
             Logger.d(TAG, "====onContentAllowed ");
             setCurrentChannelBlocked(false);
-            int device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-            if (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2) {
+
+            if (isAVDevice(inputId)) {
                 isAvNoSignal = false;
             }
             isChannelBlocked = false;
@@ -631,8 +519,10 @@ public class TvControl {
                 case TV_MSG_PLAY_TV:
                     if (mTvConfig.isBootvideoStopped()) {
                         Logger.d(TAG, "bootvideo is stopped, and tvapp released, start tv play");
-                        if (initChannelWhenChannelReady()) {
-                            tuneTvView();
+                        String inputId = mPlayInputId;
+                        long channelId = mPlayChannelId;
+                        if (isChannelReady(inputId, channelId)) {
+                            tuneTvView(inputId, channelId);
                         } else {
                             Logger.d(TAG, "screen blocked and no need start tv play");
                         }
@@ -666,4 +556,49 @@ public class TvControl {
         }
     };
 
+    private long getPlayChannelId(String inputId){
+        long channelId = mChannelDataManager.getLastPlayChannelForInput(inputId);
+        if (channelId == -1) {
+            channelId = mChannelDataManager.getLastPlayChannel(inputId);
+        }
+        return channelId;
+    }
+
+    private String getCurrentInputSourceId() {
+        return DroidLogicTvUtils.getCurrentInputId(mContext);
+    }
+
+    private TvInputInfo getInputSourceInfo(String id) {
+        List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
+        if (input_list == null) {
+            return null;
+        }
+
+        for (TvInputInfo tvInput : input_list) {
+            if (tvInput.getId().equals(id)) {
+                return tvInput;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSpdifDevice(String id) {
+        TvInputInfo input = getInputSourceInfo(id);
+        if (input == null) {
+            return false;
+        }
+
+        int deviceId = DroidLogicTvUtils.getHardwareDeviceId(input);
+        return (deviceId == DroidLogicTvUtils.DEVICE_ID_SPDIF);
+    }
+
+    private boolean isAVDevice(String id) {
+        TvInputInfo input = getInputSourceInfo(id);
+        if (input == null) {
+            return false;
+        }
+
+        int deviceId = DroidLogicTvUtils.getHardwareDeviceId(input);
+        return (deviceId == DroidLogicTvUtils.DEVICE_ID_AV1 || deviceId == DroidLogicTvUtils.DEVICE_ID_AV2);
+    }
 }

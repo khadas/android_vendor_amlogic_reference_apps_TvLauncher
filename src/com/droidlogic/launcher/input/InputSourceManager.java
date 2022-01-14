@@ -196,7 +196,7 @@ public class InputSourceManager {
     public void startInputAPP(String id) {
         try {
             if (id == null) {
-                id = TVSOURCE;
+                id = DroidLogicTvUtils.getCurrentInputId(mContext);;
             }
 
             Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
