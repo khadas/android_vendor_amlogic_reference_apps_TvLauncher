@@ -94,11 +94,11 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        registerAppReceiver();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
@@ -118,7 +118,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     public void onResume() {
         super.onResume();
         initTime();
-        registerAppReceiver();
         //===this is for live tv and input Source
         tvHeaderListRow.signalUpdate();
         if (mTvControl != null) {
@@ -139,7 +138,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     public void onStop() {
         super.onStop();
         mTimeDisplay.unInit();
-        unregisterAppReceiver();
         //===this is for live tv=======
         if (mTvControl != null) {
             mTvControl.stop();
@@ -150,6 +148,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterAppReceiver();
         if (mLoadHandler != null) {
             mLoadHandler.removeCallbacksAndMessages(null);
             mLoadHandler = null;
