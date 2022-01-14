@@ -51,4 +51,5 @@
     <string name="no_search_results">No search results found for \'%1$s\'</string>
     <string name="search_result_channel">Channel</string>
     <string name="search_result_program">Program</string>
+    <string name="clean_memory_notice">Memory cleared</string>
 </resources>

@@ -87,4 +87,26 @@
 
     </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
 
+    <com.droidlogic.launcher.leanback.view.BorderEffectLayout
+        android:id="@+id/img_clean"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        app:effectShape="oval"
+        app:layout_constraintBottom_toBottomOf="@id/tv_date"
+       app:layout_constraintLeft_toRightOf="@id/img_search"
+        app:layout_constraintTop_toTopOf="@id/tv_date">
+
+        <ImageView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:padding="3dp"
+            android:background="@drawable/bg_round_status_bar_search"
+            android:src="@drawable/statusbar_clean"
+            tools:ignore="ContentDescription" />
+
+    </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

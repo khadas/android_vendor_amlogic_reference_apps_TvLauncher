@@ -63,7 +63,7 @@ public class PreviewProgram {
         mTitle = other.mTitle;
         mPosterArtUri = other.mPosterArtUri;
         mSearchable = other.mSearchable;
-        mIntentUri=other.mIntentUri;
+        mIntentUri = other.mIntentUri;
     }
 
     public static PreviewProgram fromCursor(Cursor cursor) {
@@ -85,10 +85,10 @@ public class PreviewProgram {
             builder.setPosterArtUrl(cursor.getString(index));
         }
 
-        int columnIndex=cursor.getColumnIndex(TvContract.PreviewPrograms.COLUMN_INTENT_URI);
-        Logger.i("columnIndex:"+columnIndex);
-        if (columnIndex!=-1) {
-            Logger.i("columnIndex:"+cursor.getString(columnIndex));
+        int columnIndex = cursor.getColumnIndex(TvContract.PreviewPrograms.COLUMN_INTENT_URI);
+        Logger.i("columnIndex:" + columnIndex);
+        if (columnIndex != -1) {
+            Logger.i("columnIndex:" + cursor.getString(columnIndex));
             builder.setIntentUri(cursor.getString(columnIndex));
         }
 

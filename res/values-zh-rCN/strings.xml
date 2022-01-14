@@ -34,4 +34,5 @@
     <string name="no_search_results">未搜索到相关内容 \'%1$s\'</string>
     <string name="search_result_channel">频道</string>
     <string name="search_result_program">节目</string>
+    <string name="clean_memory_notice">内存已清理</string>
 </resources>

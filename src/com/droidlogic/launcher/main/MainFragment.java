@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -44,6 +45,7 @@ import com.droidlogic.launcher.livetv.TvControl;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
 import com.droidlogic.launcher.recommend.RecommendRow;
+import com.droidlogic.launcher.util.AppUtils;
 import com.droidlogic.launcher.util.Logger;
 import com.droidlogic.launcher.util.StorageManagerUtil;
 
@@ -75,8 +77,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private boolean broadcastsRegisteredApp = false;
 
     private boolean broadcastsRegisteredNetwork = false;
-
-    private View imgSearch;
 
     private ImageView imgNetWork;
 
@@ -214,15 +214,18 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private void initView(View view) {
         if (view == null) return;
-        imgSearch = view.findViewById(R.id.img_search);
-        imgSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (getActivity() instanceof LeanbackActivity) {
-                    LeanbackActivity activity = (LeanbackActivity) getActivity();
-                    activity.onSearchRequested();
-                }
+        view.findViewById(R.id.img_search).setOnClickListener(view1 -> {
+            if (getActivity() instanceof LeanbackActivity) {
+                LeanbackActivity activity = (LeanbackActivity) getActivity();
+                activity.onSearchRequested();
             }
+        });
+        view.findViewById(R.id.img_clean).setOnClickListener(view12 -> {
+            //long beforeMemory = AppUtils.getAvailMemory(getContext());
+            AppUtils.killRunningProcesses(getContext());
+            //long collectionMemory = (AppUtils.getAvailMemory(getContext()) - beforeMemory);
+            //Logger.i("collectionMemory:" + collectionMemory);
+            Toast.makeText(getContext(), R.string.clean_memory_notice, Toast.LENGTH_SHORT).show();
         });
         imgNetWork = (ImageView) view.findViewById(R.id.iv_network);
         imgTfCard = (ImageView) view.findViewById(R.id.iv_tf_card);
