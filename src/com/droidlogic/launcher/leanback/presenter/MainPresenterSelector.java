@@ -9,17 +9,21 @@ import androidx.leanback.widget.Presenter;
 import androidx.leanback.widget.PresenterSelector;
 import androidx.leanback.widget.Row;
 import androidx.leanback.widget.RowPresenter;
-import android.util.Log;
 
 import com.droidlogic.launcher.input.InputSourceManager;
 import com.droidlogic.launcher.leanback.listrow.TvHeaderListRow;
 import com.droidlogic.launcher.leanback.presenter.content.TvHeaderPresenter;
 import com.droidlogic.launcher.leanback.presenter.title.CusTitlePresenter;
+import com.droidlogic.launcher.util.Logger;
 
 public class MainPresenterSelector extends PresenterSelector {
 
-    private final InputSourceManager inputSource;
+    private InputSourceManager inputSource;
     private final OnItemClickListener onItemClickListener;
+
+    public MainPresenterSelector(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
 
     public MainPresenterSelector(InputSourceManager inputSource, OnItemClickListener onItemClickListener) {
         this.inputSource = inputSource;
@@ -50,7 +54,7 @@ public class MainPresenterSelector extends PresenterSelector {
             protected void initializeRowViewHolder(RowPresenter.ViewHolder holder) {
                 setShadowEnabled(false);
                 setSelectEffectEnabled(false);
-                setKeepChildForeground(false);
+                setKeepChildForeground(true);
                 ViewHolder viewHolder = (ViewHolder) holder;
                 final HorizontalGridView gridView = viewHolder.getGridView();
                 gridView.setClipChildren(false);
@@ -64,7 +68,7 @@ public class MainPresenterSelector extends PresenterSelector {
                 vh.setOnItemViewClickedListener(new OnItemViewClickedListener() {
                     @Override
                     public void onItemClicked(Presenter.ViewHolder viewHolder, Object o, RowPresenter.ViewHolder rowViewHolder, Row row) {
-                        Log.i("MainSelector", "onRowViewAttachedToWindow-->setOnItemViewClickedListener:" + o + "view:" + viewHolder.view);
+                        Logger.i("MainSelector", "onRowViewAttachedToWindow-->setOnItemViewClickedListener:" + o + "view:" + viewHolder.view);
                         if (onItemClickListener != null) {
                             onItemClickListener.onPresenterItemClick(viewHolder.view, o);
                         }

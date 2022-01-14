@@ -1,6 +1,7 @@
 package com.droidlogic.launcher.leanback.view;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -10,15 +11,15 @@ import com.droidlogic.launcher.R;
 public class BorderEffectLayout extends NoEffectLayout {
 
     //white border
+    public static final int EFFECT_SHAPE_RECTANGLE = 0;
     private ImageView borderView;
-
-    public BorderEffectLayout(Context context) {
-        super(context);
-        initView();
-    }
+    private final int effectShape;
 
     public BorderEffectLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.BorderEffectLayout);
+        effectShape = typedArray.getInt(R.styleable.BorderEffectLayout_effectShape, EFFECT_SHAPE_RECTANGLE);
+        typedArray.recycle();
         initView();
     }
 
@@ -32,7 +33,7 @@ public class BorderEffectLayout extends NoEffectLayout {
     private void addBorder() {
         borderView = new ImageView(getContext());
         borderView.setDuplicateParentStateEnabled(true);
-        borderView.setBackgroundResource(R.drawable.bg_white_board);
+        borderView.setBackgroundResource(effectShape == EFFECT_SHAPE_RECTANGLE ? R.drawable.bg_white_board_rectangle : R.drawable.bg_white_board_oval);
         addView(borderView);
     }
 
@@ -46,12 +47,12 @@ public class BorderEffectLayout extends NoEffectLayout {
             return i;
         }
         int focusIndex = indexOfChild(focusedChild);
-        if (i < focusIndex) {
+        if (i == focusIndex) {
+            return childCount - 1;
+        } else if (i < focusIndex) {
             return i;
-        } else if (i < childCount - 1) {
-            return focusIndex + childCount - 1 - i;
         } else {
-            return focusIndex;
+            return i - 1;
         }
     }
 

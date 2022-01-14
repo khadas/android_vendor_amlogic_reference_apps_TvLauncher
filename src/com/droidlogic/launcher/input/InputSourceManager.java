@@ -18,6 +18,7 @@ import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.tv.TvScanConfig;
 import com.droidlogic.launcher.R;
+import com.droidlogic.launcher.util.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -180,10 +181,10 @@ public class InputSourceManager {
 
                 SystemControlManager mSystemControlManager = SystemControlManager.getInstance();
                 if (DTVKITSOURCE.equals(input.getId())) {//DTVKIT SOURCE
-                    if (DEBUG) Log.d(TAG, "DtvKit source");
+                    if (DEBUG) Logger.d(TAG, "DtvKit source");
                     mSystemControlManager.SetDtvKitSourceEnable(1);
                 } else {
-                    if (DEBUG) Log.d(TAG, "Not DtvKit source");
+                    if (DEBUG) Logger.d(TAG, "Not DtvKit source");
                     mSystemControlManager.SetDtvKitSourceEnable(0);
                 }
 
@@ -203,7 +204,7 @@ public class InputSourceManager {
             intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, id);
             mContext.startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Log.e(TAG, " can't start LiveTv:" + e);
+            Logger.e(TAG, " can't start LiveTv:" + e);
         }
     }
 
@@ -222,10 +223,10 @@ public class InputSourceManager {
         TvInputInfo currentInfo = null;
         InputInfo input;
         for (TvInputInfo tvInput : input_list) {
-            //Log.d(TAG, "input:" + tvInput.getType());
+            //Logger.d(TAG, "input:" + tvInput.getType());
 
             if (tvInput.isHidden(mContext)) {
-                Log.d(TAG, "this input hidden");
+                Logger.d(TAG, "this input hidden");
                 continue;
             }
 
@@ -238,7 +239,7 @@ public class InputSourceManager {
 
             CharSequence name = getTitle(mContext, tvInput, audioSystem, hdmiList);
             boolean connect = isInputEnabled(tvInput);
-            //Log.d(TAG, "input:" + name + " connect:"+connect);
+            //Logger.d(TAG, "input:" + name + " connect:"+connect);
             int icon = getIcon(tvInput, connect);
             input = new InputInfo(tvInput.getId(), name.toString(), icon);
             InputInfos.add(input);
@@ -258,7 +259,7 @@ public class InputSourceManager {
 
             String name = themedContext.getString(R.string.input_dtv);
             boolean connect = isInputEnabled(input);
-            Log.d(TAG, "input:" + name + " connect:"+connect);
+            Logger.d(TAG, "input:" + name + " connect:"+connect);
             int icon = getIcon(input, connect);
             InputInfo info = new InputInfo(input.getId(), name.toString(), icon);
             return info;
@@ -307,7 +308,7 @@ public class InputSourceManager {
         } else {
             title = customLabel;
         }
-        //Log.d(TAG, "getTitle default " + title + ", label = " + label + ", customLabel = " + customLabel);
+        //Logger.d(TAG, "getTitle default " + title + ", label = " + label + ", customLabel = " + customLabel);
         if (input.isPassthroughInput()) {
             int portId = DroidLogicTvUtils.getPortId(input);
             if (audioSystem != null && audioSystem.getPortId() == portId) {
@@ -325,7 +326,7 @@ public class InputSourceManager {
         } else if (TextUtils.isEmpty(title)) {
             title = input.getServiceInfo().name;
         }
-        //Log.d(TAG, "getTitle " + title);
+        //Logger.d(TAG, "getTitle " + title);
         return title;
     }
 
@@ -343,13 +344,13 @@ public class InputSourceManager {
             }
         }
 
-        //Log.d(TAG, "getTitleForTuner title " + title + " for package " + packageName);
+        //Logger.d(TAG, "getTitleForTuner title " + title + " for package " + packageName);
         return title;
     }
 
     private List<HdmiDeviceInfo> getHdmiList() {
         if (mTvClient == null) {
-            Log.e(TAG, "mTvClient null!");
+            Logger.e(TAG, "mTvClient null!");
             return null;
         }
         return mTvClient.getDeviceList();
@@ -360,7 +361,7 @@ public class InputSourceManager {
      */
     private HdmiDeviceInfo getOrigHdmiDeviceByPort(int portId, List<HdmiDeviceInfo> hdmiList) {
         if (hdmiList == null) {
-            Log.d(TAG, "mTvInputManager or mTvClient maybe null");
+            Logger.d(TAG, "mTvInputManager or mTvClient maybe null");
             return null;
         }
         for (HdmiDeviceInfo info : hdmiList) {
@@ -373,7 +374,7 @@ public class InputSourceManager {
 
     private HdmiDeviceInfo getOrigHdmiDevice(int logicalAddress, List<HdmiDeviceInfo> hdmiList) {
         if (hdmiList == null) {
-            Log.d(TAG, "mTvInputManager or mTvClient maybe null");
+            Logger.d(TAG, "mTvInputManager or mTvClient maybe null");
             return null;
         }
         for (HdmiDeviceInfo info : hdmiList) {
@@ -387,14 +388,14 @@ public class InputSourceManager {
     private boolean isInputEnabled(TvInputInfo input) {
         HdmiDeviceInfo hdmiInfo = input.getHdmiDeviceInfo();
         if (hdmiInfo != null) {
-            //if (DEBUG) Log.d(TAG, "isInputEnabled:  hdmiInfo="+ hdmiInfo);
+            //if (DEBUG) Logger.d(TAG, "isInputEnabled:  hdmiInfo="+ hdmiInfo);
             return true;
         }
 
         int deviceId = DroidLogicTvUtils.getHardwareDeviceId(input);
 //        if (DEBUG) {
-//            Log.d(TAG, "===== getHardwareDeviceId:tvInputId = " + input.getId());
-//            Log.d(TAG, "===== deviceId : "+ deviceId);
+//            Loggerd(TAG, "===== getHardwareDeviceId:tvInputId = " + input.getId());
+//            Loggerd(TAG, "===== deviceId : "+ deviceId);
 //        }
         TvControlManager.SourceInput tvSourceInput = DroidLogicTvUtils.parseTvSourceInputFromDeviceId(deviceId);
         int connectStatus = -1;
@@ -402,7 +403,7 @@ public class InputSourceManager {
             connectStatus = mTvInputManager.getInputState(input.getId());
         } else {
 //            if (DEBUG) {
-//                Log.w(TAG, "===== cannot find tvSourceInput");
+//                Loggerw(TAG, "===== cannot find tvSourceInput");
 //            }
         }
 

@@ -3,31 +3,36 @@ package com.droidlogic.launcher.main;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvView;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.storage.StorageManager;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.ItemBridgeAdapter;
 import androidx.leanback.widget.VerticalGridView;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppRow;
+import com.droidlogic.launcher.base.LeanbackActivity;
 import com.droidlogic.launcher.function.FunctionModel;
 import com.droidlogic.launcher.input.InputModel;
 import com.droidlogic.launcher.input.InputSourceManager;
@@ -39,12 +44,12 @@ import com.droidlogic.launcher.livetv.TvControl;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
 import com.droidlogic.launcher.recommend.RecommendRow;
+import com.droidlogic.launcher.util.Logger;
+import com.droidlogic.launcher.util.StorageManagerUtil;
 
-import java.util.List;
+public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
-public class MainFragment extends Fragment {
-
-    private final String TAG=MainFragment.class.getName();
+    private final String TAG = MainFragment.class.getName();
 
     private static final String PACKAGE_LIVE_TV = "com.droidlogic.android.tv";
 
@@ -67,7 +72,17 @@ public class MainFragment extends Fragment {
     private VerticalGridView verticalGridView;
     private ArrayObjectAdapter mRowsAdapter;
 
-    private boolean mBroadcastsRegistered = false;
+    private boolean broadcastsRegisteredApp = false;
+
+    private boolean broadcastsRegisteredNetwork = false;
+
+    private View imgSearch;
+
+    private ImageView imgNetWork;
+
+    private ImageView imgTfCard;
+
+    private ImageView imgUsbDevice;
 
     public MainFragment() {
     }
@@ -96,6 +111,7 @@ public class MainFragment extends Fragment {
         mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
         prepareBackgroundManager();
         initView(getView());
+        initStorage();
     }
 
     @Override
@@ -138,6 +154,18 @@ public class MainFragment extends Fragment {
             mLoadHandler.removeCallbacksAndMessages(null);
             mLoadHandler = null;
         }
+        if (storageManagerUtil != null) {
+            storageManagerUtil.unRegisterListener();
+        }
+    }
+
+    private StorageManagerUtil storageManagerUtil;
+
+    private void initStorage() {
+        if (storageManagerUtil == null) {
+            storageManagerUtil = new StorageManagerUtil(getContext().getSystemService(StorageManager.class), MainFragment.this);
+            storageManagerUtil.registerListener();
+        }
     }
 
     //=======this is for live tv
@@ -171,7 +199,7 @@ public class MainFragment extends Fragment {
     }
 
     private void initTime() {
-        TextView view = (TextView) getView().findViewById(R.id.tx_date);
+        TextView view = (TextView) getView().findViewById(R.id.tv_date);
         mTimeDisplay = new TimeDisplay(getActivity(), view);
         mTimeDisplay.init();
         mTimeDisplay.update();
@@ -187,6 +215,20 @@ public class MainFragment extends Fragment {
 
     private void initView(View view) {
         if (view == null) return;
+        imgSearch = view.findViewById(R.id.img_search);
+        imgSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (getActivity() instanceof LeanbackActivity) {
+                    LeanbackActivity activity = (LeanbackActivity) getActivity();
+                    activity.onSearchRequested();
+                }
+            }
+        });
+        imgNetWork = (ImageView) view.findViewById(R.id.iv_network);
+        imgTfCard = (ImageView) view.findViewById(R.id.iv_tf_card);
+        imgUsbDevice = (ImageView) view.findViewById(R.id.iv_usb_device);
+
         verticalGridView = (VerticalGridView) view.findViewById(R.id.vtl_grid_view);
         verticalGridView.setVerticalSpacing((int) getResources().getDimension(R.dimen.main_page_vtl_space));
         mRowsAdapter = new ArrayObjectAdapter(new MainPresenterSelector(mInputSource, new OnItemClickListener() {
@@ -260,20 +302,33 @@ public class MainFragment extends Fragment {
     }
 
     private void registerAppReceiver() {
-        if (!mBroadcastsRegistered) {
+        if (!broadcastsRegisteredApp) {
             IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
             filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
             filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
             filter.addDataScheme("package");
             getActivity().registerReceiver(appReceiver, filter);
-            mBroadcastsRegistered = true;
+            broadcastsRegisteredApp = true;
         }
+
+        if (!broadcastsRegisteredNetwork) {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
+            filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+            getActivity().registerReceiver(networkReceiver, filter);
+            broadcastsRegisteredNetwork = true;
+        }
+
     }
 
     private void unregisterAppReceiver() {
-        if (mBroadcastsRegistered) {
+        if (broadcastsRegisteredApp) {
             getActivity().unregisterReceiver(appReceiver);
-            mBroadcastsRegistered = false;
+            broadcastsRegisteredApp = false;
+        }
+
+        if (broadcastsRegisteredNetwork) {
+            getActivity().unregisterReceiver(networkReceiver);
+            broadcastsRegisteredNetwork = false;
         }
     }
 
@@ -293,7 +348,7 @@ public class MainFragment extends Fragment {
             return;
         }
 
-        Log.d(TAG, "---update app:" + packageName);
+        Logger.i(TAG, "---update app:" + packageName);
         if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
             mAppRow.remove(packageName);
         } else if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
@@ -312,7 +367,7 @@ public class MainFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            Log.d(TAG, "appReceiver receive " + action);
+            Logger.i(TAG, "appReceiver receive " + action);
             if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
                     || Intent.ACTION_PACKAGE_REMOVED.equals(action)
                     || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
@@ -320,6 +375,39 @@ public class MainFragment extends Fragment {
             }
         }
     };
+
+    private final BroadcastReceiver networkReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ConnectivityManager connectivityManager =
+                    (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isAvailable()) {
+                switch (networkInfo.getType()) {
+                    case ConnectivityManager.TYPE_ETHERNET:
+                        imgNetWork.setImageResource(R.drawable.statusbar_ethernet);
+                        break;
+                    case ConnectivityManager.TYPE_WIFI:
+                        imgNetWork.setImageResource(R.drawable.statusbar_wifi);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                imgNetWork.setImageResource(R.drawable.statusbar_no_net);
+            }
+        }
+    };
+
+    @Override
+    public void onTFCardMountState(boolean isMount) {
+        imgTfCard.setVisibility(isMount ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void onUsbDeviceMountState(boolean isMount) {
+        imgUsbDevice.setVisibility(isMount ? View.VISIBLE : View.GONE);
+    }
 
     private int mLoadCount = 0;
     @SuppressLint("HandlerLeak")
@@ -340,37 +428,9 @@ public class MainFragment extends Fragment {
     //====this is for live tv===========
     private class SourceStatusListener extends TvInputManager.TvInputCallback {
         public void onInputStateChanged(String inputId, int state) {
-            Log.d(TAG, "source :" + inputId + " connect:" + state);
+            Logger.d(TAG, "source :" + inputId + " connect:" + state);
             tvHeaderListRow.signalUpdate();
         }
-    }
-
-    private Handler handler=new Handler();
-
-    private void test(){
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                dump();
-                test();
-            }
-        },5000);
-    }
-
-    private void dump() {
-        ActivityManager am = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> runningTaskInfoList = am.getRunningTasks(1);
-        for (ActivityManager.RunningTaskInfo runningTaskInfo : runningTaskInfoList) {
-            log("id: " + runningTaskInfo.id);
-            log("description: " + runningTaskInfo.description);
-            log("number of activities: " + runningTaskInfo.numActivities);
-            log("topActivity: " + runningTaskInfo.topActivity);
-            log("baseActivity: " + runningTaskInfo.baseActivity.toString());
-        }
-    }
-
-    private void log(String msg) {
-        Log.i("MAIN_ACTIVITY", msg);
     }
 
 }

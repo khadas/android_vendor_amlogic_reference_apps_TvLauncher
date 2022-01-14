@@ -6,45 +6,44 @@
     android:layout_height="@dimen/item_app_card_height"
     android:background="#1A3865">
 
-    <ImageView
-        android:id="@+id/item_img_card_icon"
-        android:layout_width="77dp"
-        android:layout_height="77dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="24dp"
-        android:scaleType="centerCrop"
-        tools:ignore="ContentDescription"
-        tools:src="@drawable/input_hdmi" />
-
-    <ImageView
-        android:id="@+id/item_img_card_banner"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="117dp"
-        android:layout_gravity="center_horizontal"
-        android:scaleType="centerCrop"
-        tools:ignore="ContentDescription"
-        tools:src="@drawable/input_hdmi" />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/item_tv_card_name"
-        android:layout_width="match_parent"
-        android:layout_height="53dp"
-        android:layout_gravity="bottom"
-        android:background="@drawable/tv_bg_common_card_name"
-        android:duplicateParentState="true"
-        android:ellipsize="marquee"
-        android:gravity="center"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:singleLine="true"
-        android:textColor="#FFFFFFFF"
-        android:textSize="20sp"
-        tools:text="HDMI" />
+        <ImageView
+            android:id="@+id/item_img_card_banner"
+            android:layout_width="match_parent"
+            android:layout_height="117dp"
+            android:layout_gravity="center_horizontal"
+            android:scaleType="centerCrop"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/input_hdmi" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="53dp"
-        android:background="@drawable/bg_common_card_cover"
-        android:duplicateParentState="true" />
+        <ImageView
+            android:id="@+id/item_img_card_icon"
+            android:layout_width="77dp"
+            android:layout_height="77dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:scaleType="centerCrop"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/input_hdmi" />
+
+        <TextView
+            android:id="@+id/item_tv_card_name"
+            android:layout_width="match_parent"
+            android:layout_height="53dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/tv_bg_common_card_name"
+            android:duplicateParentState="true"
+            android:ellipsize="marquee"
+            android:gravity="center"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
+            android:textColor="#FFFFFFFF"
+            android:textSize="20sp"
+            tools:text="HDMI" />
+
+    </FrameLayout>
 
 </com.droidlogic.launcher.leanback.view.BorderEffectLayout>

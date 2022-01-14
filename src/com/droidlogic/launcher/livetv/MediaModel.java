@@ -103,7 +103,7 @@ public class MediaModel {
                 id        = channel.getId();
                 inputid   = channel.getInputId();
                 type      = channel.getType();
-                //Log.d("Media", "input id:" + channel.getInputId() + " " + inputid);
+                //Loggerd("Media", "input id:" + channel.getInputId() + " " + inputid);
                 MediaModel mediaModel = new MediaModel(id, titles, contents, inputid, type);
                 mediaModel.setIcon(icon);
                 mediaModels.add(mediaModel);

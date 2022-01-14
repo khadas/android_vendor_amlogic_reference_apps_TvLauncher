@@ -16,13 +16,18 @@ android_app {
 		"droidlogic-tv",
 		"glide-annotations",
 		"disklrucache",
+		"reactive-streams",
+		"rxjava",
 	],
 	static_libs: [
+		"autosize",
 		"gifdecoder",
 		"glidev4",
+		"rxandroid",
 		"androidx.palette_palette",
 		"androidx.appcompat_appcompat",
 		"androidx.leanback_leanback",
+		"androidx-constraintlayout_constraintlayout",
 	],
 
     privileged: true,

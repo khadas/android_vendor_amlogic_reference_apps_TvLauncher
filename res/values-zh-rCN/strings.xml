@@ -30,4 +30,8 @@
     <string name="fun_name_app">应用</string>
     <string name="fun_name_recommend">推荐</string>
 
+    <string name="search_results">搜索结果 \'%1$s\'</string>
+    <string name="no_search_results">未搜索到相关内容 \'%1$s\'</string>
+    <string name="search_result_channel">频道</string>
+    <string name="search_result_program">节目</string>
 </resources>

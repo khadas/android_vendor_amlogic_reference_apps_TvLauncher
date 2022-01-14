@@ -23,7 +23,8 @@ import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
+
+import com.droidlogic.launcher.util.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +85,7 @@ public final class TVModelUtils {
                 }
             }
         } catch (Exception e) {
-            Log.w(TAG, "Unable to get channels", e);
+            Logger.w(TAG, "Unable to get channels", e);
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -109,10 +110,10 @@ public final class TVModelUtils {
             while (cursor.moveToNext()) {
                 Channel ch = Channel.fromCursor(cursor);
                 channels.add(ch);
-                //Log.d("channel", "get channel:" + ch.getDisplayName());
+                //Loggerd("channel", "get channel:" + ch.getDisplayName());
             }
         } catch (Exception e) {
-            Log.w(TAG, "Unable to get channels", e);
+            Logger.w(TAG, "Unable to get channels", e);
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -137,7 +138,7 @@ public final class TVModelUtils {
                 programs.add(PreviewProgram.fromCursor(cursor));
             }
         } catch (Exception e) {
-            Log.w(TAG, "Unable to get programs for " + uri, e);
+            Logger.w(TAG, "Unable to get programs for " + uri, e);
         } finally {
             if (cursor != null) {
                 cursor.close();

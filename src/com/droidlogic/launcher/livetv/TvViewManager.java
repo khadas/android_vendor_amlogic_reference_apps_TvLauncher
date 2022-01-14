@@ -39,7 +39,7 @@ public class TvViewManager {
         if (mTvView != null) {
             mTvView.setVisibility(View.VISIBLE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mTvView.setZOrderMediaOverlay(true);
+                mTvView.setZOrderMediaOverlay(false);
             }
         }
     }

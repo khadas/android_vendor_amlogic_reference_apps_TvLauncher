@@ -93,7 +93,7 @@ public class AppDataManage {
                 localAppBean.setName(info.getLabel().toString());
                 localAppBean.setPackageName(info.getComponentName().getPackageName());
                 localAppBean.setLauncherName(info.getComponentName().getPackageName());
-                //Log.d("APP", "---GET APP:" + localAppBean.getPackageName());
+                //Logger.d("APP", "---GET APP:" + localAppBean.getPackageName());
                 if (!isHideApp(localAppBean.getPackageName())) {
                     localArrayList.add(localAppBean);
                 }
@@ -136,7 +136,7 @@ public class AppDataManage {
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            //Log.d("APP", "GET APP:" + localAppBean.getPackageName());
+            //Logger.d("APP", "GET APP:" + localAppBean.getPackageName());
             if (!isHideApp(localAppBean.getPackageName())) {
                 localArrayList.add(localAppBean);
             }
@@ -181,7 +181,7 @@ public class AppDataManage {
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            //Log.d("APP", "GET APP:" + localAppBean.getPackageName());
+            //Logger.d("APP", "GET APP:" + localAppBean.getPackageName());
             return localAppBean;
         }
         return null;

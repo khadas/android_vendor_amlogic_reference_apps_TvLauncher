@@ -1,12 +1,13 @@
 package com.droidlogic.launcher.leanback.presenter.content;
 
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
 import androidx.leanback.widget.ItemBridgeAdapter;
 import androidx.leanback.widget.OnChildViewHolderSelectedListener;
 import androidx.leanback.widget.VerticalGridView;
 import androidx.recyclerview.widget.RecyclerView;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.function.FunctionRow;
@@ -19,6 +20,7 @@ import com.droidlogic.launcher.leanback.presenter.BasePresenter;
 import com.droidlogic.launcher.leanback.presenter.BaseViewHolder;
 import com.droidlogic.launcher.leanback.presenter.OnItemClickListener;
 import com.droidlogic.launcher.leanback.view.BorderEffectLayout;
+import com.droidlogic.launcher.leanback.view.LeanBarSeekBar;
 import com.droidlogic.launcher.livetv.TvConfig;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
@@ -63,6 +65,7 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
         private final VerticalGridView signalSourceListView;
         private final VerticalGridView systemFunctionListView;
         private final IRowSignalSourceProvider rowDataProvider;
+        private final LeanBarSeekBar scrollBar;
 
         public Holder(OnItemClickListener listener, ViewGroup viewGroup, int layoutId, InputSourceManager inputSource) {
             super(listener, viewGroup, layoutId);
@@ -88,6 +91,9 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
                     onPresenterItemClick(view, tvViewModel);
                 }
             });
+
+            scrollBar = (LeanBarSeekBar) view.findViewById(R.id.scroll_bar);
+
         }
 
         private void initSignalSourceList(final IRowSignalSourceProvider rowDataProvider) {
@@ -96,18 +102,13 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
                 @Override
                 public void onChildViewHolderSelected(RecyclerView parent, RecyclerView.ViewHolder child, int position, int subposition) {
                     super.onChildViewHolderSelected(parent, child, position, subposition);
+                    scrollBar.update(position,rowDataProvider.getListRowAdapter().size()-1);
                     buildChildClickListener(child.itemView, rowDataProvider.getListRowAdapter().get(position));
-
                     //start childView's marquee effect
                     BorderEffectLayout borderEffectLayout = (BorderEffectLayout) child.itemView.findViewById(R.id.tv_item_source_info_parent);
                     final TextView tvSourceInfo = (TextView) child.itemView.findViewById(R.id.tv_item_source_info);
                     if (borderEffectLayout != null) {
-                        borderEffectLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                            @Override
-                            public void onFocusChange(View view, boolean gainFocus) {
-                                tvSourceInfo.setSelected(gainFocus);
-                            }
-                        });
+                        borderEffectLayout.setOnFocusChangeListener((view, gainFocus) -> tvSourceInfo.setSelected(gainFocus));
                     }
                 }
 

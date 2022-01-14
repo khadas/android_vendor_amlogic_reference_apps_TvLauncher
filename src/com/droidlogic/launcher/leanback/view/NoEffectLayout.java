@@ -44,7 +44,6 @@ public class NoEffectLayout extends FrameLayout {
         clearAnimation();
         if (gainFocus) {
             if (enableAnim) {
-                bringToFront();
                 startAnimation(gainFocusAnimation);
             }
         } else {

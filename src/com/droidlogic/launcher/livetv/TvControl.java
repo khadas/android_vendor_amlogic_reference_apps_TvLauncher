@@ -1,5 +1,6 @@
 package com.droidlogic.launcher.livetv;
 
+import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -18,7 +19,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +28,7 @@ import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvDataBaseManager;
 import com.droidlogic.launcher.R;
+import com.droidlogic.launcher.util.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,7 +133,8 @@ public class TvControl {
     }
 
     private boolean isTunerSource(String inputId) {
-        return !mTvInputManager.getTvInputInfo(inputId).isPassthroughInput();
+        TvInputInfo tvInputInfo = mTvInputManager.getTvInputInfo(inputId);
+        return tvInputInfo != null && !tvInputInfo.isPassthroughInput();
     }
 
     private boolean isCurrentChannelBlocked() {
@@ -179,7 +181,7 @@ public class TvControl {
                 return false;
             }
         }
-        Log.d(TAG, "initChannelWhenChannelReady isChannelBlocked = " + isChannelBlocked + ", isCurrentChannelBlockBlocked = " + isCurrentChannelBlockBlocked());
+        Logger.d(TAG, "initChannelWhenChannelReady isChannelBlocked = " + isChannelBlocked + ", isCurrentChannelBlockBlocked = " + isCurrentChannelBlockBlocked());
         if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
             result = true;
         } else {
@@ -191,14 +193,14 @@ public class TvControl {
     }
 
     private boolean compareInputId(String inputId, TvInputInfo info) {
-        Log.d(TAG, "compareInputId currentInputId " + inputId + " info " + info);
+        Logger.d(TAG, "compareInputId currentInputId " + inputId + " info " + info);
         if (null == info) {
-            Log.d(TAG, "compareInputId info null");
+            Logger.d(TAG, "compareInputId info null");
             return false;
         }
         String infoInputId = info.getId();
         if (TextUtils.isEmpty(inputId) || TextUtils.isEmpty(infoInputId)) {
-            Log.d(TAG, "inputId empty");
+            Logger.d(TAG, "inputId empty");
             return false;
         }
         if (TextUtils.equals(inputId, infoInputId)) {
@@ -222,7 +224,7 @@ public class TvControl {
         ChannelInfo currentChannel = mTvDataBaseManager.getChannelInfo(channelUri);
         String currentSignalType = DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
                 ? TvContract.Channels.TYPE_ATSC_T : DroidLogicTvUtils.getCurrentSignalType(mContext);
-        Log.d(TAG, "channelid = " + channelId + "   [currentChannel] =" + currentChannel);
+        Logger.d(TAG, "channelid = " + channelId + "   [currentChannel] =" + currentChannel);
         if (currentChannel != null) {
             if (!TvContract.Channels.TYPE_OTHER.equals(currentChannel.getType())) {
                 if (DroidLogicTvUtils.isAtscCountry(mContext)) {
@@ -257,23 +259,23 @@ public class TvControl {
                     if (TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
                         if (TextUtils.equals(DroidLogicTvUtils.getSearchInputId(mContext), channel.getInputId())) {
                             mChannelUri = channel.getUri();
-                            Log.d(TAG, "current other type channel not exisit, find a new channel instead: " + mChannelUri);
+                            Logger.d(TAG, "current other type channel not exisit, find a new channel instead: " + mChannelUri);
                             return;
                         }
                     } else if (DroidLogicTvUtils.isAtscCountry(mContext)) {
                         if (channel.getSignalType().equals(currentSignalType)) {
                             mChannelUri = channel.getUri();
-                            Log.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
+                            Logger.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
                             return;
                         }
                     } else {
                         if (DroidLogicTvUtils.isATV(mContext) && channel.isAnalogChannel()) {
                             mChannelUri = channel.getUri();
-                            Log.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
+                            Logger.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
                             return;
                         } else if (DroidLogicTvUtils.isDTV(mContext) && channel.isDigitalChannel()) {
                             mChannelUri = channel.getUri();
-                            Log.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
+                            Logger.d(TAG, "current channel not exisit, find a new channel instead: " + mChannelUri);
                             return;
                         }
                     }
@@ -300,11 +302,11 @@ public class TvControl {
         device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
         channel_id = DataProviderManager.getLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, -1);
         isRadioChannel = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_CHANNEL_IS_RADIO, 0) == 1 ? true : false;
-        Log.d(TAG, "TV get device_id=" + device_id + " dtv=" + channel_id);
+        Logger.d(TAG, "TV get device_id=" + device_id + " dtv=" + channel_id);
 
         String inputid = DroidLogicTvUtils.getCurrentInputId(mContext);
         List<TvInputInfo> input_list = mTvInputManager.getTvInputList();
-        Log.d(TAG, "----input id:" + inputid);
+        Logger.d(TAG, "----input id:" + inputid);
         TvInputInfo currentInfo = null;
         for (TvInputInfo info : input_list) {
             /*if (parseDeviceId(info.getId()) == device_id) {
@@ -318,7 +320,7 @@ public class TvControl {
         }
 
         if (TextUtils.isEmpty(mTvInputId)) {
-            Log.d(TAG, "device" + device_id + " is not exist");
+            Logger.i(TAG, "device" + device_id + " is not exist");
             setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
             return;
         } else {
@@ -329,7 +331,7 @@ public class TvControl {
             }
         }
 
-        Log.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
+        Logger.d(TAG, "TV play tune inputId=" + mTvInputId + " uri=" + mChannelUri);
         if (mChannelUri != null && (DroidLogicTvUtils.getChannelId(mChannelUri) > 0
                 || (currentInfo != null && currentInfo.isPassthroughInput()))) {
             mViewManager.tune(mTvInputId, mChannelUri);
@@ -340,19 +342,19 @@ public class TvControl {
             if (current != null/* && (!mTvInputManager.isParentalControlsEnabled() ||
                         (mTvInputManager.isParentalControlsEnabled() && !current.isLocked()))*/) {
                 if (isCurrentChannelBlocked() && !current.getInputId().startsWith(DTVKIT_PACKAGE)) {
-                    Log.d(TAG, "current channel is blocked");
+                    Logger.d(TAG, "current channel is blocked");
                     setTvPrompt(TvPrompt.TV_PROMPT_BLOCKED);
                 } else {
                     setTvPrompt(TvPrompt.TV_PROMPT_TUNING);
-                    Log.d(TAG, "TV play tune continue as no channel blocks");
+                    Logger.d(TAG, "TV play tune continue as no channel blocks");
                 }
             } else {
                 setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
                 mViewManager.setStreamVolume(0);
-                Log.d(TAG, "TV play not tune as channel blocked");
+                Logger.d(TAG, "TV play not tune as channel blocked");
             }
         } else if (mChannelUri == null) {
-            Log.d(TAG, "TV play not tune as mChannelUri null");
+            Logger.d(TAG, "TV play not tune as mChannelUri null");
             setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
             mViewManager.setStreamVolume(0);
         }
@@ -365,7 +367,7 @@ public class TvControl {
     }
 
     public void releasePlayingTv() {
-        Log.d(TAG, "releasePlayingTv");
+        Logger.d(TAG, "releasePlayingTv");
         isChannelBlocked = false;
         if (mTvStartPlaying) {
             mViewManager.enable(false);
@@ -375,14 +377,14 @@ public class TvControl {
     }
 
     public void startOtpSource(Intent intent) {
-        Log.d(TAG, "startOtpSource");
+        Logger.d(TAG, "startOtpSource");
         if (mTvStartPlaying) {
             releasePlayingTv();
         }
         try {
             mContext.startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Log.e(TAG, " can't start LiveTv:" + e);
+            Logger.e(TAG, " can't start LiveTv:" + e);
         }
     }
 
@@ -407,7 +409,7 @@ public class TvControl {
             }
 
         } catch (ActivityNotFoundException e) {
-            Log.e(TAG, " can't start TvSettings:" + e);
+            Logger.e(TAG, " can't start TvSettings:" + e);
         }
     }
 
@@ -459,7 +461,7 @@ public class TvControl {
     public class TvViewInputCallback extends TvView.TvInputCallback {
 
         public void onEvent(String inputId, String eventType, Bundle eventArgs) {
-            Log.d(TAG, "====onEvent==inputId =" + inputId + ", ===eventType =" + eventType);
+            Logger.d(TAG, "====onEvent==inputId =" + inputId + ", ===eventType =" + eventType);
             if (eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_IS_SCRAMBLED);
             }
@@ -482,12 +484,12 @@ public class TvControl {
                 mViewManager.setStreamVolume(0);
             }
 
-            Log.d(TAG, "====onVideoAvailable==inputId =" + inputId);
+            Logger.d(TAG, "====onVideoAvailable==inputId =" + inputId);
         }
 
         @Override
         public void onConnectionFailed(String inputId) {
-            Log.d(TAG, "====onConnectionFailed==inputId =" + inputId);
+            Logger.d(TAG, "====onConnectionFailed==inputId =" + inputId);
             new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -504,7 +506,7 @@ public class TvControl {
 
         @Override
         public void onVideoUnavailable(String inputId, int reason) {
-            Log.d(TAG, "====onVideoUnavailable==inputId =" + inputId + ", ===reason =" + reason);
+            Logger.d(TAG, "====onVideoUnavailable==inputId =" + inputId + ", ===reason =" + reason);
             switch (reason) {
                 case TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN:
                 case TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING:
@@ -539,7 +541,7 @@ public class TvControl {
 
         @Override
         public void onContentBlocked(String inputId, TvContentRating rating) {
-            Log.d(TAG, "====onContentBlocked");
+            Logger.d(TAG, "====onContentBlocked");
             setCurrentChannelBlocked(true);
             int device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
             isChannelBlocked = true;
@@ -553,7 +555,7 @@ public class TvControl {
 
         @Override
         public void onContentAllowed(String inputId) {
-            Log.d(TAG, "====onContentAllowed ");
+            Logger.d(TAG, "====onContentAllowed ");
             setCurrentChannelBlocked(false);
             int device_id = DataProviderManager.getIntValue(mContext, DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
             if (device_id == DroidLogicTvUtils.DEVICE_ID_AV1 || device_id == DroidLogicTvUtils.DEVICE_ID_AV2) {
@@ -566,13 +568,13 @@ public class TvControl {
 
         @Override
         public void onTracksChanged(String inputId, List<TvTrackInfo> tracks) {
-            Log.d(TAG, "onTracksChanged inputId = " + inputId);
+            Logger.d(TAG, "onTracksChanged inputId = " + inputId);
             //appyPrimaryAudioLanguage(tracks);
         }
 
         @Override
         public void onTrackSelected(String inputId, int type, String trackId) {
-            Log.d(TAG, "onTrackSelected inputId = " + inputId + ", type = " + type + ", trackId = " + trackId);
+            Logger.d(TAG, "onTrackSelected inputId = " + inputId + ", type = " + type + ", trackId = " + trackId);
         }
     }
 
@@ -582,7 +584,7 @@ public class TvControl {
         public void onReceive(Context context, Intent intent) {
 
             final String action = intent.getAction();
-            Log.d(TAG, " receive " + action);
+            Logger.d(TAG, " receive " + action);
             if (ACTION_OTP_INPUT_SOURCE_CHANGE.equals(action)) {
                 Intent i = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
                 i.putExtra("from_cec_otp", true);
@@ -596,7 +598,7 @@ public class TvControl {
                     Toast.makeText(mContext, R.string.toast_otp_input_change, Toast.LENGTH_LONG).show();
                     startOtpSource(i);
                 } else {
-                    Log.d(TAG, " acitivity not resumed or bootvideo not finished, drop " + ACTION_OTP_INPUT_SOURCE_CHANGE);
+                    Logger.d(TAG, " acitivity not resumed or bootvideo not finished, drop " + ACTION_OTP_INPUT_SOURCE_CHANGE);
                 }
             }
         }
@@ -606,13 +608,11 @@ public class TvControl {
     private boolean mBroadcastsRegistered = false;
 
     private void registerTvBroadcasts() {
+        if (mBroadcastsRegistered) return;
         IntentFilter filter = new IntentFilter();
-
-        filter = new IntentFilter();
         filter.addAction(ACTION_OTP_INPUT_SOURCE_CHANGE);
         filter.addAction(Intent.ACTION_BOOT_COMPLETED);
         mContext.registerReceiver(otherReceiver, filter);
-
         mBroadcastsRegistered = true;
     }
 
@@ -624,19 +624,20 @@ public class TvControl {
         mBroadcastsRegistered = false;
     }
 
-    private Handler mTvHandler = new Handler() {
+    @SuppressLint("HandlerLeak")
+    private final Handler mTvHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case TV_MSG_PLAY_TV:
                     if (mTvConfig.isBootvideoStopped()) {
-                        Log.d(TAG, "bootvideo is stopped, and tvapp released, start tv play");
+                        Logger.d(TAG, "bootvideo is stopped, and tvapp released, start tv play");
                         if (initChannelWhenChannelReady()) {
                             tuneTvView();
                         } else {
-                            Log.d(TAG, "screen blocked and no need start tv play");
+                            Logger.d(TAG, "screen blocked and no need start tv play");
                         }
                     } else {
-                        //Log.d(TAG, "bootvideo is not stopped, or tvapp not released, wait it");
+                        //Loggerd(TAG, "bootvideo is not stopped, or tvapp not released, wait it");
                         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
                         mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 200);
                     }
@@ -644,7 +645,7 @@ public class TvControl {
 
                 case TV_MSG_BOOTUP_TO_TVAPP:
                     if (mTvConfig.isBootvideoStopped()) {
-                        Log.d(TAG, "bootvideo is stopped, start tv app");
+                        Logger.d(TAG, "bootvideo is stopped, start tv app");
                         if (mDelayedSourceChange != null) {
                             startOtpSource(mDelayedSourceChange);
                             mDelayedSourceChange = null;
@@ -654,7 +655,7 @@ public class TvControl {
                             startTvApp();
                         }
                     } else {
-                        //Log.d(TAG, "bootvideo is not stopped, wait it");
+                        //Loggerd(TAG, "bootvideo is not stopped, wait it");
                         mTvHandler.removeMessages(TV_MSG_BOOTUP_TO_TVAPP);
                         mTvHandler.sendEmptyMessageDelayed(TV_MSG_BOOTUP_TO_TVAPP, 200);
                     }

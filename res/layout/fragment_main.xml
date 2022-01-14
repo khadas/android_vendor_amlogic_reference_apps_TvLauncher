@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,23 +10,81 @@
         android:id="@+id/vtl_grid_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="48dp"
         android:clipToPadding="false"
-        android:paddingBottom="60dp" />
+        android:paddingBottom="60dp"
+        app:focusOutEnd="true"
+        app:focusOutFront="true"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:layout_width="fill_parent"
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="end">
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="60dp"
+        android:textSize="28sp"
+        android:textColor="@android:color/white"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tx_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dip"
-            android:layout_marginEnd="60dip"
-            android:textSize="28.0sp" />
+    <ImageView
+        android:id="@+id/iv_network"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="20dp"
+        android:src="@drawable/statusbar_no_net"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_date"
+        app:layout_constraintRight_toLeftOf="@+id/tv_date"
+        app:layout_constraintTop_toTopOf="@+id/tv_date"
+        tools:ignore="ContentDescription" />
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/iv_usb_device"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="20dp"
+        android:visibility="gone"
+        android:src="@drawable/statusbar_storage"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_date"
+        app:layout_constraintRight_toLeftOf="@+id/iv_network"
+        app:layout_constraintTop_toTopOf="@+id/tv_date"
+        tools:ignore="ContentDescription" />
 
-</FrameLayout>
+    <ImageView
+        android:id="@+id/iv_tf_card"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="20dp"
+        android:visibility="gone"
+        app:layout_goneMarginEnd="20dp"
+        android:src="@drawable/statusbar_sd_card"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_date"
+        app:layout_constraintRight_toLeftOf="@+id/iv_usb_device"
+        app:layout_constraintTop_toTopOf="@+id/tv_date"
+        tools:ignore="ContentDescription" />
+
+    <com.droidlogic.launcher.leanback.view.BorderEffectLayout
+        android:id="@+id/img_search"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="60dp"
+        app:effectShape="oval"
+        app:layout_constraintBottom_toBottomOf="@id/tv_date"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_date">
+
+        <ImageView
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            android:background="@drawable/bg_round_status_bar_search"
+            android:src="@drawable/statusbar_search"
+            tools:ignore="ContentDescription" />
+
+    </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

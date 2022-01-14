@@ -2,7 +2,8 @@ package com.droidlogic.launcher.livetv;
 
 import android.database.Cursor;
 import android.media.tv.TvContract;
-import android.os.Build;
+
+import com.droidlogic.launcher.util.Logger;
 
 
 public class PreviewProgram {
@@ -31,15 +32,23 @@ public class PreviewProgram {
         mSearchable = IS_SEARCHABLE;
     }
 
-    public String getTile(){
+    public long getId() {
+        return mId;
+    }
+
+    public String getTile() {
         return mTitle;
     }
 
-    public long getChannelId(){
+    public long getChannelId() {
         return mChannelId;
     }
 
-    public String getPosterArtUrl(){
+    public String getIntentUri() {
+        return mIntentUri;
+    }
+
+    public String getPosterArtUrl() {
         return mPosterArtUri;
     }
 
@@ -49,15 +58,15 @@ public class PreviewProgram {
         }
 
         mId = other.mId;
-        mPackageName= other.mPackageName;
+        mPackageName = other.mPackageName;
         mChannelId = other.mChannelId;
         mTitle = other.mTitle;
         mPosterArtUri = other.mPosterArtUri;
         mSearchable = other.mSearchable;
+        mIntentUri=other.mIntentUri;
     }
 
-
-    static PreviewProgram fromCursor(Cursor cursor) {
+    public static PreviewProgram fromCursor(Cursor cursor) {
         Builder builder = new Builder();
         int index = 0;
         if (!cursor.isNull(index)) {
@@ -75,13 +84,21 @@ public class PreviewProgram {
         if (!cursor.isNull(++index)) {
             builder.setPosterArtUrl(cursor.getString(index));
         }
+
+        int columnIndex=cursor.getColumnIndex(TvContract.PreviewPrograms.COLUMN_INTENT_URI);
+        Logger.i("columnIndex:"+columnIndex);
+        if (columnIndex!=-1) {
+            Logger.i("columnIndex:"+cursor.getString(columnIndex));
+            builder.setIntentUri(cursor.getString(columnIndex));
+        }
+
         return builder.build();
     }
 
 
     private static String[] getProjection() {
         String[] baseColumns =
-                new String[] {
+                new String[]{
                         TvContract.PreviewPrograms._ID,
                         TvContract.PreviewPrograms.COLUMN_PACKAGE_NAME,
                         TvContract.PreviewPrograms.COLUMN_CHANNEL_ID,
@@ -98,7 +115,6 @@ public class PreviewProgram {
 
         return baseColumns;
     }
-
 
 
     public static final class Builder {
@@ -130,8 +146,13 @@ public class PreviewProgram {
             return this;
         }
 
-        public Builder setPosterArtUrl(String url){
+        public Builder setPosterArtUrl(String url) {
             mProgram.mPosterArtUri = url;
+            return this;
+        }
+
+        public Builder setIntentUri(String intentUri) {
+            mProgram.mIntentUri = intentUri;
             return this;
         }
 
@@ -143,5 +164,17 @@ public class PreviewProgram {
         }
     }
 
-
+    @Override
+    public String toString() {
+        return "PreviewProgram{" +
+                "mId=" + mId +
+                ", mPackageName='" + mPackageName + '\'' +
+                ", mChannelId=" + mChannelId +
+                ", mTitle='" + mTitle + '\'' +
+                ", mPosterArtUri='" + mPosterArtUri + '\'' +
+                ", mSearchable=" + mSearchable +
+                ", mPreviewVideoUri='" + mPreviewVideoUri + '\'' +
+                ", mIntentUri='" + mIntentUri + '\'' +
+                '}';
+    }
 }
