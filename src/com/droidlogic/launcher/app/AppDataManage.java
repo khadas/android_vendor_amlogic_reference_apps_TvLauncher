@@ -35,7 +35,6 @@ public class AppDataManage {
             "com.droidlogic.appinstall",
             "com.droidlogic.android.tv",
             "org.chromium.webview_shell",
-            "com.android.deskclock",
             PKG_NAME_MIRACAST
     };
 
