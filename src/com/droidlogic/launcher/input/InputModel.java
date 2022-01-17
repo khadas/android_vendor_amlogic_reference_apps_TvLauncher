@@ -5,11 +5,12 @@ import java.util.List;
 
 public class InputModel {
 
-    public static  String TAG = "InputModel";
+    public static String TAG = "InputModel";
 
     private int icon;
     private String id;
     private String name;
+    private boolean signalInput;
 
     public int getIcon() {
         return icon;
@@ -27,10 +28,20 @@ public class InputModel {
         this.id = id;
     }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isSignalInput() {
+        return signalInput;
+    }
+
+    public void setSignalInput(boolean signalInput) {
+        this.signalInput = signalInput;
     }
 
     public static List<InputModel> getInputList(InputSourceManager manager) {
@@ -39,13 +50,17 @@ public class InputModel {
         List<InputInfo> input_list = manager.getInputList();
         InputModel func;
 
+        int inputIndex = manager.getCurrentInputIndex();
+        int index = 0;
         for (InputInfo info : input_list) {
-            int icon    = info.getIcon();
+            int icon = info.getIcon();
             func = new InputModel();
             func.setName(info.getName());
             func.setIcon(icon);
             func.setId(info.getId());
             InputModels.add(func);
+            func.setSignalInput(index == inputIndex);
+            index++;
         }
 
         return InputModels;

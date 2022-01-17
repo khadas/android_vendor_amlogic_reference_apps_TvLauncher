@@ -1,11 +1,12 @@
 
 package com.droidlogic.launcher.livetv;
 
-import java.util.ArrayList;
-import java.util.List;
 import android.content.Context;
 
 import com.droidlogic.launcher.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MediaModel {
@@ -15,21 +16,31 @@ public class MediaModel {
     private String content;
     private String inputId;
     private String type; //TYPE_PAL
+    private boolean playing;
 
     private MediaModel(
-            final long   id,
+            final long id,
             final String title,
             final String content,
             final String inputId,
             final String type) {
-        this.id       = id;
-        this.icon     = 0;
-        this.title    = title;
-        this.content  = content;
-        this.inputId  = inputId;
-        this.type     = type;
+        this.id = id;
+        this.icon = 0;
+        this.title = title;
+        this.content = content;
+        this.inputId = inputId;
+        this.type = type;
     }
 
+    public MediaModel(long id, String title, String content, String inputId, String type, boolean playing) {
+        this.id = id;
+        this.icon = 0;
+        this.title = title;
+        this.content = content;
+        this.inputId = inputId;
+        this.type = type;
+        this.playing = playing;
+    }
 
     public long getId() {
         return id;
@@ -79,6 +90,10 @@ public class MediaModel {
         this.type = type;
     }
 
+    public boolean isPlaying() {
+        return playing;
+    }
+
     public static List<MediaModel> getDTVModels(Context context) {
         List<MediaModel> mediaModels = new ArrayList<>();
 
@@ -91,26 +106,28 @@ public class MediaModel {
         String inputid = null;
         List<Channel> channels = TVModelUtils.getChannels(context.getContentResolver(), inputid);
         int num = channels.size();
-
         //num = 0;
         if (num > 0) {
+
+            ChannelDataManager channelDataManager = new ChannelDataManager(context);
+            long currentChannelId = channelDataManager.getCurrentChannelId();
+
             long id;
 
             for (int i = 0; i < num; i++) {
                 Channel channel = channels.get(i);
-                titles    = channel.getDisplayName();
-                contents  = channel.getDescription();
-                id        = channel.getId();
-                inputid   = channel.getInputId();
-                type      = channel.getType();
+                titles = channel.getDisplayName();
+                contents = channel.getDescription();
+                id = channel.getId();
+                inputid = channel.getInputId();
+                type = channel.getType();
                 //Loggerd("Media", "input id:" + channel.getInputId() + " " + inputid);
-                MediaModel mediaModel = new MediaModel(id, titles, contents, inputid, type);
+                MediaModel mediaModel = new MediaModel(id, titles, contents, inputid, type, currentChannelId == id);
                 mediaModel.setIcon(icon);
                 mediaModels.add(mediaModel);
             }
-        }
-        else{
-            titles   = context.getString(R.string.tv_no_channel);
+        } else {
+            titles = context.getString(R.string.tv_no_channel);
             contents = context.getString(R.string.tv_search_channel);
 
             MediaModel mediaModel = new MediaModel(-1, titles, contents, null, null);

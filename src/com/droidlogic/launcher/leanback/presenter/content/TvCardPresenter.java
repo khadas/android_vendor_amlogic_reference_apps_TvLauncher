@@ -1,8 +1,10 @@
 package com.droidlogic.launcher.leanback.presenter.content;
 
-import androidx.leanback.widget.Presenter;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.leanback.widget.Presenter;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.leanback.presenter.BaseViewHolder;
@@ -30,15 +32,18 @@ public class TvCardPresenter extends Presenter {
     private static class Holder extends BaseViewHolder<MediaModel> {
 
         private final TextView tvAppName;
+        private final View inPutState;
 
         public Holder(ViewGroup viewGroup, int layoutId) {
             super(viewGroup, layoutId);
             tvAppName = (TextView) view.findViewById(R.id.tv_item_source_info);
+            inPutState = view.findViewById(R.id.img_source_selected);
         }
 
         @Override
         protected void bindData(MediaModel mediaModel) {
             tvAppName.setText(mediaModel.getTitle());
+            inPutState.setVisibility(mediaModel.isPlaying() ? View.VISIBLE : View.GONE);
         }
 
     }
