@@ -4,6 +4,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.ItemBridgeAdapter;
 import androidx.leanback.widget.OnChildViewHolderSelectedListener;
 import androidx.leanback.widget.VerticalGridView;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.function.FunctionRow;
+import com.droidlogic.launcher.input.InputModel;
 import com.droidlogic.launcher.input.InputRow;
 import com.droidlogic.launcher.input.InputSourceManager;
 import com.droidlogic.launcher.leanback.model.HotFunctionModel;
@@ -21,6 +23,7 @@ import com.droidlogic.launcher.leanback.presenter.BaseViewHolder;
 import com.droidlogic.launcher.leanback.presenter.OnItemClickListener;
 import com.droidlogic.launcher.leanback.view.BorderEffectLayout;
 import com.droidlogic.launcher.leanback.view.LeanBarSeekBar;
+import com.droidlogic.launcher.livetv.MediaModel;
 import com.droidlogic.launcher.livetv.TvConfig;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
@@ -102,8 +105,8 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
                 @Override
                 public void onChildViewHolderSelected(RecyclerView parent, RecyclerView.ViewHolder child, int position, int subposition) {
                     super.onChildViewHolderSelected(parent, child, position, subposition);
-                    scrollBar.update(position,rowDataProvider.getListRowAdapter().size()-1);
-                    buildChildClickListener(child.itemView, rowDataProvider.getListRowAdapter().get(position));
+                    scrollBar.update(position, rowDataProvider.getListRowAdapter().size() - 1);
+                    buildChildClickListener(child.itemView, rowDataProvider.getListRowAdapter().get(position), rowDataProvider.getListRowAdapter());
                     //start childView's marquee effect
                     BorderEffectLayout borderEffectLayout = (BorderEffectLayout) child.itemView.findViewById(R.id.tv_item_source_info_parent);
                     final TextView tvSourceInfo = (TextView) child.itemView.findViewById(R.id.tv_item_source_info);
@@ -136,7 +139,7 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
                     } else {
                         child.itemView.setNextFocusLeftId(View.NO_ID);
                     }
-                    buildChildClickListener(child.itemView, functionRow.getListRowAdapter().get(position));
+                    buildChildClickListener(child.itemView, functionRow.getListRowAdapter().get(position), null);
                 }
 
                 @Override
@@ -151,12 +154,22 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
 
         }
 
-        private void buildChildClickListener(View view, final Object model) {
+        private void buildChildClickListener(View view, final Object model, final ArrayObjectAdapter arrayObjectAdapter) {
             if (view != null) {
-                view.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onPresenterItemClick(v, model);
+                view.setOnClickListener(v -> {
+                    onPresenterItemClick(v, model);
+                    if (arrayObjectAdapter != null) {
+                        for (int i = 0; i < arrayObjectAdapter.size(); i++) {
+                            if (arrayObjectAdapter.get(i) instanceof InputModel) {
+                                InputModel inputModel = (InputModel) arrayObjectAdapter.get(i);
+                                inputModel.setSignalInput(inputModel == model);
+                                arrayObjectAdapter.notifyArrayItemRangeChanged(0, arrayObjectAdapter.size());
+                            } else if (arrayObjectAdapter.get(i) instanceof MediaModel) {
+                                MediaModel mediaModel = (MediaModel) arrayObjectAdapter.get(i);
+                                mediaModel.setPlaying(mediaModel == model);
+                                arrayObjectAdapter.notifyArrayItemRangeChanged(0, arrayObjectAdapter.size());
+                            }
+                        }
                     }
                 });
             }

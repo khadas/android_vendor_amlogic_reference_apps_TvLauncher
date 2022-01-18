@@ -94,6 +94,10 @@ public class MediaModel {
         return playing;
     }
 
+    public void setPlaying(boolean playing) {
+        this.playing = playing;
+    }
+
     public static List<MediaModel> getDTVModels(Context context) {
         List<MediaModel> mediaModels = new ArrayList<>();
 
