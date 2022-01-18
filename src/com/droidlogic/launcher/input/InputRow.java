@@ -1,5 +1,7 @@
 package com.droidlogic.launcher.input;
 
+import android.text.TextUtils;
+
 import androidx.leanback.widget.ArrayObjectAdapter;
 
 import com.droidlogic.launcher.leanback.model.IRowSignalSourceProvider;
@@ -48,7 +50,7 @@ public class InputRow implements IRowSignalSourceProvider {
             for (i = 0; i < newSize; i++) {
                 InputModel model1 = (InputModel) mListRowAdapter.get(i);
                 InputModel model2 = (InputModel) list.get(i);
-                if (model1.getId() != model2.getId() || model1.getIcon() != model2.getIcon()) {
+                if (!TextUtils.equals(model1.getId(), model2.getId()) || model1.getIcon() != model2.getIcon() || model1.isSignalInput() != model2.isSignalInput()) {
                     mListRowAdapter.replace(i, model2);
                 }
             }

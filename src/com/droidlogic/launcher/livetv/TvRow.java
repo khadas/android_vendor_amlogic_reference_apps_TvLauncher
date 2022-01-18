@@ -1,6 +1,7 @@
 package com.droidlogic.launcher.livetv;
 
 import android.content.Context;
+
 import androidx.leanback.widget.ArrayObjectAdapter;
 
 import com.droidlogic.launcher.leanback.model.IRowSignalSourceProvider;
@@ -47,7 +48,7 @@ public class TvRow implements IRowSignalSourceProvider {
             for (i = 0; i < newSize; i++) {
                 MediaModel model1 = (MediaModel) mListRowAdapter.get(i);
                 MediaModel model2 = (MediaModel) list.get(i);
-                if (model1.getId() != model2.getId()) {
+                if (model1.getId() != model2.getId() || model1.isPlaying() != model2.isPlaying()) {
                     mListRowAdapter.replace(i, model2);
                 }
             }
