@@ -84,13 +84,7 @@ public class TvControl {
      * */
     public void play(long id) {
         mPlayInputId   = getCurrentInputSourceId();
-        if (id == -1){
-            mPlayChannelId = getPlayChannelId(mPlayInputId);
-        }
-        else{
-            mPlayChannelId = id;
-        }
-
+        mPlayChannelId = id;
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
         mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
     }
@@ -100,13 +94,7 @@ public class TvControl {
     * */
     public void play(String inputId) {
         mPlayInputId   = inputId;
-        if(isTunerSource(inputId)) {
-            mPlayChannelId = getPlayChannelId(inputId);
-        }
-        else{
-            mPlayChannelId = -1;
-        }
-
+        mPlayChannelId = -1;
         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
         mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
     }
@@ -154,8 +142,23 @@ public class TvControl {
     }
 
     private boolean isTunerSource(String inputId) {
-        return !mTvInputManager.getTvInputInfo(inputId).isPassthroughInput();
+        TvInputInfo info = getTvInputInfo(inputId);
+        if (info != null)
+            return !info.isPassthroughInput();
+
+        return false;
     }
+
+    private TvInputInfo getTvInputInfo(String inputId) {
+        List<TvInputInfo> infos = mTvInputManager.getTvInputList();
+        for(TvInputInfo info : infos){
+            if(info.getId().equals(inputId))
+                return info;
+        }
+
+        return null;
+    }
+
 
     private boolean isCurrentChannelBlocked() {
         return mChannelDataManager.isCurrentChannelBlocked();
@@ -175,10 +178,13 @@ public class TvControl {
         isChannelBlocked = false;
         if (isTunerSource(inputid)){
             if (channelId == -1) {
+                channelId = getPlayChannelId(inputid);
+            }
+            if (channelId == -1) {
                 setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
                 return false;
             }
-
+            mPlayChannelId = channelId;
             Uri channelUri = TvContract.buildChannelUri(channelId);
             if (mChannelDataManager.isChennelLocked(channelUri) && mTvInputManager.isParentalControlsEnabled()) {
                 isChannelBlocked = true;

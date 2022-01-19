@@ -129,10 +129,13 @@ public class InputSourceManager {
         if (currentId == null)
             return -1;
 
+        List<TvInputInfo> infos = mTvInputManager.getTvInputList();
+
         for(i=0; i<mInputInfos.size(); i++){
             InputInfo info = mInputInfos.get(i);
             if (currentId.equals(info.getId())){
-                if(isSpecialTVInput(currentId)){
+                TvInputInfo input = getTvInputInfo(currentId, infos);
+                if(isSpecialTVInput(input)){
                     String name = info.getName();
 
                     if(isAtvSearch() && name.equals(getATVInputName())){
@@ -163,20 +166,18 @@ public class InputSourceManager {
 
         List<HdmiDeviceInfo> hdmiList = getHdmiList();
         HdmiDeviceInfo audioSystem = getOrigHdmiDevice(LOGICAL_ADDRESS_AUDIO_SYSTEM, hdmiList);
-
-        for (TvInputInfo input : inputList) {
-            if (input.getId().equals(id)) {
-                CharSequence name = getTitle(mContext, input, audioSystem, hdmiList);
-                if (isSpecialTVInput(id)){
-                    if (isAtvSearch()){
-                        return getATVInputName();
-                    }
-                    else{
-                        return getDTVInputName();
-                    }
+        TvInputInfo input = getTvInputInfo(id, inputList);
+        if (input != null) {
+            CharSequence name = getTitle(mContext, input, audioSystem, hdmiList);
+            if (isSpecialTVInput(input)){
+                if (isAtvSearch()){
+                    return getATVInputName();
                 }
-                return name.toString();
+                else{
+                    return getDTVInputName();
+                }
             }
+            return name.toString();
         }
 
         return null;
@@ -196,33 +197,30 @@ public class InputSourceManager {
             name = getDTVInputName();
         }
 
-        for (TvInputInfo input : inputList) {
-            if (input.getId().equals(id)) {
-                DroidLogicTvUtils.setCurrentInputId(mContext, id);
-                DroidLogicTvUtils.setSearchInputId(mContext, input.getId(), false);
-                if (!input.isPassthroughInput()) {
-                    if (TextUtils.equals(name, getATVInputName())) {
-                        DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
-                    } else if (TextUtils.equals(name, getDTVInputName())) {
-                        String country = DroidLogicTvUtils.getCountry(mContext);
-                        ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
-                        DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
-                    }
+        TvInputInfo input = getTvInputInfo(id, inputList);
+        if (input != null) {
+            DroidLogicTvUtils.setCurrentInputId(mContext, id);
+            DroidLogicTvUtils.setSearchInputId(mContext, input.getId(), false);
+            if (!input.isPassthroughInput()) {
+                if (TextUtils.equals(name, getATVInputName())) {
+                    DroidLogicTvUtils.setSearchType(mContext, TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX));
+                } else if (TextUtils.equals(name, getDTVInputName())) {
+                    String country = DroidLogicTvUtils.getCountry(mContext);
+                    ArrayList<String> dtvList = TvScanConfig.GetTvDtvSystemList(country);
+                    DroidLogicTvUtils.setSearchType(mContext, dtvList.get(0));
                 }
+            }
 
-                Settings.System.putInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID,
-                        DroidLogicTvUtils.getHardwareDeviceId(input));
+            Settings.System.putInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID,
+                    DroidLogicTvUtils.getHardwareDeviceId(input));
 
-                SystemControlManager mSystemControlManager = SystemControlManager.getInstance();
-                if (DTVKITSOURCE.equals(input.getId())) {//DTVKIT SOURCE
-                    if (DEBUG) Logger.d(TAG, "DtvKit source");
-                    mSystemControlManager.SetDtvKitSourceEnable(1);
-                } else {
-                    if (DEBUG) Logger.d(TAG, "Not DtvKit source");
-                    mSystemControlManager.SetDtvKitSourceEnable(0);
-                }
-
-                break;
+            SystemControlManager mSystemControlManager = SystemControlManager.getInstance();
+            if (DTVKITSOURCE.equals(input.getId())) {//DTVKIT SOURCE
+                if (DEBUG) Logger.d(TAG, "DtvKit source");
+                mSystemControlManager.SetDtvKitSourceEnable(1);
+            } else {
+                if (DEBUG) Logger.d(TAG, "Not DtvKit source");
+                mSystemControlManager.SetDtvKitSourceEnable(0);
             }
         }
     }
@@ -287,8 +285,20 @@ public class InputSourceManager {
         return InputInfos;
     }
 
-    private boolean isTunerSource(String inputId) {
-        return !mTvInputManager.getTvInputInfo(inputId).isPassthroughInput();
+    private TvInputInfo getTvInputInfo(String inputId, List<TvInputInfo> infos) {
+        for(TvInputInfo info : infos){
+            if(info.getId().equals(inputId))
+                return info;
+        }
+
+        return null;
+    }
+
+    private boolean isTunerSource(TvInputInfo info) {
+        if(info == null){
+            return false;
+        }
+        return !info.isPassthroughInput();
     }
 
     private String getDTVInputName(){
@@ -299,17 +309,18 @@ public class InputSourceManager {
         return mContext.getResources().getString(R.string.input_atv);
     }
 
-    private boolean isSpecialTVInput(String id){
-        if (DroidLogicTvUtils.isChina(mContext)
-                && isTunerSource(id)
-                && DroidLogicTvUtils.isDroidLogicInput(id)) {
+    private boolean isSpecialTVInput(TvInputInfo info){
+        if (info!=null
+                && DroidLogicTvUtils.isChina(mContext)
+                && isTunerSource(info)
+                && DroidLogicTvUtils.isDroidLogicInput(info.getId())) {
             return true;
         }
         return false;
     }
 
     private InputInfo getSpecificDtv(Context themedContext, TvInputInfo input) {
-        if (isSpecialTVInput(input.getId())) {
+        if (isSpecialTVInput(input)) {
             String name = getDTVInputName();
             boolean connect = isInputEnabled(input);
             Logger.d(TAG, "input:" + name + " connect:"+connect);
