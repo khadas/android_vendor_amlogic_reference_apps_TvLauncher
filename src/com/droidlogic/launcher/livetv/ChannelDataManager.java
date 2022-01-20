@@ -149,10 +149,15 @@ public class ChannelDataManager {
             channelId = getLong(mContext, inputId, -1);
         }
 
+        ChannelInfo info = getFirstChannel(inputId);
         if (channelId == -1){
-            ChannelInfo info = getFirstChannel(inputId);
             if (info != null) {
                 channelId = info.getId();
+            }
+        }
+        else{
+            if (info == null){
+                channelId = -1;  //如果当前source无节目
             }
         }
 

@@ -564,9 +564,9 @@ public class TvControl {
 
     private long getPlayChannelId(String inputId){
         long channelId = mChannelDataManager.getLastPlayChannelForInput(inputId);
-        if (channelId == -1) {
-            channelId = mChannelDataManager.getLastPlayChannel(inputId);
-        }
+//        if (channelId == -1) {
+//            channelId = mChannelDataManager.getLastPlayChannel(inputId);
+//        }
         return channelId;
     }
 
