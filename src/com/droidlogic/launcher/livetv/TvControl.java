@@ -525,10 +525,8 @@ public class TvControl {
                 case TV_MSG_PLAY_TV:
                     if (mTvConfig.isBootvideoStopped()) {
                         Logger.d(TAG, "bootvideo is stopped, and tvapp released, start tv play");
-                        String inputId = mPlayInputId;
-                        long channelId = mPlayChannelId;
-                        if (isChannelReady(inputId, channelId)) {
-                            tuneTvView(inputId, channelId);
+                        if (isChannelReady(mPlayInputId, mPlayChannelId)) {
+                            tuneTvView(mPlayInputId, mPlayChannelId);
                         } else {
                             Logger.d(TAG, "screen blocked and no need start tv play");
                         }
