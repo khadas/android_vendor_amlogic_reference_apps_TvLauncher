@@ -157,7 +157,7 @@ public class ChannelDataManager {
         }
         else{
             if (info == null){
-                channelId = -1;  //如果当前source无节目
+                channelId = -1;  //if current source no channel
             }
         }
 
