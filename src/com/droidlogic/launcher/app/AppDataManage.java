@@ -1,6 +1,7 @@
 
 package com.droidlogic.launcher.app;
 
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_FILE_BROWSER;
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
 
 import android.app.ActivityManager;
@@ -35,6 +36,7 @@ public class AppDataManage {
             "com.droidlogic.appinstall",
             "com.droidlogic.android.tv",
             "org.chromium.webview_shell",
+            PKG_NAME_FILE_BROWSER,
             PKG_NAME_MIRACAST
     };
 
