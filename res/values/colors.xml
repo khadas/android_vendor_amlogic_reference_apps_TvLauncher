@@ -33,5 +33,6 @@
 
     <color name="common_card_item_name_normal">#182D53</color>
     <color name="common_card_item_name_focus">#425D8D</color>
+    <color name="status_bar_fun_bg_color">#14FFFFFF</color>
 
 </resources>

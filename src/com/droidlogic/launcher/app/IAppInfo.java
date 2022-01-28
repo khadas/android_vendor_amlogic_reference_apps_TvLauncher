@@ -1,0 +1,1 @@
+package com.droidlogic.launcher.app;public interface IAppInfo {}

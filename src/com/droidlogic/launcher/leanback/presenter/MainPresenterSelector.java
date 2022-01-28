@@ -14,6 +14,7 @@ import com.droidlogic.launcher.input.InputSourceManager;
 import com.droidlogic.launcher.leanback.listrow.TvHeaderListRow;
 import com.droidlogic.launcher.leanback.presenter.content.TvHeaderPresenter;
 import com.droidlogic.launcher.leanback.presenter.title.CusTitlePresenter;
+import com.droidlogic.launcher.util.DensityTool;
 import com.droidlogic.launcher.util.Logger;
 
 public class MainPresenterSelector extends PresenterSelector {
@@ -59,6 +60,7 @@ public class MainPresenterSelector extends PresenterSelector {
                 final HorizontalGridView gridView = viewHolder.getGridView();
                 gridView.setClipChildren(false);
                 gridView.setClipToPadding(false);
+                gridView.setHorizontalSpacing(DensityTool.dp2px(13));
                 super.initializeRowViewHolder(holder);
             }
 

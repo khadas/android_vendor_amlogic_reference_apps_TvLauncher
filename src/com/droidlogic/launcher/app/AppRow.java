@@ -1,6 +1,7 @@
 package com.droidlogic.launcher.app;
 
 import android.content.Context;
+
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.HeaderItem;
 import androidx.leanback.widget.ListRow;
@@ -8,15 +9,18 @@ import androidx.leanback.widget.ListRow;
 import com.droidlogic.launcher.leanback.presenter.content.AppCardPresenter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class AppRow {
-    private String  mTitle;
+
+    private final int APP_MAX_SHOW_NUM = 5;
+    private String mTitle;
     private Context mContext;
     private ArrayObjectAdapter mGridAdapter;
     private ArrayObjectAdapter mListRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
 
-    public AppRow(Context context, String title, ArrayObjectAdapter gridAdapter){
+    public AppRow(Context context, String title, ArrayObjectAdapter gridAdapter) {
         mContext = context;
         mTitle = title;
         mGridAdapter = gridAdapter;
@@ -25,67 +29,93 @@ public class AppRow {
         mGridAdapter.add(new ListRow(header, mListRowAdapter));
     }
 
-    public void load(){
-        ArrayList<AppModel> appDataList = new AppDataManage(mContext).getAppsList();
+    private void generateAppMoreModel(List<AppModel> appModelList) {
+        AppMoreModel appMoreModel = new AppMoreModel();
+        if (appModelList != null) {
+            for (AppModel appModel : appModelList) {
+                appMoreModel.addAppModel(appModel);
+            }
+        }
+
+        if (appMoreModel.getAppModelList().size() > 0) {
+            mListRowAdapter.add(appMoreModel);
+        }
+    }
+
+    private void generateAppRowData(ArrayList<AppModel> appDataList) {
         int cardCount = appDataList.size();
-
         for (int i = 0; i < cardCount; i++) {
-            mListRowAdapter.add(appDataList.get(i));
-        }
-    }
-
-    public void add(String packageName){
-        AppModel model = new AppDataManage(mContext).getLaunchAppModel(packageName);
-        if (model != null) {
-            mListRowAdapter.add(model);
-        }
-    }
-
-    public void update(String packageName){
-        int i;
-        AppModel newModel = new AppDataManage(mContext).getLaunchAppModel(packageName);
-
-        for (i = 0; i < mListRowAdapter.size(); i++) {
-            AppModel model = (AppModel) mListRowAdapter.get(i);
-            if (model.getPackageName().equals(packageName)) {
-                mListRowAdapter.replace(i, newModel);
+            if (i < APP_MAX_SHOW_NUM) {
+                mListRowAdapter.add(appDataList.get(i));
+            } else {
+                mListRowAdapter.remove(appDataList.get(APP_MAX_SHOW_NUM - 1));
+                generateAppMoreModel(appDataList.subList(APP_MAX_SHOW_NUM - 1, cardCount));
                 break;
             }
         }
     }
 
-    public void remove(String packageName){
-        int i;
-        for (i = 0; i < mListRowAdapter.size(); i++) {
-            AppModel model = (AppModel) mListRowAdapter.get(i);
-            if (model.getPackageName().equals(packageName)) {
-                mListRowAdapter.removeItems(i, 1);
-                break;
-            }
-        }
+    private void load() {
+        ArrayList<AppModel> appDataList = new AppDataManage(mContext).getAppsList();
+        mListRowAdapter.clear();
+        generateAppRowData(appDataList);
     }
 
-    public void update(){
-        int i;
+    public void update() {
 
         ArrayList<AppModel> list = new AppDataManage(mContext).getAppsList();
-
-        int curSize = mListRowAdapter.size();
         int newSize = list.size();
-        if (curSize != newSize) {
-            mListRowAdapter.clear();
-            for (i = 0; i < newSize; i++) {
-                AppModel model2 = (AppModel) list.get(i);
-                mListRowAdapter.add(model2);
+        int adapterSize = getAdapterSize();
+        boolean adapterSizeChanged = false;
+
+        if (newSize < adapterSize) {
+            int shouldRemoveCount = adapterSize - newSize;
+            mListRowAdapter.removeItems(adapterSize - shouldRemoveCount, shouldRemoveCount);
+            adapterSizeChanged = true;
+        }
+
+        for (int i = 0; i < newSize; i++) {
+
+            AppModel model2 = (AppModel) list.get(i);
+
+            if (adapterSizeChanged) {
+                adapterSizeChanged = false;
+                adapterSize = getAdapterSize();
             }
-        } else {
-            for (i = 0; i < newSize; i++) {
-                AppModel model1 = (AppModel) mListRowAdapter.get(i);
-                AppModel model2 = (AppModel) list.get(i);
-                if (!model1.getPackageName().equals(model2.getPackageName())) {
+
+            if (i < adapterSize) {
+                if (i < APP_MAX_SHOW_NUM) {
                     mListRowAdapter.replace(i, model2);
+                } else {
+                    mListRowAdapter.remove(mListRowAdapter.get(i - 1));
+                    generateAppMoreModel(list.subList(APP_MAX_SHOW_NUM - 1, list.size()));
+                    break;
+                }
+            } else {
+                adapterSizeChanged = true;
+                if (i < APP_MAX_SHOW_NUM) {
+                    mListRowAdapter.add(model2);
+                } else {
+                    mListRowAdapter.remove(mListRowAdapter.get(i - 1));
+                    generateAppMoreModel(list.subList(APP_MAX_SHOW_NUM - 1, list.size()));
+                    break;
                 }
             }
+
         }
+    }
+
+    private int getAdapterSize() {
+        int size = 0;
+        for (int i = 0; i < mListRowAdapter.size(); i++) {
+            Object item = mListRowAdapter.get(i);
+            if (item instanceof AppModel) {
+                size++;
+            } else if (item instanceof AppMoreModel) {
+                AppMoreModel appMoreModel = (AppMoreModel) item;
+                size += appMoreModel.getAppModelList().size();
+            }
+        }
+        return size;
     }
 }

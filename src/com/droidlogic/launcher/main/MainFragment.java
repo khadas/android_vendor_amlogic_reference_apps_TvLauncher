@@ -32,7 +32,9 @@ import androidx.leanback.widget.VerticalGridView;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppModel;
+import com.droidlogic.launcher.app.AppMoreModel;
 import com.droidlogic.launcher.app.AppRow;
+import com.droidlogic.launcher.app.gallery.AppGalleryActivity;
 import com.droidlogic.launcher.base.LeanbackActivity;
 import com.droidlogic.launcher.function.FunctionModel;
 import com.droidlogic.launcher.input.InputModel;
@@ -223,13 +225,13 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private void initView(View view) {
         if (view == null) return;
-        view.findViewById(R.id.img_search).setOnClickListener(view1 -> {
+        view.findViewById(R.id.fun_content_search).setOnClickListener(view1 -> {
             if (getActivity() instanceof LeanbackActivity) {
                 LeanbackActivity activity = (LeanbackActivity) getActivity();
                 activity.onSearchRequested();
             }
         });
-        view.findViewById(R.id.img_clean).setOnClickListener(view12 -> {
+        view.findViewById(R.id.fun_memory_clean).setOnClickListener(view12 -> {
             //long beforeMemory = AppUtils.getAvailMemory(getContext());
             AppUtils.killRunningProcesses(getContext());
             //long collectionMemory = (AppUtils.getAvailMemory(getContext()) - beforeMemory);
@@ -254,6 +256,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     if (launchIntent != null) {
                         startActivity(launchIntent);
                     }
+                } else if (item instanceof AppMoreModel) {
+                    startActivity(new Intent(getContext(), AppGalleryActivity.class));
                 } else if (item instanceof FunctionModel) {
                     FunctionModel model = (FunctionModel) item;
                     Intent intent = model.getIntent();
@@ -285,6 +289,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 View defaultFocusView = verticalGridView.findViewById(R.id.border_view_holder);
                 if (defaultFocusView != null) {
                     defaultFocusView.requestFocus();
+                    defaultFocusView.setNextFocusUpId(R.id.fun_content_search);
                 }
                 //initial tvControl
                 TvView tvView = (TvView) verticalGridView.findViewById(R.id.tv_view);
@@ -362,14 +367,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             return;
         }
 
-        Logger.i(TAG, "---update app:" + packageName);
-        if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
-            mAppRow.remove(packageName);
-        } else if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-            mAppRow.add(packageName);
-        } else if (Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
-            mAppRow.update(packageName);
-        }
+        Logger.i(TAG, "---update app:" + packageName + "\t" + intent.getAction());
+        mAppRow.update();
     }
 
     private void killTvApp() {
@@ -399,16 +398,16 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             if (networkInfo != null && networkInfo.isAvailable()) {
                 switch (networkInfo.getType()) {
                     case ConnectivityManager.TYPE_ETHERNET:
-                        imgNetWork.setImageResource(R.drawable.statusbar_ethernet);
+                        imgNetWork.setImageResource(R.drawable.status_bar_ethernet);
                         break;
                     case ConnectivityManager.TYPE_WIFI:
-                        imgNetWork.setImageResource(R.drawable.statusbar_wifi);
+                        imgNetWork.setImageResource(R.drawable.status_bar_wifi);
                         break;
                     default:
                         break;
                 }
             } else {
-                imgNetWork.setImageResource(R.drawable.statusbar_no_net);
+                imgNetWork.setImageResource(R.drawable.status_bar_no_net);
             }
         }
     };

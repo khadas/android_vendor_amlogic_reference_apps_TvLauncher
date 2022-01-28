@@ -10,7 +10,7 @@
         android:id="@+id/vtl_grid_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="68dp"
         android:clipToPadding="false"
         android:paddingBottom="60dp"
         app:focusOutEnd="true"
@@ -22,19 +22,20 @@
         android:id="@+id/tv_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="60dp"
-        android:textSize="28sp"
         android:textColor="@android:color/white"
+        android:textSize="28sp"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="2022-01-28 07:25" />
 
     <ImageView
         android:id="@+id/iv_network"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="20dp"
-        android:src="@drawable/statusbar_no_net"
+        android:src="@drawable/status_bar_no_net"
         app:layout_constraintBottom_toBottomOf="@+id/tv_date"
         app:layout_constraintRight_toLeftOf="@+id/tv_date"
         app:layout_constraintTop_toTopOf="@+id/tv_date"
@@ -45,8 +46,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="20dp"
+        android:src="@drawable/status_bar_storage"
         android:visibility="gone"
-        android:src="@drawable/statusbar_storage"
         app:layout_constraintBottom_toBottomOf="@+id/tv_date"
         app:layout_constraintRight_toLeftOf="@+id/iv_network"
         app:layout_constraintTop_toTopOf="@+id/tv_date"
@@ -57,56 +58,62 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_marginEnd="20dp"
+        android:src="@drawable/status_bar_sd_card"
         android:visibility="gone"
-        app:layout_goneMarginEnd="20dp"
-        android:src="@drawable/statusbar_sd_card"
         app:layout_constraintBottom_toBottomOf="@+id/tv_date"
         app:layout_constraintRight_toLeftOf="@+id/iv_usb_device"
         app:layout_constraintTop_toTopOf="@+id/tv_date"
-        tools:ignore="ContentDescription" />
+        app:layout_goneMarginEnd="20dp"
+        tools:ignore="ContentDescription"
+        tools:visibility="visible" />
 
-    <com.droidlogic.launcher.leanback.view.BorderEffectLayout
-        android:id="@+id/img_search"
-        android:layout_width="40dp"
+    <com.droidlogic.launcher.leanback.view.NoEffectLayout
+        android:id="@+id/fun_content_search"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_marginStart="60dp"
-        app:effectShape="oval"
+        android:background="@drawable/bg_status_bar_function_selector"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
         app:layout_constraintBottom_toBottomOf="@id/tv_date"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="@id/tv_date">
 
-        <ImageView
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:scaleType="centerCrop"
-            android:padding="2dp"
-            android:background="@drawable/bg_round_status_bar_search"
-            android:src="@drawable/statusbar_search"
-            tools:ignore="ContentDescription" />
+            android:drawableStart="@drawable/status_bar_search"
+            android:gravity="center"
+            android:text="@string/status_bar_search"
+            android:textSize="20sp"
+            tools:ignore="UseCompatTextViewDrawableXml" />
 
-    </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
+    </com.droidlogic.launcher.leanback.view.NoEffectLayout>
 
-    <com.droidlogic.launcher.leanback.view.BorderEffectLayout
-        android:id="@+id/img_clean"
-        android:layout_width="40dp"
+    <com.droidlogic.launcher.leanback.view.NoEffectLayout
+        android:id="@+id/fun_memory_clean"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_marginStart="20dp"
-        app:effectShape="oval"
+        android:background="@drawable/bg_status_bar_function_selector"
+        android:padding="4dp"
         app:layout_constraintBottom_toBottomOf="@id/tv_date"
-       app:layout_constraintLeft_toRightOf="@id/img_search"
+        app:layout_constraintLeft_toRightOf="@id/fun_content_search"
         app:layout_constraintTop_toTopOf="@id/tv_date">
 
-        <ImageView
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:scaleType="centerCrop"
-            android:padding="3dp"
-            android:background="@drawable/bg_round_status_bar_search"
-            android:src="@drawable/statusbar_clean"
-            tools:ignore="ContentDescription" />
+            android:drawableStart="@drawable/status_bar_clean"
+            android:gravity="center"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="@string/status_bar_memory_clean"
+            android:textSize="20sp"
+            tools:ignore="UseCompatTextViewDrawableXml" />
 
-    </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
+    </com.droidlogic.launcher.leanback.view.NoEffectLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

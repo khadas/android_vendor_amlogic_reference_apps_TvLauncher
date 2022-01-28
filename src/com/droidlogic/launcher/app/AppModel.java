@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
-public class AppModel {
+public class AppModel implements IAppInfo {
 
     private String dataDir;
     private Drawable icon;

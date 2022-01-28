@@ -1,5 +1,6 @@
 package com.droidlogic.launcher.leanback.presenter.content;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,30 +11,38 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import androidx.leanback.widget.Presenter;
-import androidx.palette.graphics.Palette;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.leanback.widget.Presenter;
+import androidx.palette.graphics.Palette;
+
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppModel;
+import com.droidlogic.launcher.app.AppMoreModel;
+import com.droidlogic.launcher.app.IAppInfo;
 import com.droidlogic.launcher.leanback.presenter.BaseViewHolder;
 import com.droidlogic.launcher.util.ImageTool;
+
+import java.util.List;
 
 
 public class AppCardPresenter extends Presenter {
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup) {
-        return new Holder(viewGroup, R.layout.item_common_card);
+        return new AppHolder(viewGroup, R.layout.item_common_card);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Object item) {
-        Holder holder = (Holder) viewHolder;
-        holder.bindData((AppModel) item);
+        AppHolder appHolder = (AppHolder) viewHolder;
+        appHolder.bindData((IAppInfo) item);
     }
 
     @Override
@@ -41,17 +50,19 @@ public class AppCardPresenter extends Presenter {
 
     }
 
-    private static class Holder extends BaseViewHolder<AppModel> {
+    private static class AppHolder extends BaseViewHolder<IAppInfo> {
 
         private final ImageView imgAppIcon;
         private final ImageView imgAppBanner;
         private final TextView tvAppName;
+        private final GridView gvAppMore;
 
-        public Holder(ViewGroup viewGroup, int layoutId) {
+        public AppHolder(ViewGroup viewGroup, int layoutId) {
             super(viewGroup, layoutId);
             imgAppIcon = (ImageView) view.findViewById(R.id.item_img_card_icon);
             imgAppBanner = (ImageView) view.findViewById(R.id.item_img_card_banner);
             tvAppName = (TextView) view.findViewById(R.id.item_tv_card_name);
+            gvAppMore = (GridView) view.findViewById(R.id.gv_app_more);
             view.findViewById(R.id.item_img_card_parent)
                     .setOnFocusChangeListener(new View.OnFocusChangeListener() {
                         @Override
@@ -62,35 +73,45 @@ public class AppCardPresenter extends Presenter {
         }
 
         @Override
-        protected void bindData(AppModel appModel) {
-            Drawable banner = appModel.getBanner();
-            Drawable icon = appModel.getIcon();
-            imgAppBanner.setImageDrawable(banner);
-            if (banner != null) {
-                icon = null;
-            } else {
-                generateAppCardBg(imgAppBanner, ImageTool.drawableToBitmap(icon));
+        protected void bindData(IAppInfo appInfo) {
+            if (appInfo instanceof AppModel) {
+                AppModel appModel = (AppModel) appInfo;
+                gvAppMore.setAdapter(null);
+                Drawable banner = appModel.getBanner();
+                Drawable icon = appModel.getIcon();
+                imgAppBanner.setImageDrawable(banner);
+                if (banner != null) {
+                    icon = null;
+                } else {
+                    generateAppCardBg(imgAppBanner, ImageTool.drawableToBitmap(icon));
+                }
+                imgAppIcon.setImageDrawable(icon);
+                tvAppName.setText(appModel.getName());
+            } else if (appInfo instanceof AppMoreModel) {
+
+                imgAppIcon.setImageDrawable(null);
+                imgAppBanner.setImageDrawable(null);
+                tvAppName.setText(R.string.app_more);
+
+                AppMoreModel appMoreModel = (AppMoreModel) appInfo;
+                AppMoreAdapter adapter = new AppMoreAdapter(appMoreModel.getAppModelList());
+                gvAppMore.setAdapter(adapter);
             }
-            imgAppIcon.setImageDrawable(icon);
-            tvAppName.setText(appModel.getName());
         }
 
         private void generateAppCardBg(final ImageView imageView, Bitmap bitmap) {
-            Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
-                @Override
-                public void onGenerated(Palette palette) {
-                    if (palette == null) return;
-                    int startColor = palette.getLightMutedColor(Color.TRANSPARENT);
-                    int endColor = palette.getLightVibrantColor(Color.TRANSPARENT);
-                    if (palette.getDarkVibrantColor(Color.TRANSPARENT) != Color.TRANSPARENT) {
-                        startColor = palette.getDarkVibrantColor(Color.TRANSPARENT);
-                        endColor = palette.getVibrantColor(Color.TRANSPARENT);
-                    } else if (palette.getDarkMutedColor(Color.TRANSPARENT) != Color.TRANSPARENT) {
-                        startColor = palette.getDarkMutedColor(Color.TRANSPARENT);
-                        endColor = palette.getMutedColor(Color.TRANSPARENT);
-                    }
-                    bindImageBackground(imageView, startColor, endColor);
+            Palette.from(bitmap).generate(palette -> {
+                if (palette == null) return;
+                int startColor = palette.getLightMutedColor(Color.TRANSPARENT);
+                int endColor = palette.getLightVibrantColor(Color.TRANSPARENT);
+                if (palette.getDarkVibrantColor(Color.TRANSPARENT) != Color.TRANSPARENT) {
+                    startColor = palette.getDarkVibrantColor(Color.TRANSPARENT);
+                    endColor = palette.getVibrantColor(Color.TRANSPARENT);
+                } else if (palette.getDarkMutedColor(Color.TRANSPARENT) != Color.TRANSPARENT) {
+                    startColor = palette.getDarkMutedColor(Color.TRANSPARENT);
+                    endColor = palette.getMutedColor(Color.TRANSPARENT);
                 }
+                bindImageBackground(imageView, startColor, endColor);
             });
         }
 
@@ -107,6 +128,43 @@ public class AppCardPresenter extends Presenter {
             canvas.drawRect(rectF, paint);
             imageView.setBackground(new BitmapDrawable(bitmap));
         }
+    }
+
+    private static class AppMoreAdapter extends BaseAdapter {
+
+        private final List<AppModel> appModelList;
+
+        public AppMoreAdapter(List<AppModel> appModelList) {
+            this.appModelList = appModelList;
+        }
+
+        @Override
+        public int getCount() {
+            final int MAX_SHOW_NUM = 8;
+            int count = appModelList == null ? 0 : appModelList.size();
+            return Math.min(count, MAX_SHOW_NUM);
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return appModelList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @SuppressLint("ViewHolder")
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            parent.setFocusable(false);
+            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_app_more, parent, false);
+            ImageView imgAppIcon = (ImageView) convertView.findViewById(R.id.img_app_more_icon);
+            imgAppIcon.setImageDrawable(appModelList.get(position).getIcon());
+            return convertView;
+        }
+
     }
 
 }

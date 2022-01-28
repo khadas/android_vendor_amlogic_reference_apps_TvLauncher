@@ -8,7 +8,7 @@
     <dimen name="main_page_vtl_space">16dp</dimen>
 
     <dimen name="item_hot_function_space">13dp</dimen>
-    <dimen name="item_app_card_width">221dp</dimen>
+    <dimen name="item_app_card_width">222dp</dimen>
     <dimen name="item_app_card_height">170dp</dimen>
 
     <!--
