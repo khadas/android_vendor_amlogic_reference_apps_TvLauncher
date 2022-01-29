@@ -10,4 +10,10 @@
         <item name="overlayDimDimmedLevel">10%</item>
     </style>
 
+    <style name="MemoryProgressBar" parent="@android:style/Widget.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/progress_horizontal</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="android:maxHeight">32dp</item>
+    </style>
+
 </resources>

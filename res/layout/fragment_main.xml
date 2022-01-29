@@ -102,17 +102,28 @@
         app:layout_constraintLeft_toRightOf="@id/fun_content_search"
         app:layout_constraintTop_toTopOf="@id/tv_date">
 
+        <ProgressBar
+            android:id="@+id/pb_status_bar_memory"
+            style="@style/MemoryProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="40dp"
+            android:max="100"
+            android:progress="100" />
+
         <TextView
+            android:id="@+id/tv_status_bar_memory"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:drawableStart="@drawable/status_bar_clean"
+            android:drawablePadding="8dp"
             android:gravity="center"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
-            android:text="@string/status_bar_memory_clean"
             android:textSize="20sp"
-            tools:ignore="UseCompatTextViewDrawableXml" />
+            tools:ignore="UseCompatTextViewDrawableXml"
+            tools:text="128MB / 2048MB" />
 
     </com.droidlogic.launcher.leanback.view.NoEffectLayout>
 

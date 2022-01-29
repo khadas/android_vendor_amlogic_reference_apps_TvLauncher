@@ -9,12 +9,12 @@ import java.util.List;
 
 public class AppUtils {
 
-    public static long getAvailMemory(Context context) {
+    public static ActivityManager.MemoryInfo getMemoryInfo(Context context) {
         ActivityManager activityManager = (ActivityManager) context
                 .getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(memoryInfo);
-        return memoryInfo.availMem;
+        return memoryInfo;
     }
 
     public static void killRunningProcesses(Context context) {
