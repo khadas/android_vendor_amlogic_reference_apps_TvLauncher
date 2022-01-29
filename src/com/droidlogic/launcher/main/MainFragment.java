@@ -47,6 +47,7 @@ import com.droidlogic.launcher.livetv.TvControl;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
 import com.droidlogic.launcher.recommend.RecommendRow;
+import com.droidlogic.launcher.util.AppStateChangeListener;
 import com.droidlogic.launcher.util.AppUtils;
 import com.droidlogic.launcher.util.Logger;
 import com.droidlogic.launcher.util.StorageManagerUtil;
@@ -76,7 +77,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private VerticalGridView verticalGridView;
     private ArrayObjectAdapter mRowsAdapter;
 
-    private boolean broadcastsRegisteredApp = false;
+    private AppStateChangeListener appListener;
 
     private boolean broadcastsRegisteredNetwork = false;
 
@@ -96,7 +97,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        registerAppReceiver();
+        registerReceiver();
     }
 
     @Override
@@ -150,7 +151,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterAppReceiver();
+        unregisterReceiver();
         if (mLoadHandler != null) {
             mLoadHandler.removeCallbacksAndMessages(null);
             mLoadHandler = null;
@@ -320,15 +321,16 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mRecommendRow = new RecommendRow(getActivity(), mRowsAdapter);
     }
 
-    private void registerAppReceiver() {
-        if (!broadcastsRegisteredApp) {
-            IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-            filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
-            filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
-            filter.addDataScheme("package");
-            getActivity().registerReceiver(appReceiver, filter);
-            broadcastsRegisteredApp = true;
+    private void registerReceiver() {
+        if (appListener == null) {
+            appListener = new AppStateChangeListener(getContext(), new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    updateAppList(intent);
+                }
+            });
         }
+        appListener.registerReceiver();
 
         if (!broadcastsRegisteredNetwork) {
             IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
@@ -339,12 +341,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     }
 
-    private void unregisterAppReceiver() {
-        if (broadcastsRegisteredApp) {
-            getActivity().unregisterReceiver(appReceiver);
-            broadcastsRegisteredApp = false;
-        }
-
+    private void unregisterReceiver() {
+        appListener.unregisterReceiver();
         if (broadcastsRegisteredNetwork) {
             getActivity().unregisterReceiver(networkReceiver);
             broadcastsRegisteredNetwork = false;
@@ -375,19 +373,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         ActivityManager activityManager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
         activityManager.killBackgroundProcesses(PACKAGE_LIVE_TV);
     }
-
-    private final BroadcastReceiver appReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            Logger.i(TAG, "appReceiver receive " + action);
-            if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
-                    || Intent.ACTION_PACKAGE_REMOVED.equals(action)
-                    || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-                updateAppList(intent);
-            }
-        }
-    };
 
     private final BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
