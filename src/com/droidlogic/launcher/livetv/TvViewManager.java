@@ -138,6 +138,7 @@ public class TvViewManager {
             if (enable) {
                 mTvView.setVisibility(View.VISIBLE);
             } else {
+                setTvPrompt(null, null);
                 mTvView.setVisibility(View.GONE);
                 mTvView.reset();
             }
