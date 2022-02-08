@@ -5,21 +5,13 @@
             <stroke
                 android:width="2dp"
                 android:color="#FFFFFF" />
-            <corners android:radius="10dp" />
+            <corners android:radius="20dp" />
         </shape>
     </item>
-
-    <item
-        android:bottom="2dp"
-        android:left="2dp"
-        android:right="2dp"
-        android:top="2dp">
+    <item>
         <shape android:shape="rectangle">
-            <stroke
-                android:width="4dp"
-                android:color="#000000" />
             <solid android:color="#26FFFFFF" />
-            <corners android:radius="14dp" />
+            <corners android:radius="20dp" />
         </shape>
     </item>
 </layer-list>
