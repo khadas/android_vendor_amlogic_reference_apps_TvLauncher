@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.storage.StorageManager;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -277,6 +278,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 } else if (item instanceof FunctionModel) {
                     FunctionModel model = (FunctionModel) item;
                     Intent intent = model.getIntent();
+                    if (intent == null && !TextUtils.isEmpty(model.getPackageName())) {
+                        intent = getActivity().getPackageManager().getLaunchIntentForPackage(model.getPackageName());
+                        model.setIntent(intent);
+                    }
                     if (intent != null) {
                         startActivity(intent);
                     }

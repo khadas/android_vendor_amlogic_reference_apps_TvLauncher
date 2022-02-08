@@ -23,6 +23,7 @@ public class FunctionModel {
     private int bgColor;
     private String id;
     private int name;
+    private String packageName;
     private Intent mIntent;
 
     public int getIcon() {
@@ -65,6 +66,14 @@ public class FunctionModel {
         mIntent = intent;
     }
 
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
+
     public static List<FunctionModel> getFunctionList(Context context) {
         List<FunctionModel> functionModels = new ArrayList<>();
         FunctionModel func;
@@ -73,6 +82,7 @@ public class FunctionModel {
         func.setName(R.string.function_app_filebrowser);
         func.setIcon(R.drawable.icon_file_browser);
         func.setBgColor(Color.parseColor("#1E3F76"));
+        func.setPackageName(PKG_NAME_FILE_BROWSER);
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(PKG_NAME_FILE_BROWSER);
         func.setIntent(intent);
         functionModels.add(func);
@@ -81,6 +91,7 @@ public class FunctionModel {
         func.setName(R.string.function_app_tvcast);
         func.setIcon(R.drawable.icon_tv_cast);
         func.setBgColor(Color.parseColor("#325568"));
+        func.setPackageName(PKG_NAME_MIRACAST);
         intent = context.getPackageManager().getLaunchIntentForPackage(PKG_NAME_MIRACAST);
         func.setIntent(intent);
         functionModels.add(func);
