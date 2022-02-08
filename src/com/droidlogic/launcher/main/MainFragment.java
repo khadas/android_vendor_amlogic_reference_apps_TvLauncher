@@ -2,6 +2,7 @@ package com.droidlogic.launcher.main;
 
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,10 +17,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.storage.StorageManager;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,6 +54,10 @@ import com.droidlogic.launcher.util.AppStateChangeListener;
 import com.droidlogic.launcher.util.AppUtils;
 import com.droidlogic.launcher.util.Logger;
 import com.droidlogic.launcher.util.StorageManagerUtil;
+
+import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
@@ -87,6 +94,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private ImageView imgUsbDevice;
 
+    private TextView tvMemory;
+
+    private ProgressBar pbMemory;
+
     public MainFragment() {
     }
 
@@ -98,6 +109,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerReceiver();
+        startTimer();
     }
 
     @Override
@@ -152,6 +164,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver();
+        stopTimer();
         if (mLoadHandler != null) {
             mLoadHandler.removeCallbacksAndMessages(null);
             mLoadHandler = null;
@@ -239,6 +252,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             //Logger.i("collectionMemory:" + collectionMemory);
             Toast.makeText(getContext(), R.string.clean_memory_notice, Toast.LENGTH_SHORT).show();
         });
+        pbMemory = (ProgressBar) view.findViewById(R.id.pb_status_bar_memory);
+        tvMemory = (TextView) view.findViewById(R.id.tv_status_bar_memory);
         imgNetWork = (ImageView) view.findViewById(R.id.iv_network);
         imgTfCard = (ImageView) view.findViewById(R.id.iv_tf_card);
         imgUsbDevice = (ImageView) view.findViewById(R.id.iv_usb_device);
@@ -319,6 +334,36 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private void addRecommendRow() {
         mRecommendRow = new RecommendRow(getActivity(), mRowsAdapter);
+    }
+
+    private Timer memoryTrackTimer;
+
+    private void stopTimer() {
+        if (memoryTrackTimer != null) {
+            memoryTrackTimer.cancel();
+            memoryTrackTimer = null;
+        }
+    }
+
+    private void startTimer() {
+        stopTimer();
+        memoryTrackTimer = new Timer();
+        memoryTrackTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Log.i("startTimer", "" + Thread.currentThread());
+                Activity context = getActivity();
+                if (context == null) return;
+                final ActivityManager.MemoryInfo memoryInfo = AppUtils.getMemoryInfo(context);
+                context.runOnUiThread(() -> {
+                    int availMem = (int) (memoryInfo.availMem / 1024f / 1024f);
+                    int totalMem = (int) (memoryInfo.totalMem / 1024f / 1024f);
+                    String memory = String.format(Locale.getDefault(), "%dMB / %d MB", availMem, totalMem);
+                    tvMemory.setText(memory);
+                    pbMemory.setProgress(availMem * 100 / totalMem);
+                });
+            }
+        }, 500, 1000);
     }
 
     private void registerReceiver() {
