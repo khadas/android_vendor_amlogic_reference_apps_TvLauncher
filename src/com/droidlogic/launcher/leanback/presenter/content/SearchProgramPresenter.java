@@ -8,19 +8,19 @@ import com.bumptech.glide.Glide;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.leanback.presenter.BasePresenter;
 import com.droidlogic.launcher.leanback.presenter.BaseViewHolder;
-import com.droidlogic.launcher.livetv.Channel;
+import com.droidlogic.launcher.livetv.Program;
 
-public class SearchChannelPresenter extends BasePresenter {
+public class SearchProgramPresenter extends BasePresenter {
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup) {
-        return new Holder(viewGroup, R.layout.item_search_channel);
+        return new Holder(viewGroup, R.layout.item_search_program);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Object o) {
         Holder holder = (Holder) viewHolder;
-        holder.bindData((Channel) o);
+        holder.bindData((Program) o);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class SearchChannelPresenter extends BasePresenter {
 
     }
 
-    private static class Holder extends BaseViewHolder<Channel> {
+    private static class Holder extends BaseViewHolder<Program> {
 
         private final ImageView imageCardView;
         private final TextView tvTitle;
@@ -40,10 +40,10 @@ public class SearchChannelPresenter extends BasePresenter {
         }
 
         @Override
-        protected void bindData(Channel channel) {
-            tvTitle.setText(channel.getDisplayName());
+        protected void bindData(Program program) {
+            tvTitle.setText(program.getTile());
             Glide.with(view.getContext())
-                    .load(channel.getAppLinkIconUri())
+                    .load(program.getPosterArtUrl())
                     .placeholder(R.drawable.place_holder_tv)
                     .into(imageCardView);
 //            String iconUri=channel.getAppLinkPosterArtUri();
@@ -51,7 +51,6 @@ public class SearchChannelPresenter extends BasePresenter {
 //                imageCardView.setImageURI(Uri.parse(iconUri));
 //            }
         }
-
     }
 
 }

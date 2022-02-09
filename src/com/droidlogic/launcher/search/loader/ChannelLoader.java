@@ -23,9 +23,9 @@ public class ChannelLoader extends BaseLoader<Channel> {
     @Override
     protected Cursor createCursor() {
         //TYPE_PREVIEW TYPE_OTHER
-        String selection = "type=? and display_name like ?";
-        String[] args = {"TYPE_PREVIEW", String.format(Locale.getDefault(), "%%%s%%", query)};
-        Logger.i("createCursor:" + args[1]);
+        String selection = "display_name like ?";
+        String[] args = {String.format(Locale.getDefault(), "%%%s%%", query)};
+        Logger.i("createCursor:" + args[0]);
         return getContentResolver().query(TvContract.Channels.CONTENT_URI, Channel.PROJECTION, selection, args, null);
     }
 

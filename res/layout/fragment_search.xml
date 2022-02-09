@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg"
     android:clipChildren="false">
 
     <androidx.leanback.widget.SearchBar
@@ -18,9 +19,9 @@
         android:id="@+id/search_grid_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="@dimen/lb_search_bar_speech_orb_margin_start"
         app:focusOutEnd="true"
         app:focusOutFront="true"
-        android:layout_marginTop="@dimen/lb_search_bar_speech_orb_margin_start"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/lb_search_bar" />

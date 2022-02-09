@@ -12,7 +12,6 @@
             android:id="@+id/item_search_img"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:scaleType="centerCrop"
             app:layout_constraintBottom_toTopOf="@+id/item_search_title"
             app:layout_constraintTop_toTopOf="parent" />
 
