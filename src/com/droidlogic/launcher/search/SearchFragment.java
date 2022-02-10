@@ -16,9 +16,6 @@
 
 package com.droidlogic.launcher.search;
 
-import static android.content.Intent.URI_INTENT_SCHEME;
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-
 import android.Manifest;
 import android.content.Intent;
 import android.media.tv.TvContract;
@@ -44,11 +41,12 @@ import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.leanback.presenter.MainPresenterSelector;
 import com.droidlogic.launcher.leanback.presenter.OnItemClickListener;
 import com.droidlogic.launcher.leanback.presenter.content.SearchChannelPresenter;
-import com.droidlogic.launcher.leanback.presenter.content.SearchPreviewProgramPresenter;
+import com.droidlogic.launcher.leanback.presenter.content.SearchProgramPresenter;
 import com.droidlogic.launcher.livetv.Channel;
 import com.droidlogic.launcher.livetv.PreviewProgram;
+import com.droidlogic.launcher.livetv.Program;
 import com.droidlogic.launcher.search.loader.ChannelLoader;
-import com.droidlogic.launcher.search.loader.PreviewProgramLoader;
+import com.droidlogic.launcher.search.loader.ProgramLoader;
 import com.droidlogic.launcher.util.DensityTool;
 import com.droidlogic.launcher.util.Logger;
 
@@ -59,6 +57,9 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.BiFunction;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+
+import static android.content.Intent.URI_INTENT_SCHEME;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 public class SearchFragment extends Fragment implements SearchBar.SearchBarListener, OnItemClickListener {
 
@@ -162,9 +163,9 @@ public class SearchFragment extends Fragment implements SearchBar.SearchBarListe
             emitter.onNext(new ChannelLoader(getContext(), query).getDataList());
             emitter.onComplete();
         }), Observable.create(emitter -> {
-            emitter.onNext(new PreviewProgramLoader(getContext(), query).getDataList());
+            emitter.onNext(new ProgramLoader(getContext(), query).getDataList());
             emitter.onComplete();
-        }), (BiFunction<List<Channel>, List<PreviewProgram>, ArrayObjectAdapter>) (channels, previewPrograms) -> {
+        }), (BiFunction<List<Channel>, List<Program>, ArrayObjectAdapter>) (channels, previewPrograms) -> {
             ArrayObjectAdapter rowsAdapter = new ArrayObjectAdapter(new MainPresenterSelector(SearchFragment.this));
             if (channels.size() > 0) {
                 ArrayObjectAdapter arrayObjectAdapter = new ArrayObjectAdapter(new SearchChannelPresenter());
@@ -173,7 +174,7 @@ public class SearchFragment extends Fragment implements SearchBar.SearchBarListe
                 rowsAdapter.add(listRow);
             }
             if (previewPrograms.size() > 0) {
-                ArrayObjectAdapter arrayObjectAdapter = new ArrayObjectAdapter(new SearchPreviewProgramPresenter());
+                ArrayObjectAdapter arrayObjectAdapter = new ArrayObjectAdapter(new SearchProgramPresenter());
                 arrayObjectAdapter.addAll(0, previewPrograms);
                 ListRow listRow = new ListRow(new HeaderItem(getString(R.string.search_result_program)), arrayObjectAdapter);
                 rowsAdapter.add(listRow);
@@ -204,11 +205,12 @@ public class SearchFragment extends Fragment implements SearchBar.SearchBarListe
         if (item instanceof Channel) {
             Channel channel = (Channel) item;
             String appLinkIntentUri = channel.getAppLinkIntentUri();
-            if (TextUtils.isEmpty(appLinkIntentUri)) {
-                lunchTv(channel.getId());
-            } else {
-                lunchApp(appLinkIntentUri);
-            }
+//            if (TextUtils.isEmpty(appLinkIntentUri)) {
+//                lunchTv(channel.getId());
+//            } else {
+//                lunchApp(appLinkIntentUri);
+//            }
+            lunchTv(channel.getId());
         } else if (item instanceof PreviewProgram) {
             PreviewProgram program = (PreviewProgram) item;
             String intentUri = program.getIntentUri();
@@ -217,6 +219,9 @@ public class SearchFragment extends Fragment implements SearchBar.SearchBarListe
             } else {
                 lunchApp(intentUri);
             }
+        } else if (item instanceof Program) {
+            Program program = (Program) item;
+            lunchTv(program.getChannelId());
         }
     }
 

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg"
     android:clipChildren="false"
     tools:context=".app.gallery.AppGalleryFragment">
 
@@ -14,9 +15,9 @@
         android:layout_marginStart="50dp"
         android:layout_marginTop="50dp"
         android:text="@string/installed_app"
-        android:textStyle="bold"
         android:textColor="@android:color/white"
         android:textSize="14sp"
+        android:textStyle="bold"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,10 +25,10 @@
         android:id="@+id/vg_app_installed"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="50dp"
-        android:clipChildren="false"
         android:layout_marginStart="60dp"
+        android:layout_marginTop="50dp"
         android:layout_marginEnd="60dp"
+        android:clipChildren="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
