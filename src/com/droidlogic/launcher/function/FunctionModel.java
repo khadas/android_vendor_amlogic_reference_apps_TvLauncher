@@ -18,6 +18,8 @@ public class FunctionModel {
     public static final String PKG_NAME_FILE_BROWSER = "com.droidlogic.FileBrower";
     public static final String PKG_NAME_TV = "com.droidlogic.android.tv";
     public static final String PKG_NAME_MIRACAST = "com.droidlogic.miracast";
+    public static final String PKG_NAME_TVCAST = "com.droidlogic.tvcast";
+    public static final String PKG_NAME_MEDIA_CENTER = "com.droidlogic.mediacenter";
 
     private int icon;
     private int bgColor;
@@ -91,8 +93,8 @@ public class FunctionModel {
         func.setName(R.string.function_app_tvcast);
         func.setIcon(R.drawable.icon_tv_cast);
         func.setBgColor(Color.parseColor("#325568"));
-        func.setPackageName(PKG_NAME_MIRACAST);
-        intent = context.getPackageManager().getLaunchIntentForPackage(PKG_NAME_MIRACAST);
+        func.setPackageName(PKG_NAME_TVCAST);
+        intent = context.getPackageManager().getLaunchIntentForPackage(PKG_NAME_TVCAST);
         func.setIntent(intent);
         functionModels.add(func);
 

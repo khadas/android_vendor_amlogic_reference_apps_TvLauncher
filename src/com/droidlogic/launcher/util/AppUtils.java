@@ -5,9 +5,18 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
+import java.util.HashMap;
 import java.util.List;
 
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
+
 public class AppUtils {
+
+    private static final HashMap<String, String> WHITE_LIST = new HashMap<String, String>() {
+        {
+            put(PKG_NAME_TVCAST, PKG_NAME_TVCAST);
+        }
+    };
 
     public static ActivityManager.MemoryInfo getMemoryInfo(Context context) {
         ActivityManager activityManager = (ActivityManager) context
@@ -25,7 +34,10 @@ public class AppUtils {
         List<ApplicationInfo> appList = packageManager.getInstalledApplications(PackageManager.MATCH_UNINSTALLED_PACKAGES);
         for (ActivityManager.RunningAppProcessInfo process : runningAppProcess) {
             for (ApplicationInfo appInfo : appList) {
-                if (!appInfo.packageName.equals(context.getPackageName()) && (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0 && process.processName.equals(appInfo.processName)) {
+                if (!appInfo.packageName.equals(context.getPackageName())
+                        && !WHITE_LIST.containsKey(appInfo.packageName)
+                        && (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0
+                        && process.processName.equals(appInfo.processName)) {
                     activityManager.forceStopPackage(appInfo.packageName);
                     break;
                 }

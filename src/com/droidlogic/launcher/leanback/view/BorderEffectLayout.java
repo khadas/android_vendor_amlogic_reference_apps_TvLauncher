@@ -3,7 +3,6 @@ package com.droidlogic.launcher.leanback.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.ImageView;
 
 import com.droidlogic.launcher.R;
@@ -34,26 +33,30 @@ public class BorderEffectLayout extends NoEffectLayout {
         borderView = new ImageView(getContext());
         borderView.setDuplicateParentStateEnabled(true);
         borderView.setBackgroundResource(effectShape == EFFECT_SHAPE_RECTANGLE ? R.drawable.bg_white_board_rectangle : R.drawable.bg_white_board_oval);
-        addView(borderView);
+        LayoutParams pms = new LayoutParams(0, 0);
+        pms.leftToLeft = 0;
+        pms.topToTop = 0;
+        pms.rightToRight = 0;
+        pms.bottomToBottom = 0;
+        addView(borderView, pms);
     }
 
     @Override
     public int getChildDrawingOrder(int childCount, int i) {
-        return orderChildDrawing(childCount, i, borderView);
-    }
-
-    private int orderChildDrawing(int childCount, int i, View focusedChild) {
-        if (focusedChild == null) {
-            return i;
+        if (null == borderView) {
+            return super.getChildDrawingOrder(childCount, i);
         }
-        int focusIndex = indexOfChild(focusedChild);
-        if (i == focusIndex) {
+        int position = indexOfChild(borderView);
+        if (position < 0) {
+            return super.getChildDrawingOrder(childCount, i);
+        }
+        if (i == childCount - 1) {
+            return position;
+        }
+        if (i == position) {
             return childCount - 1;
-        } else if (i < focusIndex) {
-            return i;
-        } else {
-            return i - 1;
         }
+        return super.getChildDrawingOrder(childCount, i);
     }
 
 }

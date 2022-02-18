@@ -1,9 +1,6 @@
 
 package com.droidlogic.launcher.app;
 
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_FILE_BROWSER;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
-
 import android.app.ActivityManager;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
@@ -27,6 +24,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_FILE_BROWSER;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MEDIA_CENTER;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
+
 public class AppDataManage {
     private final Context mContext;
 
@@ -37,7 +39,9 @@ public class AppDataManage {
             "com.droidlogic.android.tv",
             "org.chromium.webview_shell",
             PKG_NAME_FILE_BROWSER,
-            PKG_NAME_MIRACAST
+            PKG_NAME_TVCAST,
+            PKG_NAME_MIRACAST,
+            PKG_NAME_MEDIA_CENTER
     };
 
     public AppDataManage(Context context) {

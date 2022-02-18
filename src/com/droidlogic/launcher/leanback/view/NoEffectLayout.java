@@ -8,11 +8,12 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.ScaleAnimation;
-import android.widget.FrameLayout;
+
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.droidlogic.launcher.R;
 
-public class NoEffectLayout extends FrameLayout {
+public class NoEffectLayout extends ConstraintLayout {
 
     private ScaleAnimation gainFocusAnimation;
     private ScaleAnimation lostFocusAnimation;
