@@ -33,7 +33,7 @@ public class TvControl {
 
     private static final String TAG = "TvControl";
     public static final String PROP_TV_PREVIEW  = "vendor.tv.is.preview.window";
-    public static final String DTVKIT_PACKAGE   = "org.dtvkit.inputsource";
+    public static final String DTVKIT_PACKAGE   = "com.droidlogic.dtvkit.inputsource";
 
     public static String COMPONENT_TV_APP       = "com.droidlogic.tvsource/com.droidlogic.tvsource.DroidLogicTv";
     public static String COMPONENT_LIVE_TV      = "com.droidlogic.android.tv/com.android.tv.TvActivity";
