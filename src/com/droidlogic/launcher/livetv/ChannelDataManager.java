@@ -57,6 +57,14 @@ public class ChannelDataManager {
         return -1;
     }
 
+    public boolean isDataChannel(Uri channelUri) {
+        ChannelInfo info = getChannelInfo(channelUri);
+        if (info != null) {
+            return info.isData();
+        }
+
+        return false;
+    }
 
     public boolean isRadioChannel(Uri channelUri) {
         ChannelInfo info = getChannelInfo(channelUri);

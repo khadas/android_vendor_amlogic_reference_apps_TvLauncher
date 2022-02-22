@@ -355,6 +355,10 @@ public class TvControl {
             case TvPrompt.TV_PROMPT_TUNING:
                 background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
+            case TvPrompt.TV_PROMPT_DATA_SERVICE:
+                text = mContext.getResources().getString(R.string.str_data_service);
+                background = mContext.getResources().getDrawable(R.drawable.black);
+                break;
         }
 
         mViewManager.setTvPrompt(text, background);
@@ -418,7 +422,11 @@ public class TvControl {
             } else if (reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY &&
                     reason != TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING) {
                 if (!TextUtils.equals(mChannelUri.toString(), TvContract.buildChannelUri(-1).toString())) {
-                    setTvPrompt(TvPrompt.TV_PROMPT_NO_SIGNAL);
+                    if (mChannelDataManager.isDataChannel(mChannelUri)) {
+                        setTvPrompt(TvPrompt.TV_PROMPT_DATA_SERVICE);
+                    } else {
+                        setTvPrompt(TvPrompt.TV_PROMPT_NO_SIGNAL);
+                    }
                     if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
                         mViewManager.setStreamVolume(0);
                     }
