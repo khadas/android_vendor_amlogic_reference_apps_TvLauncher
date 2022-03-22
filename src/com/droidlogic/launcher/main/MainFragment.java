@@ -1,6 +1,7 @@
 package com.droidlogic.launcher.main;
 
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -22,6 +23,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -166,6 +168,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         super.onDestroy();
         unregisterReceiver();
         stopTimer();
+        stopMemoryAnim();
         if (mLoadHandler != null) {
             mLoadHandler.removeCallbacksAndMessages(null);
             mLoadHandler = null;
@@ -247,10 +250,14 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             }
         });
         view.findViewById(R.id.fun_memory_clean).setOnClickListener(view12 -> {
-            //long beforeMemory = AppUtils.getAvailMemory(getContext());
+            if (isMemoryAnimRunning()) return;
+            ActivityManager.MemoryInfo memoryInfo = AppUtils.getMemoryInfo(getContext());
+            float total = memoryInfo.totalMem;
+            float beforeMemory = memoryInfo.availMem;
             AppUtils.killRunningProcesses(getContext());
-            //long collectionMemory = (AppUtils.getAvailMemory(getContext()) - beforeMemory);
+            float after = AppUtils.getAvailMemory(getContext());
             //Logger.i("collectionMemory:" + collectionMemory);
+            reStartMemoryAnim(beforeMemory, after, total);
             Toast.makeText(getContext(), R.string.clean_memory_notice, Toast.LENGTH_SHORT).show();
         });
         pbMemory = (ProgressBar) view.findViewById(R.id.pb_status_bar_memory);
@@ -341,6 +348,32 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mRecommendRow = new RecommendRow(getActivity(), mRowsAdapter);
     }
 
+    private ValueAnimator memoryAnimator;
+
+    private void stopMemoryAnim() {
+        if (memoryAnimator != null) {
+            memoryAnimator.cancel();
+            memoryAnimator = null;
+        }
+    }
+
+    private boolean isMemoryAnimRunning() {
+        return memoryAnimator != null && memoryAnimator.isRunning();
+    }
+
+    private void reStartMemoryAnim(float before, float after, final float total) {
+        stopMemoryAnim();
+        memoryAnimator = ValueAnimator.ofFloat(before, 0, after);
+        memoryAnimator.setDuration(1500);
+        memoryAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        memoryAnimator.setDuration(1500);
+        memoryAnimator.addUpdateListener(animation -> {
+            float current = (float) animation.getAnimatedValue();
+            updateMemoryView(current, total);
+        });
+        memoryAnimator.start();
+    }
+
     private Timer memoryTrackTimer;
 
     private void stopTimer() {
@@ -356,19 +389,24 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         memoryTrackTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Log.i("startTimer", "" + Thread.currentThread());
+                //Log.i("startTimer", "" + Thread.currentThread());
                 Activity context = getActivity();
                 if (context == null) return;
                 final ActivityManager.MemoryInfo memoryInfo = AppUtils.getMemoryInfo(context);
                 context.runOnUiThread(() -> {
-                    int availMem = (int) (memoryInfo.availMem / 1024f / 1024f);
-                    int totalMem = (int) (memoryInfo.totalMem / 1024f / 1024f);
-                    String memory = String.format(Locale.getDefault(), "%dMB / %d MB", availMem, totalMem);
-                    tvMemory.setText(memory);
-                    pbMemory.setProgress(availMem * 100 / totalMem);
+                    if (isMemoryAnimRunning()) return;
+                    updateMemoryView(memoryInfo.availMem, memoryInfo.totalMem);
                 });
             }
         }, 500, 1000);
+    }
+
+    private void updateMemoryView(float availMem, float totalMem) {
+        int avail = (int) (availMem / 1024f / 1024f);
+        int total = (int) (totalMem / 1024f / 1024f);
+        String memory = String.format(Locale.getDefault(), "%dMB / %d MB", avail, total);
+        tvMemory.setText(memory);
+        pbMemory.setProgress(avail * 100 / total);
     }
 
     private void registerReceiver() {

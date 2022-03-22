@@ -26,6 +26,11 @@ public class AppUtils {
         return memoryInfo;
     }
 
+    public static long getAvailMemory(Context context) {
+        ActivityManager.MemoryInfo memoryInfo = getMemoryInfo(context);
+        return memoryInfo.availMem;
+    }
+
     public static void killRunningProcesses(Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> runningAppProcess = activityManager.getRunningAppProcesses();
