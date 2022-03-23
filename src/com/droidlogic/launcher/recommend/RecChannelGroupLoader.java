@@ -11,22 +11,20 @@ import com.droidlogic.launcher.util.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecChannelLoader extends BaseLoader<Channel> {
+import static android.media.tv.TvContract.BaseTvColumns.COLUMN_PACKAGE_NAME;
+import static android.provider.BaseColumns._ID;
 
-    private final String query;
+public class RecChannelGroupLoader extends BaseLoader<Channel> {
 
-    public RecChannelLoader(Context context, String query) {
+    public RecChannelGroupLoader(Context context) {
         super(context);
-        this.query = query;
     }
 
     @Override
     protected Cursor createCursor() {
         //TYPE_PREVIEW TYPE_OTHER
-        String selection = "type = ?";
-        String[] args = {"TYPE_PREVIEW"};
-        Logger.i("createCursor:" + args[0]);
-        return getContentResolver().query(TvContract.Channels.CONTENT_URI, Channel.PROJECTION, selection, args, TvContract.Channels.COLUMN_PACKAGE_NAME + " ASC");
+        String selection = "type = 'TYPE_PREVIEW') group by (" + COLUMN_PACKAGE_NAME;
+        return getContentResolver().query(TvContract.Channels.CONTENT_URI, Channel.PROJECTION, selection, null, _ID + " ASC");
     }
 
     @Override
