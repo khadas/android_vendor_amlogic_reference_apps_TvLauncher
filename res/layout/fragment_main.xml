@@ -120,12 +120,13 @@
             android:layout_gravity="center"
             android:drawableStart="@drawable/status_bar_clean"
             android:drawablePadding="8dp"
-            android:gravity="center"
+            android:gravity="right|center_vertical"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
             android:textSize="20sp"
+            app:layout_constraintWidth_min="225dp"
             tools:ignore="UseCompatTextViewDrawableXml"
-            tools:text="128MB / 2048MB" />
+            tools:text="100MB / 2048MB" />
 
     </com.droidlogic.launcher.leanback.view.NoEffectLayout>
 
