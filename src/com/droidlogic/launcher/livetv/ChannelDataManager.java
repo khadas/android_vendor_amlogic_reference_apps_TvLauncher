@@ -201,6 +201,7 @@ public class ChannelDataManager {
                         break;
                     }
                 }
+                channel = null;
             }
         }
         return channel;
