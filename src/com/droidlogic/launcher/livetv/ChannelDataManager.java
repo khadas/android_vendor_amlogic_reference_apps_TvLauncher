@@ -13,7 +13,7 @@ import com.droidlogic.app.tv.TvDataBaseManager;
 import java.util.ArrayList;
 
 public class ChannelDataManager {
-    public static final String AV_SIG_SCRAMBLED = "av_sig_scambled";
+    public static final String TV_DTVKIT_SYSTEM = "tv_dtvkit_system";
     public static final String TV_DROIDLOGIC_PACKAGE = "com.droidlogic.tvinput";
     public static final String DTVKIT_PACKAGE = "com.droidlogic.dtvkit.inputsource";
 
@@ -175,35 +175,109 @@ public class ChannelDataManager {
         return channelId;
     }
 
+    public boolean dtvkitChannelsMatchSystem(String channelType, String dvbSystem) {
+        boolean ret = false;
+        if (TextUtils.isEmpty(dvbSystem)) {
+            ret = true;
+        } else {
+            switch (dvbSystem) {
+                case "DVB-T": {
+                    if (TvContract.Channels.TYPE_DVB_T.equals(channelType)
+                            || TvContract.Channels.TYPE_DVB_T2.equals(channelType)) {
+                        ret = true;
+                    }
+                    break;
+                }
+                case "DVB-C": {
+                    if (TvContract.Channels.TYPE_DVB_C.equals(channelType)
+                            || TvContract.Channels.TYPE_DVB_C2.equals(channelType)) {
+                        ret = true;
+                    }
+                    break;
+                }
+                case "DVB-S": {
+                    if (TvContract.Channels.TYPE_DVB_S.equals(channelType)
+                            || TvContract.Channels.TYPE_DVB_S2.equals(channelType)
+                            || TvContract.Channels.TYPE_DVB_SH.equals(channelType)) {
+                        ret = true;
+                    }
+                    break;
+                }
+                case "ISDB-T": {
+                    if (TvContract.Channels.TYPE_ISDB_T.equals(channelType)
+                            || TvContract.Channels.TYPE_ISDB_TB.equals(channelType)) {
+                        ret = true;
+                    }
+                    break;
+                }
+                case "ANALOG": {
+                    if (TvContract.Channels.TYPE_PAL.equals(channelType)
+                            || TvContract.Channels.TYPE_SECAM.equals(channelType)
+                            || TvContract.Channels.TYPE_NTSC.equals(channelType)) {
+                        ret = true;
+                    }
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public String getDtvkitSystem(Context context) {
+        String result = null;
+        if (context != null) {
+            result = DataProviderManager.getStringValue(context, TV_DTVKIT_SYSTEM, "");
+        }
+
+        return result;
+    }
+
     private ChannelInfo getFirstChannel(String inputId) {
         ChannelInfo channel = null;
-        String signalType = DroidLogicTvUtils.getCurrentSignalType(mContext);
-        if (signalType.equals(DroidLogicTvUtils.SIGNAL_TYPE_ERROR)) {
-            signalType = TvContract.Channels.TYPE_ATSC_T;
-        }
 
         ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(inputId, ChannelInfo.COMMON_PROJECTION, null, null);
         if (channelList != null && channelList.size() > 0) {
-            for (int i = 0; i < channelList.size(); i++) {
+            int i;
+            for (i = 0; i < channelList.size(); i++) {
                 channel = channelList.get(i);
-                if (TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
-                    if (TextUtils.equals(DroidLogicTvUtils.getSearchInputId(mContext), channel.getInputId())) {
-                        break;
+
+                if (!TextUtils.equals(inputId, channel.getInputId())) {
+                    continue;
+                }
+
+                if (isDroidLogicInput(inputId)) {
+                    if (isAtscCountry(mContext)) {
+                        if (!TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
+                            break;
+                        }
+                    } else {
+                        if (DroidLogicTvUtils.isATV(mContext) && channel.isAnalogChannel()) {
+                            break;
+                        } else if (DroidLogicTvUtils.isDTV(mContext) && channel.isDigitalChannel()) {
+                            break;
+                        }
                     }
-                } else if (DroidLogicTvUtils.isAtscCountry(mContext)) {
-                    if (channel.getSignalType().equals(signalType)) {
-                        break;
+                } else if (isDtvKitInput(inputId)) {
+                    String dtvkitSystem = getDtvkitSystem(mContext);
+                    if (!dtvkitChannelsMatchSystem(channel.getType(), dtvkitSystem)) {
+                        continue;
                     }
-                } else {
-                    if (DroidLogicTvUtils.isATV(mContext) && channel.isAnalogChannel()) {
-                        break;
-                    } else if (DroidLogicTvUtils.isDTV(mContext) && channel.isDigitalChannel()) {
+                    if (!TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
                         break;
                     }
                 }
+                else {
+                    if (!TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
+                        break;
+                    }
+                }
+            }
+
+            if (i == channelList.size()) {
                 channel = null;
             }
         }
+
         return channel;
     }
 }
