@@ -9,17 +9,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvView;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.storage.StorageManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,11 +31,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.DiffCallback;
+import androidx.leanback.widget.HeaderItem;
 import androidx.leanback.widget.ItemBridgeAdapter;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.VerticalGridView;
 
 import com.droidlogic.launcher.R;
@@ -46,21 +53,38 @@ import com.droidlogic.launcher.function.FunctionModel;
 import com.droidlogic.launcher.input.InputModel;
 import com.droidlogic.launcher.input.InputSourceManager;
 import com.droidlogic.launcher.leanback.listrow.TvHeaderListRow;
+import com.droidlogic.launcher.leanback.listrow.TvRecommendListRow;
 import com.droidlogic.launcher.leanback.presenter.MainPresenterSelector;
 import com.droidlogic.launcher.leanback.presenter.OnItemClickListener;
+import com.droidlogic.launcher.leanback.presenter.content.SearchPreviewProgramPresenter;
+import com.droidlogic.launcher.livetv.Channel;
 import com.droidlogic.launcher.livetv.MediaModel;
+import com.droidlogic.launcher.livetv.PreviewProgram;
 import com.droidlogic.launcher.livetv.TvControl;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
-import com.droidlogic.launcher.recommend.RecommendRow;
+import com.droidlogic.launcher.recommend.AppPreviewProgramModel;
+import com.droidlogic.launcher.recommend.RecChannelGroupLoader;
+import com.droidlogic.launcher.recommend.RecommendChannelLoader;
+import com.droidlogic.launcher.search.loader.PreviewProgramLoader;
 import com.droidlogic.launcher.util.AppStateChangeListener;
 import com.droidlogic.launcher.util.AppUtils;
 import com.droidlogic.launcher.util.Logger;
+import com.droidlogic.launcher.util.PackageUtil;
 import com.droidlogic.launcher.util.StorageManagerUtil;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
+import static android.content.Intent.URI_INTENT_SCHEME;
 
 public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
@@ -75,7 +99,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private BackgroundManager mBackgroundManager;
 
     private AppRow mAppRow;
-    private RecommendRow mRecommendRow;
 
     //===this is for live tv===========
     private TvControl mTvControl;
@@ -169,6 +192,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         unregisterReceiver();
         stopTimer();
         stopMemoryAnim();
+        disposableRecLoad();
         if (mLoadHandler != null) {
             mLoadHandler.removeCallbacksAndMessages(null);
             mLoadHandler = null;
@@ -185,6 +209,106 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             storageManagerUtil = new StorageManagerUtil(getContext().getSystemService(StorageManager.class), MainFragment.this);
             storageManagerUtil.registerListener();
         }
+    }
+
+    private Disposable disposableRec;
+
+    private void disposableRecLoad() {
+        if (disposableRec != null) {
+            disposableRec.dispose();
+            disposableRec = null;
+        }
+    }
+
+    private void channelRowRecycleMark() {
+        if (mRowsAdapter != null) {
+            for (int i = 0; i < mRowsAdapter.size(); i++) {
+                Object objRow = mRowsAdapter.get(i);
+                if (objRow instanceof TvRecommendListRow) {
+                    TvRecommendListRow tvRecommendListRow = (TvRecommendListRow) objRow;
+                    tvRecommendListRow.setRecycleMark(true);
+                }
+            }
+        }
+    }
+
+    private void channelRowRecycle() {
+        if (mRowsAdapter != null) {
+            for (int index = mRowsAdapter.size() - 1; index >= 0; index--) {
+                Object objRow = mRowsAdapter.get(index);
+                if (objRow instanceof TvRecommendListRow) {
+                    TvRecommendListRow tvRecommendListRow = (TvRecommendListRow) objRow;
+                    if (tvRecommendListRow.isRecycleMark()) {
+                        mRowsAdapter.remove(objRow);
+                    }
+                }
+            }
+        }
+    }
+
+    private void loadRecommend() {
+        disposableRecLoad();
+        channelRowRecycleMark();
+        disposableRec = Observable.create((ObservableOnSubscribe<AppPreviewProgramModel>) emitter -> {
+            List<Channel> groupChannels = new RecChannelGroupLoader(getContext()).getDataList();
+            if (groupChannels != null) {
+                for (Channel groupByChannel : groupChannels) {
+                    ApplicationInfo applicationInfo = PackageUtil.getApplicationInfoByPkgName(getContext(), groupByChannel.getPackageName());
+                    List<Channel> channels = new RecommendChannelLoader(getContext(), groupByChannel.getPackageName()).getDataList();
+                    if (channels != null && applicationInfo != null) {
+                        for (Channel channel : channels) {
+                            List<PreviewProgram> programs = new PreviewProgramLoader(getContext(), "", channel.getPackageName(), channel.getId()).getDataList();
+                            if (programs != null && programs.size() > 0) {
+                                String channelName = applicationInfo.loadLabel(getContext().getPackageManager()) + " (" + channel.getDisplayName() + ")";
+                                AppPreviewProgramModel appPreviewProgramModel = new AppPreviewProgramModel(channelName, channel, programs);
+                                emitter.onNext(appPreviewProgramModel);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            emitter.onComplete();
+        }).subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(appPreviewProgramModel -> {
+            if (mRowsAdapter != null) {
+                for (int i = 0; i < mRowsAdapter.size(); i++) {
+                    Object objRow = mRowsAdapter.get(i);
+                    if (objRow instanceof TvRecommendListRow) {
+                        TvRecommendListRow recommendListRow = (TvRecommendListRow) objRow;
+                        AppPreviewProgramModel rowPreviewModel = recommendListRow.getPreviewProgramModel();
+                        if (rowPreviewModel != null && rowPreviewModel.getChannelId() == appPreviewProgramModel.getChannelId()) {
+                            recommendListRow.setRecycleMark(false);
+                            //already add , refresh data
+                            ObjectAdapter objectAdapter = recommendListRow.getAdapter();
+                            if (objectAdapter instanceof ArrayObjectAdapter) {
+                                ArrayObjectAdapter arrayObjectAdapter = (ArrayObjectAdapter) objectAdapter;
+                                arrayObjectAdapter.setItems(appPreviewProgramModel.getPreviewPrograms(), new DiffCallback<PreviewProgram>() {
+                                    @Override
+                                    public boolean areItemsTheSame(@NonNull PreviewProgram o1, @NonNull PreviewProgram o2) {
+                                        return o1.getChannelId() == o2.getChannelId();
+                                    }
+
+                                    @Override
+                                    public boolean areContentsTheSame(@NonNull PreviewProgram o1, @NonNull PreviewProgram o2) {
+                                        return o1.getChannelId() == o2.getChannelId();
+                                    }
+                                });
+                            }
+                            return;
+                        }
+                    }
+                }
+                //new row
+                ArrayObjectAdapter arrayObjectAdapter = new ArrayObjectAdapter(new SearchPreviewProgramPresenter());
+                arrayObjectAdapter.addAll(0, appPreviewProgramModel.getPreviewPrograms());
+                ListRow listRow = new TvRecommendListRow(new HeaderItem(appPreviewProgramModel.getChannelName()), arrayObjectAdapter, appPreviewProgramModel);
+                mRowsAdapter.add(listRow);
+            }
+
+        }, throwable -> Logger.i("loadRecChannel--throwable:" + throwable), () -> {
+            Logger.i("loadRecChannel--onComplete");
+            channelRowRecycle();
+        });
     }
 
     //=======this is for live tv
@@ -282,6 +406,23 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     }
                 } else if (item instanceof AppMoreModel) {
                     startActivity(new Intent(getContext(), AppGalleryActivity.class));
+                } else if (item instanceof PreviewProgram) {
+                    try {
+                        PreviewProgram program = (PreviewProgram) item;
+                        String intentUri = program.getIntentUri();
+                        if (TextUtils.isEmpty(intentUri)) {
+                            Uri channelUri = TvContract.buildChannelUri(program.getChannelId());
+                            Intent intent = new Intent(Intent.ACTION_VIEW, channelUri);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } else {
+                            Intent intent = Intent.parseUri(intentUri, URI_INTENT_SCHEME);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else if (item instanceof FunctionModel) {
                     FunctionModel model = (FunctionModel) item;
                     Intent intent = model.getIntent();
@@ -307,7 +448,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         //add function row
         addTvHeaderView();
         addAppRow();
-        //addVideoRow();
+        loadRecommend();
+
         verticalGridView.setAdapter(new ItemBridgeAdapter(mRowsAdapter));
 
         verticalGridView.post(new Runnable() {
@@ -342,10 +484,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private void addAppRow() {
         String headerName = getResources().getString(R.string.app_header_app_name);
         mAppRow = new AppRow(getActivity(), headerName, mRowsAdapter);
-    }
-
-    private void addRecommendRow() {
-        mRecommendRow = new RecommendRow(getActivity(), mRowsAdapter);
     }
 
     private ValueAnimator memoryAnimator;
@@ -415,6 +553,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     updateAppList(intent);
+                    loadRecommend();
                 }
             });
         }

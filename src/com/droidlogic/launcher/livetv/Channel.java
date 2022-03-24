@@ -29,7 +29,7 @@ public final class Channel {
     /** @hide */
     public static final String[] PROJECTION = getProjection();
 
-    private static final long INVALID_CHANNEL_ID = -1;
+    public static final long INVALID_CHANNEL_ID = -1;
     private static final int INVALID_INTEGER_VALUE = -1;
     private static final int IS_SEARCHABLE = 1;
 
