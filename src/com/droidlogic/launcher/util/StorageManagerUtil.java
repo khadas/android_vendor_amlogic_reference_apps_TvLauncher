@@ -19,7 +19,7 @@ public class StorageManagerUtil {
     }
 
     private boolean isInteresting(int state) {
-        return state == VolumeInfo.STATE_UNMOUNTED || state == VolumeInfo.STATE_MOUNTED;
+        return state == VolumeInfo.STATE_UNMOUNTED || state == VolumeInfo.STATE_MOUNTED || state == VolumeInfo.STATE_EJECTING;
     }
 
     private void callback(String deviceName, int state) {
