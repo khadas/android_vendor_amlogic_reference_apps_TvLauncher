@@ -157,19 +157,20 @@ public class ChannelDataManager {
             channelId = getLong(mContext, inputId, -1);
         }
 
-        ChannelInfo info = getFirstChannel(inputId);
-        if (channelId == -1){
+        Uri channelUri   = TvContract.buildChannelUri(channelId);
+        ChannelInfo info = getChannelInfo(channelUri); //check if channnel exist
+        if (info == null) {
+            channelId = -1;
+            info = getFirstChannel(inputId); //The first channel will be tuned to
+        }
+
+        if (channelId == -1) {
             if (info != null) {
                 channelId = info.getId();
             }
         }
-        else{
-            if (info == null){
-                channelId = -1;  //if current source no channel
-            }
-        }
 
-        if (channelId != -1){
+        if (channelId != -1) {
             DataProviderManager.putLongValue(mContext, DroidLogicTvUtils.TV_DTV_CHANNEL_INDEX, channelId);
         }
         return channelId;

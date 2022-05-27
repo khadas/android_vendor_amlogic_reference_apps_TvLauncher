@@ -39,6 +39,7 @@ public class TvControl {
     public static String COMPONENT_LIVE_TV      = "com.droidlogic.android.tv/com.android.tv.TvActivity";
 
     private static final String ACTION_OTP_INPUT_SOURCE_CHANGE = "droidlogic.tv.action.OTP_INPUT_SOURCE_CHANGED";
+    private static final String EVENT_CHANNEL_LIST_UPDATE      = "event_channel_list_updated";
 
     private static final int TV_MSG_PLAY_TV         = 0;
     private static final int TV_MSG_BOOTUP_TO_TVAPP = 1;
@@ -63,6 +64,8 @@ public class TvControl {
     private String  mPlayInputId;
 
     private boolean mActivityResumed;
+    private boolean mBootComplete      = false;
+    private boolean mVideoAvailable    = false;
 
     public TvControl(Context context, TvView mTvView, TextView prompt) {
         mContext            = context;
@@ -371,12 +374,15 @@ public class TvControl {
             if (eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_IS_SCRAMBLED);
             }
+            else if (eventType.equals(EVENT_CHANNEL_LIST_UPDATE)) {
+                replay(true);
+            }
         }
 
         @Override
         public void onVideoAvailable(String inputId) {
             mViewManager.invalidate();
-
+            mVideoAvailable = true;
             if (isAVDevice(inputId)) {
                 isAvNoSignal = false;
             }
@@ -503,6 +509,10 @@ public class TvControl {
                     Logger.d(TAG, " acitivity not resumed or bootvideo not finished, drop " + ACTION_OTP_INPUT_SOURCE_CHANGE);
                 }
             }
+            else if (action.equals("android.intent.action.BOOT_COMPLETED")) {
+                mBootComplete = true;
+                replay(false);
+            }
         }
     };
 
@@ -526,6 +536,14 @@ public class TvControl {
         mBroadcastsRegistered = false;
     }
 
+    private void replay(boolean force) {
+        if ((mBootComplete && !mVideoAvailable) || force) {
+            Logger.d(TAG, "replay...");
+            mBootComplete  = false;
+            play(-1);
+        }
+    }
+
     @SuppressLint("HandlerLeak")
     private final Handler mTvHandler = new Handler() {
         public void handleMessage(Message msg) {
@@ -539,7 +557,7 @@ public class TvControl {
                             Logger.d(TAG, "screen blocked and no need start tv play");
                         }
                     } else {
-                        //Loggerd(TAG, "bootvideo is not stopped, or tvapp not released, wait it");
+                        //Logger.d(TAG, "bootvideo is not stopped, or tvapp not released, wait it");
                         mTvHandler.removeMessages(TV_MSG_PLAY_TV);
                         mTvHandler.sendEmptyMessageDelayed(TV_MSG_PLAY_TV, 200);
                     }
