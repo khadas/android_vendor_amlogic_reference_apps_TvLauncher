@@ -319,12 +319,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         } else {
             String name = mInputSource.getInputName(inputId);
             if (name == null) {
-                name = "ATV";
+                name = mInputSource.getATVInputName();
             }
             if (!type.equals("TYPE_PAL") && !type.equals("TYPE_NTSC") && !type.equals("TYPE_SECAM")) {
-                name = "DTV";
+                name = mInputSource.getDTVInputName();
             }
-            if (name.equals("ATV") && !mInputSource.isAtvSearch()) {
+            if (name.equals(mInputSource.getATVInputName()) && !mInputSource.isAtvSearch()) {
                 killTvApp(); // for atv no channel
             }
             mInputSource.setSearchType(name);
@@ -332,17 +332,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         }
     }
 
-    private void startInputSourceApp(String inputId, String name) {
-        if (name.equals("ATV") && !mInputSource.isAtvSearch()) {
-            killTvApp(); // for atv no channel
-        }
-        mTvControl.releasePlayingTv();
-        mInputSource.switchInput(inputId, name);
-        mInputSource.startInputAPP(inputId);
-    }
-
     private void startPlayInputSource(String inputId, String name) {
-        if (name.equals("ATV") && !mInputSource.isAtvSearch()) {
+        if (name.equals(mInputSource.getATVInputName()) && !mInputSource.isAtvSearch()) {
             killTvApp(); // for atv no channel
         }
         mTvControl.releasePlayingTv();
@@ -435,10 +426,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     }
                 } else if (item instanceof InputModel) {
                     InputModel model = (InputModel) item;
-                    //startInputSourceApp(model.getId(), model.getName());
                     startPlayInputSource(model.getId(), model.getName());
                 } else if (item instanceof TvViewModel) {
-                    //((TvViewModel) item).lunch(getContext());
                     mTvControl.releasePlayingTv();
                     mInputSource.startInputAPP(null);
                 }

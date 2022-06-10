@@ -30,8 +30,8 @@
 
     <string name="input_long_label_for_tuner">TV (antenna/cable)</string>
     <string name="input_atv">ATV</string>
-    <string name="input_dtv">DTV</string>
-    <string name="input_dtv_kit">DTVKit</string>
+    <string name="input_dtv">DTMB</string>
+    <string name="input_dtv_kit">DTV</string>
     <string name="input_google_channel">Live Channels</string>
 
     <string name="input_tuner">Tuner</string>

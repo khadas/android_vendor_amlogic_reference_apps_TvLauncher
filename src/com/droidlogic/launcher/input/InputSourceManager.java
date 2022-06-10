@@ -301,11 +301,11 @@ public class InputSourceManager {
         return !info.isPassthroughInput();
     }
 
-    private String getDTVInputName(){
+    public String getDTVInputName(){
         return mContext.getResources().getString(R.string.input_dtv);
     }
 
-    private String getATVInputName(){
+    public String getATVInputName(){
         return mContext.getResources().getString(R.string.input_atv);
     }
 
