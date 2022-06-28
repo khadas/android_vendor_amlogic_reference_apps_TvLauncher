@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
+import android.os.UserHandle;
 
 import java.lang.reflect.Field;
 import java.text.Collator;
@@ -38,6 +39,8 @@ public class AppDataManage {
             "com.droidlogic.appinstall",
             "com.droidlogic.android.tv",
             "org.chromium.webview_shell",
+            "com.android.tv.settings",
+            "com.android.traceur",
             PKG_NAME_FILE_BROWSER,
             PKG_NAME_TVCAST,
             PKG_NAME_MIRACAST,
@@ -67,8 +70,17 @@ public class AppDataManage {
         return map;
     }
 
-
     public ArrayList<AppModel> getAppsList() {
+
+        ArrayList<AppModel> launcherAppModels = getLaunchAppList();
+        ArrayList<AppModel> leanbackLauncherAppModels = getLaunchAppList(LEANBACK_LAUNCHER);
+        leanbackLauncherAppModels.removeAll(launcherAppModels);
+        launcherAppModels.addAll(leanbackLauncherAppModels);
+        if (launcherAppModels.size() != 0) {
+            Collections.sort(launcherAppModels, getAppNameComparator());
+            return launcherAppModels;
+        }
+
         LauncherApps mLauncherApps = (LauncherApps) mContext.getSystemService(Context.LAUNCHER_APPS_SERVICE);
         ActivityManager mActivityManager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
         ArrayList<AppModel> localArrayList = new ArrayList<>();
@@ -76,43 +88,47 @@ public class AppDataManage {
         if (apps == null) {
             return localArrayList;
         }
-        Collections.sort(apps, getAppNameComparator());
 
         final int iconDpi = mActivityManager.getLauncherLargeIconDensity();
-
-        if (apps != null) {
-            for (int i = 0; i < apps.size(); i++) {
-                LauncherActivityInfo info = apps.get(i);
-                AppModel localAppBean = new AppModel();
-                Class<LauncherActivityInfo> cls = LauncherActivityInfo.class;
-                try {
-                    Field fileInfo = cls.getDeclaredField("mActivityInfo");
-                    fileInfo.setAccessible(true);
-                    ActivityInfo activityInfo = (ActivityInfo) fileInfo.get(info);
-                    Drawable banner = activityInfo.loadBanner(mContext.getPackageManager());
-                    localAppBean.setBanner(banner);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                localAppBean.setIcon(info.getBadgedIcon(iconDpi));
-                localAppBean.setName(info.getLabel().toString());
-                localAppBean.setPackageName(info.getComponentName().getPackageName());
-                localAppBean.setLauncherName(info.getComponentName().getPackageName());
-                //Logger.d("APP", "---GET APP:" + localAppBean.getPackageName());
-                if (!isHideApp(localAppBean.getPackageName())) {
-                    localArrayList.add(localAppBean);
-                }
+        for (int i = 0; i < apps.size(); i++) {
+            LauncherActivityInfo info = apps.get(i);
+            //Log.d("APP", "---GET APP:" + info.getComponentName().getPackageName() + ":" + info.getComponentName().getPackageName());
+            AppModel localAppBean = new AppModel();
+            Class<LauncherActivityInfo> cls = LauncherActivityInfo.class;
+            try {
+                Field fileInfo = cls.getDeclaredField("mActivityInfo");
+                fileInfo.setAccessible(true);
+                ActivityInfo activityInfo = (ActivityInfo) fileInfo.get(info);
+                Drawable banner = activityInfo.loadBanner(mContext.getPackageManager());
+                localAppBean.setBanner(banner);
+            } catch (Exception e) {
+                //Log.d("APP", "---GET APP e:" + e);
+                e.printStackTrace();
+            }
+            localAppBean.setUser(info.getUser());
+            localAppBean.setIcon(info.getBadgedIcon(iconDpi));
+            localAppBean.setName(info.getLabel().toString());
+            localAppBean.setPackageName(info.getComponentName().getPackageName());
+            localAppBean.setLauncherName(info.getComponentName().getClassName());
+            if (!isHideApp(localAppBean.getPackageName())) {
+                localArrayList.add(localAppBean);
             }
         }
-
+        Collections.sort(localArrayList, getAppNameComparator());
         return localArrayList;
     }
 
+    public static final String LEANBACK_LAUNCHER = "android.intent.category.LEANBACK_LAUNCHER";
 
     public ArrayList<AppModel> getLaunchAppList() {
+        return getLaunchAppList("android.intent.category.LAUNCHER");
+    }
+
+    public ArrayList<AppModel> getLaunchAppList(String category) {
         PackageManager localPackageManager = mContext.getPackageManager();
         Intent localIntent = new Intent("android.intent.action.MAIN");
-        localIntent.addCategory("android.intent.category.LAUNCHER");
+        localIntent.addCategory(category);
+
         List<ResolveInfo> localList = localPackageManager.queryIntentActivities(localIntent, 0);
         ArrayList<AppModel> localArrayList = null;
         Iterator<ResolveInfo> localIterator = null;
@@ -120,17 +136,20 @@ public class AppDataManage {
         if (localList.size() != 0) {
             localIterator = localList.iterator();
         }
+        UserHandle userHandle = new UserHandle(0);
         while (true) {
             if (!localIterator.hasNext())
                 break;
             ResolveInfo localResolveInfo = (ResolveInfo) localIterator.next();
             AppModel localAppBean = new AppModel();
+            localAppBean.setUser(userHandle);
             localAppBean.setBanner(localResolveInfo.activityInfo.loadBanner(localPackageManager));
             localAppBean.setIcon(localResolveInfo.activityInfo.loadIcon(localPackageManager));
             localAppBean.setName(localResolveInfo.activityInfo.loadLabel(localPackageManager).toString());
             localAppBean.setPackageName(localResolveInfo.activityInfo.packageName);
             localAppBean.setDataDir(localResolveInfo.activityInfo.applicationInfo.publicSourceDir);
             localAppBean.setLauncherName(localResolveInfo.activityInfo.name);
+            localAppBean.setLeanbackOnly(LEANBACK_LAUNCHER.equals(category));
             String pkgName = localResolveInfo.activityInfo.packageName;
             PackageInfo mPackageInfo;
             try {
@@ -141,7 +160,7 @@ public class AppDataManage {
             } catch (NameNotFoundException e) {
                 e.printStackTrace();
             }
-            //Logger.d("APP", "GET APP:" + localAppBean.getPackageName());
+            //Log.d("APP", "GET APP:" + localAppBean.getPackageName());
             if (!isHideApp(localAppBean.getPackageName())) {
                 localArrayList.add(localAppBean);
             }
@@ -276,40 +295,46 @@ public class AppDataManage {
         return localArrayList;
     }
 
-    private final Comparator<LauncherActivityInfo> getAppNameComparator() {
+    private Comparator<AppModel> getAppNameComparator() {
         final Collator collator = Collator.getInstance();
         final HashMap<String, Integer> map = getAPPUseList();
+        return (a, b) -> {
+            if (a.getUser().equals(b.getUser())) {
+                int num1 = 0;
+                int num2 = 0;
+                Integer n1 = map.get(a.getPackageName());
+                Integer n2 = map.get(b.getPackageName());
 
-        return new Comparator<LauncherActivityInfo>() {
-
-            public final int compare(LauncherActivityInfo a, LauncherActivityInfo b) {
-                if (a.getUser().equals(b.getUser())) {
-                    int num1 = 0;
-                    int num2 = 0;
-                    Integer n1 = map.get(a.getComponentName().getPackageName());
-                    Integer n2 = map.get(b.getComponentName().getPackageName());
-
-                    if (n1 != null) {
-                        num1 = n1;
-                    }
-                    if (n2 != null) {
-                        num2 = n2;
-                    }
-
-                    if (num1 > num2)
-                        return -1;
-                    else if (num1 < num2)
-                        return 1;
-
-                    int result = collator.compare(a.getLabel().toString(), b.getLabel().toString());
-                    if (result == 0) {
-                        result = a.getName().compareTo(b.getName());
-                    }
-                    return result;
-                } else {
-                    // TODO: Order this based on profile type rather than string compares.
-                    return a.getUser().toString().compareTo(b.getUser().toString());
+                if (n1 != null) {
+                    num1 = n1;
                 }
+                if (n2 != null) {
+                    num2 = n2;
+                }
+
+                if (num1 > num2)
+                    return -1;
+                else if (num1 < num2)
+                    return 1;
+
+                int result = 0;
+                try {
+                    result = collator.compare(a.getName(), b.getName());
+                    if (result == 0) {
+                        result = a.getLauncherName().compareTo(b.getLauncherName());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return result;
+            } else {
+                int result = 0;
+                try {
+                    result = a.getLauncherName().compareTo(b.getLauncherName());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return result;
             }
         };
     }

@@ -1,10 +1,14 @@
 
 package com.droidlogic.launcher.app;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.UserHandle;
 import android.view.View;
+
+import java.util.Objects;
 
 public class AppModel implements IAppInfo {
 
@@ -18,6 +22,8 @@ public class AppModel implements IAppInfo {
     private int pageIndex;
     private int position;
     private boolean sysApp;
+    private boolean leanbackOnly;
+    private UserHandle user;
 
     public String getDataDir() {
         return this.dataDir;
@@ -103,12 +109,44 @@ public class AppModel implements IAppInfo {
         this.launcherName = launcherName;
     }
 
+    public boolean isLeanbackOnly() {
+        return leanbackOnly;
+    }
+
+    public void setLeanbackOnly(boolean leanbackOnly) {
+        this.leanbackOnly = leanbackOnly;
+    }
+
+    public UserHandle getUser() {
+        return user;
+    }
+
+    public void setUser(UserHandle user) {
+        this.user = user;
+    }
+
     public void onClickModel(View view) {
         Context context = view.getContext();
-        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-        if (launchIntent != null) {
-            context.startActivity(launchIntent);
+        try {
+            Intent intent = new Intent("android.intent.action.MAIN");
+            ComponentName componentName = new ComponentName(packageName, launcherName);
+            intent.setComponent(componentName);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppModel appModel = (AppModel) o;
+        return packageName.equals(appModel.packageName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(packageName);
+    }
 }

@@ -44,6 +44,7 @@ import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.VerticalGridView;
 
 import com.droidlogic.launcher.R;
+import com.droidlogic.launcher.app.AppDataManage;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppMoreModel;
 import com.droidlogic.launcher.app.AppRow;
@@ -73,6 +74,7 @@ import com.droidlogic.launcher.util.Logger;
 import com.droidlogic.launcher.util.PackageUtil;
 import com.droidlogic.launcher.util.StorageManagerUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -93,6 +95,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private static final String PACKAGE_LIVE_TV = "com.droidlogic.android.tv";
 
     private static final int MSG_LOAD_DATA = 100;
+    private static final int MSG_LOAD_APP = 200;
 
     private TimeDisplay mTimeDisplay;
     private DisplayMetrics mMetrics;
@@ -150,6 +153,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mInputSource = new InputSourceManager(getActivity(), new SourceStatusListener(), mLoadHandler);
         //=======================================
         mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
+        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
         prepareBackgroundManager();
         initView(getView());
         initStorage();
@@ -391,10 +395,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     startTvApp(model.getId(), model.getInputId(), model.getType());
                 } else if (item instanceof AppModel) {
                     AppModel appBean = (AppModel) item;
-                    Intent launchIntent = getActivity().getPackageManager().getLaunchIntentForPackage(appBean.getPackageName());
-                    if (launchIntent != null) {
-                        startActivity(launchIntent);
-                    }
+                    appBean.onClickModel(view);
                 } else if (item instanceof AppMoreModel) {
                     startActivity(new Intent(getContext(), AppGalleryActivity.class));
                 } else if (item instanceof PreviewProgram) {
@@ -549,7 +550,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         appListener.registerReceiver();
 
         if (!broadcastsRegisteredNetwork) {
-            IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
+            IntentFilter filter = new IntentFilter();
             filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             getActivity().registerReceiver(networkReceiver, filter);
             broadcastsRegisteredNetwork = true;
@@ -627,12 +628,23 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @SuppressLint("HandlerLeak")
     private Handler mLoadHandler = new Handler() {
         public void handleMessage(Message msg) {
+            super.handleMessage(msg);
             switch (msg.what) {
                 case MSG_LOAD_DATA:
                     if (mLoadCount < 10) {
                         mLoadCount++;
                         tvHeaderListRow.signalUpdate();
                         mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
+                    }
+                    break;
+                case MSG_LOAD_APP:
+                    ArrayList<AppModel> apps = new AppDataManage(getContext()).getLaunchAppList();
+                    if (apps != null && apps.size() > 0) {
+                        if (mAppRow != null) {
+                            mAppRow.update();
+                        }
+                    } else {
+                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
                     }
                     break;
             }
