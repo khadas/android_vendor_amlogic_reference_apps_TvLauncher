@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.droidlogic.app.SystemControlManager;
+import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.util.Logger;
@@ -207,8 +208,8 @@ public class TvControl {
         return result;
     }
 
-    private void setChannelUri(boolean isPassthroughtInput, long channelId) {
-        if (!isPassthroughtInput) {
+    private void setChannelUri(boolean isPassthroughInput, long channelId) {
+        if (!isPassthroughInput) {
             mChannelUri = TvContract.buildChannelUri(channelId);
             if (channelId != -1) {
                 isRadioChannel = mChannelDataManager.isRadioChannel(mChannelUri);
@@ -219,7 +220,7 @@ public class TvControl {
         }
     }
 
-    public void tuneTvView(String inputid, long channelId) {
+    public void tuneTvView(String inputId, long channelId) {
         isRadioChannel = false;
         mTvInputId = null;
         mChannelUri = null;
@@ -229,41 +230,50 @@ public class TvControl {
         mSystemControlManager.setProperty(PROP_TV_PREVIEW, "true");
         setTvPrompt(TvPrompt.TV_PROMPT_TUNING);
 
-        TvInputInfo currentInputInfo = getInputSourceInfo(inputid);
-        if (TextUtils.isEmpty(inputid) || currentInputInfo == null) {
-            Logger.i(TAG, "input " + inputid + " is not exist");
+        TvInputInfo currentInputInfo = getInputSourceInfo(inputId);
+        if (TextUtils.isEmpty(inputId) || currentInputInfo == null) {
+            Logger.i(TAG, "input " + inputId + " is not exist");
             setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
             return;
         }
 
-        mTvInputId = inputid;
-        boolean isPassthroughtInput = currentInputInfo.isPassthroughInput();
+        mTvInputId = inputId;
+        boolean isPassthroughInput = currentInputInfo.isPassthroughInput();
 
-        setChannelUri(isPassthroughtInput, channelId);
-        if (mChannelUri == null) {
+        setChannelUri(isPassthroughInput, channelId);
+        ChannelInfo currentChannel = mChannelDataManager.getChannelInfo(mChannelUri);
+        Logger.d(TAG, "TV play tune inputId=" + inputId + " uri=" + mChannelUri);
+        if (mChannelUri == null || currentChannel == null) {
             Logger.d(TAG, "TV play not tune as mChannelUri null");
             setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
             mViewManager.setStreamVolume(0);
             return;
         }
 
-        Logger.d(TAG, "TV play tune inputId=" + inputid + " uri=" + mChannelUri);
-        if (mChannelDataManager.getChannelId(mChannelUri) > 0 || isPassthroughtInput) {
+        if ((mChannelDataManager.getChannelId(mChannelUri) > 0
+                && currentChannel.getSetHidden() == 0
+                && currentChannel.getSetDelete() == 0) || isPassthroughInput) {
             mViewManager.enable(true);
-            mViewManager.tune(inputid, mChannelUri);
+            mViewManager.tune(inputId, mChannelUri);
         }
 
-        if (!isPassthroughtInput) {
-            if (isCurrentChannelBlocked() && !inputid.startsWith(DTVKIT_PACKAGE)) {
+        if (!isPassthroughInput) {
+            if (isCurrentChannelBlocked() && !inputId.startsWith(DTVKIT_PACKAGE)) {
                 Logger.d(TAG, "current channel is blocked");
                 setTvPrompt(TvPrompt.TV_PROMPT_BLOCKED);
+            } else if (currentChannel.getSetDelete() == 1) {
+                Logger.d(TAG, "current channel is delete");
+                setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
+            } else if (currentChannel.getSetHidden() == 1) {
+                Logger.d(TAG, "current channel is hide");
+                setTvPrompt(TvPrompt.TV_PROMPT_IS_SKIP);
             } else {
                 setTvPrompt(TvPrompt.TV_PROMPT_TUNING);
                 Logger.d(TAG, "TV play tune continue");
             }
         }
         else{
-            if (isSpdifDevice(inputid)) {
+            if (isSpdifDevice(inputId)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_SPDIF);
             }
         }
@@ -360,6 +370,14 @@ public class TvControl {
                 break;
             case TvPrompt.TV_PROMPT_DATA_SERVICE:
                 text = mContext.getResources().getString(R.string.str_data_service);
+                background = mContext.getResources().getDrawable(R.drawable.black);
+                break;
+            case TvPrompt.TV_PROMPT_IS_SKIP:
+                text = mContext.getResources().getString(R.string.str_channel_skip);
+                background = mContext.getResources().getDrawable(R.drawable.black);
+                break;
+            case TvPrompt.TV_PROMPT_IS_DELETE:
+                text = mContext.getResources().getString(R.string.str_channel_delete);
                 background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
         }
