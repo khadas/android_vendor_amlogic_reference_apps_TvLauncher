@@ -39,7 +39,10 @@ public class ChannelLoader extends BaseLoader<Channel> {
         try {
             while (cursor.moveToNext()) {
                 Channel ch = Channel.fromCursor(cursor);
-                channels.add(ch);
+                String inputId = ch.getInputId();
+                if (inputId != null && inputId.length() > 0) {
+                    channels.add(ch);
+                }
                 Logger.i("get channel:" + ch.getDisplayName());
             }
         } catch (Exception e) {
