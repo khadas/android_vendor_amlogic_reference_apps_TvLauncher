@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvView;
@@ -266,7 +267,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                                 String channelName = applicationInfo.loadLabel(getContext().getPackageManager()) + " (" + channel.getDisplayName() + ")";
                                 AppPreviewProgramModel appPreviewProgramModel = new AppPreviewProgramModel(channelName, channel, programs);
                                 emitter.onNext(appPreviewProgramModel);
-                                break;
+                                //break;
                             }
                         }
                     }
@@ -399,22 +400,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 } else if (item instanceof AppMoreModel) {
                     startActivity(new Intent(getContext(), AppGalleryActivity.class));
                 } else if (item instanceof PreviewProgram) {
-                    try {
-                        PreviewProgram program = (PreviewProgram) item;
-                        String intentUri = program.getIntentUri();
-                        if (TextUtils.isEmpty(intentUri)) {
-                            Uri channelUri = TvContract.buildChannelUri(program.getChannelId());
-                            Intent intent = new Intent(Intent.ACTION_VIEW, channelUri);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        } else {
-                            Intent intent = Intent.parseUri(intentUri, URI_INTENT_SCHEME);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    startPreviewProgram((PreviewProgram) item);
                 } else if (item instanceof FunctionModel) {
                     FunctionModel model = (FunctionModel) item;
                     Intent intent = model.getIntent();
@@ -500,6 +486,41 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             updateMemoryView(current, total);
         });
         memoryAnimator.start();
+    }
+
+    private void startRecommendApp(PreviewProgram program) {
+        PackageManager manager = getActivity().getPackageManager();
+        String packageName = program.getmProviderId();
+        Intent intent = manager.getLeanbackLaunchIntentForPackage(packageName);
+        if (intent == null) {
+            intent = manager.getLaunchIntentForPackage(packageName);
+        }
+        if (intent != null) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } else {
+            //no package, start google play store to install it
+            intent = new Intent(Intent.ACTION_VIEW);
+            intent.setPackage("com.android.vending");
+            intent.setData(Uri.parse(program.getmProviderData()));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
+    }
+
+    private void startPreviewProgram(PreviewProgram program) {
+        try {
+            String intentUri = program.getIntentUri();
+            if (TextUtils.isEmpty(intentUri)) {
+                startRecommendApp(program);
+            } else {
+                Intent intent = Intent.parseUri(intentUri, URI_INTENT_SCHEME);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private Timer memoryTrackTimer;

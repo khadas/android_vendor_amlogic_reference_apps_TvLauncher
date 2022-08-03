@@ -24,6 +24,8 @@ public class PreviewProgram {
     private int mSearchable;
     private String mPreviewVideoUri;
     private String mIntentUri;
+    private String mProviderId;
+    private String mProviderData;
 
 
     private PreviewProgram() {
@@ -52,6 +54,14 @@ public class PreviewProgram {
         return mPosterArtUri;
     }
 
+    public String getmProviderId() {
+        return mProviderId;
+    }
+
+    public String getmProviderData() {
+        return mProviderData;
+    }
+
     private void copyFrom(PreviewProgram other) {
         if (this == other) {
             return;
@@ -64,6 +74,8 @@ public class PreviewProgram {
         mPosterArtUri = other.mPosterArtUri;
         mSearchable = other.mSearchable;
         mIntentUri = other.mIntentUri;
+        mProviderId = other.mProviderId;
+        mProviderData = other.mProviderData;
     }
 
     public static PreviewProgram fromCursor(Cursor cursor) {
@@ -84,7 +96,16 @@ public class PreviewProgram {
         if (!cursor.isNull(++index)) {
             builder.setPosterArtUrl(cursor.getString(index));
         }
-
+        index++;
+        if (!cursor.isNull(++index)) {
+            byte[] data = cursor.getBlob(index);
+            if (data != null && data.length > 0) {
+                builder.setProviderData(new String(data));
+            }
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setProviderId(cursor.getString(index));
+        }
         int columnIndex = cursor.getColumnIndex(TvContract.PreviewPrograms.COLUMN_INTENT_URI);
         Logger.i("columnIndex:" + columnIndex);
         if (columnIndex != -1) {
@@ -105,6 +126,8 @@ public class PreviewProgram {
                         TvContract.PreviewPrograms.COLUMN_TITLE,
                         TvContract.PreviewPrograms.COLUMN_POSTER_ART_URI,
                         TvContract.PreviewPrograms.COLUMN_SEARCHABLE,
+                        TvContract.PreviewPrograms.COLUMN_INTERNAL_PROVIDER_DATA,
+                        TvContract.PreviewPrograms.COLUMN_INTERNAL_PROVIDER_ID,
                         TvContract.PreviewPrograms.COLUMN_PREVIEW_VIDEO_URI,
                         TvContract.PreviewPrograms.COLUMN_INTENT_URI,
                         TvContract.PreviewPrograms.COLUMN_TRANSIENT,
@@ -153,6 +176,35 @@ public class PreviewProgram {
 
         public Builder setIntentUri(String intentUri) {
             mProgram.mIntentUri = intentUri;
+            return this;
+        }
+
+        public Builder setProviderData(String providerData) {
+            String data = "https:";
+            if (providerData != null) {
+                int pos = providerData.indexOf(data);
+                if (pos > 0) {
+                    providerData = providerData.substring(pos);
+                }
+            } else {
+                providerData = "";
+            }
+
+            mProgram.mProviderData = providerData;
+            return this;
+        }
+
+        public Builder setProviderId(String providerId) {
+            if (providerId != null) {
+                String data = "android_app:";
+                int pos = providerId.indexOf(data);
+                if (pos > 0) {
+                    providerId = providerId.substring(pos + data.length());
+                }
+            }else {
+                providerId = "";
+            }
+            mProgram.mProviderId = providerId;
             return this;
         }
 
