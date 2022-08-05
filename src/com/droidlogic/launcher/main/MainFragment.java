@@ -27,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -43,6 +44,7 @@ import androidx.leanback.widget.ItemBridgeAdapter;
 import androidx.leanback.widget.ListRow;
 import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.VerticalGridView;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppDataManage;
@@ -86,6 +88,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import me.jessyan.autosize.utils.AutoSizeUtils;
 
 import static android.content.Intent.URI_INTENT_SCHEME;
 
@@ -127,6 +130,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private TextView tvMemory;
 
     private ProgressBar pbMemory;
+
+    private TvView tvView;
+
+    private TextView tvPrompt;
 
     public MainFragment() {
     }
@@ -361,6 +368,47 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mBackgroundManager.setThemeDrawableResourceId(R.drawable.bg);
     }
 
+    abstract static class TvViewRunnable implements Runnable {
+        protected boolean resize = false;
+        public int scrollY = 0;
+    }
+
+    private final TvViewRunnable resizeTvView = new TvViewRunnable() {
+        @Override
+        public void run() {
+            if (tvView == null) return;
+            int width = AutoSizeUtils.dp2px(getContext(), 476);
+            int height = AutoSizeUtils.dp2px(getContext(), 316);
+            int topMargin = AutoSizeUtils.dp2px(getContext(), 80);
+            int smallWindowsHeight = AutoSizeUtils.dp2px(getContext(), 180);
+            int smallWindowsWidth = smallWindowsHeight * 16 / 9;
+            int startMargin = AutoSizeUtils.dp2px(getContext(), 60);
+            int startMarginOrg = AutoSizeUtils.dp2px(getContext(), 62);
+            int smallWindowStartMargin = AutoSizeUtils.dp2px(getContext(), 56);
+            FrameLayout.LayoutParams pms = (FrameLayout.LayoutParams) tvView.getLayoutParams();
+            int tvPromptHeight = tvPrompt.getHeight();
+            /*Log.i("onScrolled", "yScroll:run" + resize + "width:" + width + "\theight:"
+                    + height + "\th:" + tvPromptHeight);*/
+            resize = scrollY > tvPromptHeight;
+            if (resize) {
+                pms.width = smallWindowsWidth;
+                pms.height = smallWindowsHeight;
+                pms.topMargin = topMargin;
+                pms.leftMargin = smallWindowStartMargin;
+            } else {
+                pms.width = width;
+                pms.height = height;
+                pms.leftMargin = startMarginOrg;
+                if (scrollY > 0) {
+                    int margin = topMargin - scrollY;
+                    pms.leftMargin = startMargin;
+                    pms.topMargin =margin;
+                }
+            }
+            tvView.setLayoutParams(pms);
+        }
+    };
+
     private void initView(View view) {
         if (view == null) return;
         view.findViewById(R.id.fun_content_search).setOnClickListener(view1 -> {
@@ -387,6 +435,27 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         imgUsbDevice = (ImageView) view.findViewById(R.id.iv_usb_device);
 
         verticalGridView = (VerticalGridView) view.findViewById(R.id.vtl_grid_view);
+        verticalGridView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            int yScroll = 0;
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                yScroll += dy;
+                //mLoadHandler.removeCallbacks(resizeTvView);
+                boolean resize = yScroll != 0;
+                //Log.i("onScrolled", "yScroll:" + yScroll + "\tresize:" + resize + "xxx:" + resizeTvView.resize + "===" + (resizeTvView.resize != resize));
+                resizeTvView.scrollY = yScroll;
+                //mLoadHandler.postDelayed(resizeTvView, 10);
+
+                resizeTvView.run();
+            }
+        });
         verticalGridView.setVerticalSpacing((int) getResources().getDimension(R.dimen.main_page_vtl_space));
         mRowsAdapter = new ArrayObjectAdapter(new MainPresenterSelector(mInputSource, new OnItemClickListener() {
             @Override
@@ -438,8 +507,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     defaultFocusView.setNextFocusUpId(R.id.fun_content_search);
                 }
                 //initial tvControl
-                TvView tvView = (TvView) verticalGridView.findViewById(R.id.tv_view);
-                TextView tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
+                tvView = (TvView) getActivity().findViewById(R.id.tv_view);
+                tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
                 if (tvView != null) {
                     mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
                     mTvControl.resume();
