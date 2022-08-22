@@ -243,11 +243,13 @@ public class TvControl {
         setChannelUri(isPassthroughInput, channelId);
         ChannelInfo currentChannel = mChannelDataManager.getChannelInfo(mChannelUri);
         Logger.d(TAG, "TV play tune inputId=" + inputId + " uri=" + mChannelUri);
-        if (mChannelUri == null || currentChannel == null) {
-            Logger.d(TAG, "TV play not tune as mChannelUri null");
-            setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
-            mViewManager.setStreamVolume(0);
-            return;
+        if (!isPassthroughInput) {
+            if (mChannelUri == null || currentChannel == null) {
+                Logger.d(TAG, "TV play not tune as mChannelUri null");
+                setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
+                mViewManager.setStreamVolume(0);
+                return;
+            }
         }
 
         if ((mChannelDataManager.getChannelId(mChannelUri) > 0
