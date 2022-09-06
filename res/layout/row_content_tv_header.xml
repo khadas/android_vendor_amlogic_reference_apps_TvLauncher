@@ -18,24 +18,7 @@
         android:layout_width="480dp"
         android:layout_height="320dp"
         android:background="#000"
-        app:animEnable="false">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/tx_tv_prompt"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:textSize="30sp"
-                android:textStyle="bold"
-                tools:text="DTVKit2" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.droidlogic.launcher.leanback.view.BorderEffectLayout>
+        app:animEnable="false"/>
 
     <FrameLayout
         android:id="@+id/vtl_view_source_list_parent"

@@ -18,14 +18,30 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.media.tv.TvView
-        android:id="@+id/tv_view"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/tv_view_parent"
         android:layout_width="476dp"
         android:layout_height="316dp"
         android:layout_marginStart="62dp"
-        android:layout_marginTop="80dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginTop="80dp">
+
+        <android.media.tv.TvView
+            android:id="@+id/tv_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tx_tv_prompt"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            tools:text="DTVKit2" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
         android:layout_width="match_parent"

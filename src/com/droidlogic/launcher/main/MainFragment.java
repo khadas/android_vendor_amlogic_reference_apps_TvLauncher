@@ -133,6 +133,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private TvView tvView;
 
+    private ViewGroup tvViewParent;
+
     private TextView tvPrompt;
 
     public MainFragment() {
@@ -376,16 +378,16 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private final TvViewRunnable resizeTvView = new TvViewRunnable() {
         @Override
         public void run() {
-            if (tvView == null) return;
+            if (tvViewParent == null) return;
             int width = AutoSizeUtils.dp2px(getContext(), 476);
             int height = AutoSizeUtils.dp2px(getContext(), 316);
             int topMargin = AutoSizeUtils.dp2px(getContext(), 80);
             int smallWindowsHeight = AutoSizeUtils.dp2px(getContext(), 180);
             int smallWindowsWidth = smallWindowsHeight * 16 / 9;
-            int startMargin = AutoSizeUtils.dp2px(getContext(), 60);
-            int startMarginOrg = AutoSizeUtils.dp2px(getContext(), 62);
+            int startMargin = AutoSizeUtils.dp2px(getContext(), 62);
+            //int startMarginOrg = AutoSizeUtils.dp2px(getContext(), 62);
             int smallWindowStartMargin = AutoSizeUtils.dp2px(getContext(), 56);
-            FrameLayout.LayoutParams pms = (FrameLayout.LayoutParams) tvView.getLayoutParams();
+            FrameLayout.LayoutParams pms = (FrameLayout.LayoutParams) tvViewParent.getLayoutParams();
             int tvPromptHeight = tvPrompt.getHeight();
             /*Log.i("onScrolled", "yScroll:run" + resize + "width:" + width + "\theight:"
                     + height + "\th:" + tvPromptHeight);*/
@@ -398,14 +400,14 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             } else {
                 pms.width = width;
                 pms.height = height;
-                pms.leftMargin = startMarginOrg;
+                pms.leftMargin = startMargin;
                 if (scrollY > 0) {
                     int margin = topMargin - scrollY;
-                    pms.leftMargin = startMargin;
+                    //pms.leftMargin = startMargin;
                     pms.topMargin =margin;
                 }
             }
-            tvView.setLayoutParams(pms);
+            tvViewParent.setLayoutParams(pms);
         }
     };
 
@@ -507,6 +509,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     defaultFocusView.setNextFocusUpId(R.id.fun_content_search);
                 }
                 //initial tvControl
+                tvViewParent = (ViewGroup) getActivity().findViewById(R.id.tv_view_parent);
                 tvView = (TvView) getActivity().findViewById(R.id.tv_view);
                 tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
                 if (tvView != null) {
