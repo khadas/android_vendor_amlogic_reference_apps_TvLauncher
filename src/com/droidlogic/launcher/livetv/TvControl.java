@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -190,7 +191,8 @@ public class TvControl {
             }
             mPlayChannelId = channelId;
             Uri channelUri = TvContract.buildChannelUri(channelId);
-            if (mChannelDataManager.isChennelLocked(channelUri) && mTvInputManager.isParentalControlsEnabled()) {
+            //if (mChannelDataManager.isChennelLocked(channelUri) && mTvInputManager.isParentalControlsEnabled()) {
+            if (mChannelDataManager.isChennelLocked(channelUri)) {
                 isChannelBlocked = true;
             }
         }
@@ -198,7 +200,8 @@ public class TvControl {
             isChannelBlocked = false;
         }
 
-        if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
+        //if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
+        if (!isChannelBlocked) {
             result = true;
         } else {
             setTvPrompt(TvPrompt.TV_PROMPT_BLOCKED);
