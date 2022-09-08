@@ -159,6 +159,13 @@ public class ChannelDataManager {
 
         Uri channelUri   = TvContract.buildChannelUri(channelId);
         ChannelInfo info = getChannelInfo(channelUri); //check if channnel exist
+        if (info != null && isDtvKitInput(inputId)) {
+            //check if channel match current tuner type
+            String dtvkitSystem = getDtvkitSystem(mContext);
+            if (!dtvkitChannelsMatchSystem(info.getType(), dtvkitSystem)) {
+                info = null;
+            }
+        }
         if (info == null) {
             channelId = -1;
             info = getFirstChannel(inputId); //The first channel will be tuned to
