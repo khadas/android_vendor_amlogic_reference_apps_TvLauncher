@@ -17,6 +17,7 @@ public class TvPrompt {
     public static final int TV_PROMPT_DATA_SERVICE            = 9;
     public static final int TV_PROMPT_IS_SKIP                 = 10;
     public static final int TV_PROMPT_IS_DELETE               = 11;
+    public static final int TV_INVALID_SERVICE                = 12;
 
     private TextView mTvPromptView;
 

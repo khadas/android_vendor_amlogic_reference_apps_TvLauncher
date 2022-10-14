@@ -43,6 +43,10 @@ public class TvControl {
     private static final String ACTION_OTP_INPUT_SOURCE_CHANGE = "droidlogic.tv.action.OTP_INPUT_SOURCE_CHANGED";
     private static final String EVENT_CHANNEL_LIST_UPDATE      = "event_channel_list_updated";
 
+    public static final String EVENT_SIGNAL_SCRAMBLED_SERVICE   = "signal_scrambled_service";
+    public static final String EVENT_SIGNAL_INVALID_SERVICE     = "signal_invalid_service";
+    public static final String EVENT_SIGNAL_DATA_SERVICE        = "signal_data_service";
+
     private static final int TV_MSG_PLAY_TV         = 0;
     private static final int TV_MSG_BOOTUP_TO_TVAPP = 1;
 
@@ -385,6 +389,10 @@ public class TvControl {
                 text = mContext.getResources().getString(R.string.str_channel_delete);
                 background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
+            case TvPrompt.TV_INVALID_SERVICE:
+                text = mContext.getResources().getString(R.string.str_invalid_service);
+                background = mContext.getResources().getDrawable(R.drawable.black);
+                break;
         }
 
         mViewManager.setTvPrompt(text, background);
@@ -394,8 +402,14 @@ public class TvControl {
 
         public void onEvent(String inputId, String eventType, Bundle eventArgs) {
             Logger.d(TAG, "====onEvent==inputId =" + inputId + ", ===eventType =" + eventType);
-            if (eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
+            if (eventType.equals(EVENT_SIGNAL_SCRAMBLED_SERVICE) || eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_IS_SCRAMBLED);
+            }
+            else if (eventType.equals(EVENT_SIGNAL_DATA_SERVICE)) {
+                setTvPrompt(TvPrompt.TV_PROMPT_DATA_SERVICE);
+            }
+            else if (eventType.equals(EVENT_SIGNAL_INVALID_SERVICE)) {
+                setTvPrompt(TvPrompt.TV_INVALID_SERVICE);
             }
             else if (eventType.equals(EVENT_CHANNEL_LIST_UPDATE)) {
                 replay(true);

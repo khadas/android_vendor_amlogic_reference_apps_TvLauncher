@@ -25,6 +25,7 @@
     <string name="str_tvapp">LiveTv</string>
     <string name="str_video">Online Video</string>
     <string name="str_data_service">Data Service</string>
+    <string name="str_invalid_service">Invalid Service</string>
     <string name="str_channel_skip">Hidden Program</string>
     <string name="str_channel_delete">Deleted Channel</string>
     <string name="toast_livetv_warn">LiveTv is releasing, please wait</string>
