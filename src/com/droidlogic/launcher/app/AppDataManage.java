@@ -76,7 +76,7 @@ public class AppDataManage {
         ArrayList<AppModel> leanbackLauncherAppModels = getLaunchAppList(LEANBACK_LAUNCHER);
         leanbackLauncherAppModels.removeAll(launcherAppModels);
         launcherAppModels.addAll(leanbackLauncherAppModels);
-        if (launcherAppModels.size() != 0) {
+        if (launcherAppModels.size() > 1) {
             Collections.sort(launcherAppModels, getAppNameComparator());
             return launcherAppModels;
         }
