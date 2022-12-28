@@ -183,6 +183,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onPause() {
         super.onPause();
+        mTimeDisplay.unInit();
         //===this is for live tv
         if (mTvControl != null) {
             mTvControl.pause();
@@ -192,7 +193,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onStop() {
         super.onStop();
-        mTimeDisplay.unInit();
         //===this is for live tv=======
         if (mTvControl != null) {
             mTvControl.stop();
