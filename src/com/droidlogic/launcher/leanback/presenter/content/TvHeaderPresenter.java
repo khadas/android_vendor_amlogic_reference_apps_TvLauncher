@@ -80,7 +80,12 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
             } else {
                 rowDataProvider = new TvRow(view.getContext());
             }
-            initSignalSourceList(rowDataProvider);
+            signalSourceListView.post(new Runnable() {
+                @Override
+                public void run() {
+                    initSignalSourceList(rowDataProvider);
+                }
+            });
 
             //system function
             systemFunctionListView = (VerticalGridView) view.findViewById(R.id.vtl_view_system_function);
