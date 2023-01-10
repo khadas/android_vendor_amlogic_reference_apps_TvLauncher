@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_root"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".main.MainFragment">
+    tools:context=".main.MainFragment"
+    android:visibility="invisible"
+    >
 
     <androidx.leanback.widget.VerticalGridView
         android:id="@+id/vtl_grid_view"
@@ -166,6 +175,16 @@
                 tools:ignore="UseCompatTextViewDrawableXml"
                 tools:text="100MB / 2048MB" />
 
-        </com.droidlogic.launcher.leanback.view.NoEffectLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</FrameLayout>
+            </com.droidlogic.launcher.leanback.view.NoEffectLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layout_black"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/black_ground"
+        android:visibility="visible">
+    </FrameLayout>
+
+</RelativeLayout>

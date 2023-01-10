@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvView;
 import android.net.ConnectivityManager;
@@ -23,6 +22,7 @@ import android.os.Message;
 import android.os.storage.StorageManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,7 +94,7 @@ import static android.content.Intent.URI_INTENT_SCHEME;
 
 public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
-    private final String TAG = MainFragment.class.getName();
+    private final String TAG = "MainFragment";
 
     private static final String PACKAGE_LIVE_TV = "com.droidlogic.android.tv";
 
@@ -104,7 +104,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private TimeDisplay mTimeDisplay;
     private DisplayMetrics mMetrics;
     private BackgroundManager mBackgroundManager;
-
     private AppRow mAppRow;
 
     //===this is for live tv===========
@@ -112,7 +111,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private InputSourceManager mInputSource;
 
     //page top area : TvHeader
-    private final TvHeaderListRow tvHeaderListRow = new TvHeaderListRow(new ArrayObjectAdapter());
+    private TvHeaderListRow tvHeaderListRow;
 
     private VerticalGridView verticalGridView;
     private ArrayObjectAdapter mRowsAdapter;
@@ -159,19 +158,19 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //===this is for live tv=================
-        mInputSource = new InputSourceManager(getActivity(), new SourceStatusListener(), mLoadHandler);
-        //=======================================
-        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
-        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
-        prepareBackgroundManager();
-        initView(getView());
-        initStorage();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        initTVControl();
+        if (checkBootToTvApp()) {
+            if (mTvControl != null) {
+                mTvControl.resume();
+            }
+            return;
+        }
+        initLauncher();
         initTime();
         //===this is for live tv and input Source
         tvHeaderListRow.signalUpdate();
@@ -183,7 +182,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onPause() {
         super.onPause();
-        mTimeDisplay.unInit();
+        if (mTimeDisplay != null) {
+            mTimeDisplay.unInit();
+        }
         //===this is for live tv
         if (mTvControl != null) {
             mTvControl.pause();
@@ -216,6 +217,20 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         }
     }
 
+    private boolean mInitLauncher = false;
+    private void initLauncher() {
+        if (!mInitLauncher) {
+            mInitLauncher = true;
+            tvHeaderListRow = new TvHeaderListRow(new ArrayObjectAdapter());
+            mInputSource = new InputSourceManager(getActivity(), new SourceStatusListener(), mLoadHandler);
+            mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
+            mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
+
+            initView(getView());
+            prepareBackgroundManager();
+            initStorage();
+        }
+    }
     private StorageManagerUtil storageManagerUtil;
 
     private void initStorage() {
@@ -356,8 +371,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     }
 
     private void initTime() {
-        TextView view = (TextView) getView().findViewById(R.id.tv_date);
-        mTimeDisplay = new TimeDisplay(getActivity(), view);
+        if (mTimeDisplay == null) {
+            TextView view = (TextView) getView().findViewById(R.id.tv_date);
+            mTimeDisplay = new TimeDisplay(getActivity(), view);
+        }
         mTimeDisplay.init();
         mTimeDisplay.update();
     }
@@ -498,7 +515,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         loadRecommend();
 
         verticalGridView.setAdapter(new ItemBridgeAdapter(mRowsAdapter));
-
         verticalGridView.post(new Runnable() {
             @Override
             public void run() {
@@ -509,15 +525,43 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     defaultFocusView.setNextFocusUpId(R.id.fun_content_search);
                 }
                 //initial tvControl
-                tvViewParent = (ViewGroup) getActivity().findViewById(R.id.tv_view_parent);
-                tvView = (TvView) getActivity().findViewById(R.id.tv_view);
-                tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
-                if (tvView != null) {
-                    mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
-                    mTvControl.resume();
-                }
+                initTVControl();
             }
         });
+    }
+
+    private void enableMainLayout() {
+        FrameLayout black = (FrameLayout) getView().findViewById(R.id.layout_black);
+        if (black != null) {
+            black.setVisibility(View.GONE);
+        }
+        FrameLayout main = (FrameLayout) getView().findViewById(R.id.layout_main);
+        if (main != null) {
+            main.setVisibility(View.VISIBLE);
+        }
+    }
+    //check if boot to tvapp when power on
+    private boolean checkBootToTvApp() {
+        if (mTvControl != null && !mTvControl.checkNeedStartTvApp()) {
+            Log.d(TAG, "start launch");
+            enableMainLayout();
+            return false;
+        } else {
+            Log.d(TAG, "start tv");
+            return true;
+        }
+    }
+
+    private void initTVControl() {
+        //initial tvControl
+        if (mTvControl == null) {
+            tvViewParent = (ViewGroup) getActivity().findViewById(R.id.tv_view_parent);
+            tvView = (TvView) getActivity().findViewById(R.id.tv_view);
+            tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
+            if (tvView != null) {
+                mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
+            }
+        }
     }
 
     private void addTvHeaderView() {
@@ -626,8 +670,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         int avail = (int) (availMem / 1024f / 1024f);
         int total = (int) (totalMem / 1024f / 1024f);
         String memory = String.format(Locale.getDefault(), "%dMB / %d MB", avail, total);
-        tvMemory.setText(memory);
-        pbMemory.setProgress(avail * 100 / total);
+        if (tvMemory != null) {
+            tvMemory.setText(memory);
+        }
+        if (pbMemory != null) {
+            pbMemory.setProgress(avail * 100 / total);
+        }
     }
 
     private void registerReceiver() {
@@ -687,6 +735,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private final BroadcastReceiver networkReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (imgNetWork == null) {
+                return;
+            }
             ConnectivityManager connectivityManager =
                     (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
@@ -709,12 +760,16 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     @Override
     public void onTFCardMountState(boolean isMount) {
-        imgTfCard.setVisibility(isMount ? View.VISIBLE : View.GONE);
+        if (imgTfCard != null) {
+            imgTfCard.setVisibility(isMount ? View.VISIBLE : View.GONE);
+        }
     }
 
     @Override
     public void onUsbDeviceMountState(boolean isMount) {
-        imgUsbDevice.setVisibility(isMount ? View.VISIBLE : View.GONE);
+        if (imgUsbDevice != null) {
+            imgUsbDevice.setVisibility(isMount ? View.VISIBLE : View.GONE);
+        }
     }
 
     private int mLoadCount = 0;
@@ -748,7 +803,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private class SourceStatusListener extends TvInputManager.TvInputCallback {
         public void onInputStateChanged(String inputId, int state) {
             Logger.d(TAG, "source :" + inputId + " connect:" + state);
-            tvHeaderListRow.signalUpdate();
+            if (tvHeaderListRow != null) {
+                tvHeaderListRow.signalUpdate();
+            }
         }
     }
 

@@ -114,6 +114,11 @@ public class TvControl {
         mTvHandler.sendEmptyMessage(TV_MSG_BOOTUP_TO_TVAPP);
     }
 
+    //boot to tvapp when power on
+    public boolean checkNeedStartTvApp() {
+        return mTvConfig.checkNeedStartTvApp(false, false);
+    }
+
     public void resume() {
         if (mTvConfig.checkNeedStartTvApp(true, mDelayedSourceChange != null)) {
             launchTvApp(-1);
@@ -612,7 +617,7 @@ public class TvControl {
                             startTvApp();
                         }
                     } else {
-                        //Loggerd(TAG, "bootvideo is not stopped, wait it");
+                        //Logger.d(TAG, "bootvideo is not stopped, wait it");
                         mTvHandler.removeMessages(TV_MSG_BOOTUP_TO_TVAPP);
                         mTvHandler.sendEmptyMessageDelayed(TV_MSG_BOOTUP_TO_TVAPP, 200);
                     }
