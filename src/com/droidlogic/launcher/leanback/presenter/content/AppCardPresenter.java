@@ -77,6 +77,7 @@ public class AppCardPresenter extends Presenter {
             if (appInfo instanceof AppModel) {
                 AppModel appModel = (AppModel) appInfo;
                 gvAppMore.setAdapter(null);
+                gvAppMore.setVisibility(View.GONE);
                 Drawable banner = appModel.getBanner();
                 Drawable icon = appModel.getIcon();
                 imgAppBanner.setImageDrawable(banner);
