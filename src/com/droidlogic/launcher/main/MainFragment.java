@@ -91,6 +91,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.autosize.utils.AutoSizeUtils;
 
 import static android.content.Intent.URI_INTENT_SCHEME;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
 
 public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
@@ -218,6 +220,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     }
 
     private boolean mInitLauncher = false;
+
     private void initLauncher() {
         if (!mInitLauncher) {
             mInitLauncher = true;
@@ -231,6 +234,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             initStorage();
         }
     }
+
     private StorageManagerUtil storageManagerUtil;
 
     private void initStorage() {
@@ -421,7 +425,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 if (scrollY > 0) {
                     int margin = topMargin - scrollY;
                     //pms.leftMargin = startMargin;
-                    pms.topMargin =margin;
+                    pms.topMargin = margin;
                 }
             }
             tvViewParent.setLayoutParams(pms);
@@ -492,12 +496,21 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 } else if (item instanceof FunctionModel) {
                     FunctionModel model = (FunctionModel) item;
                     Intent intent = model.getIntent();
-                    if (intent == null && !TextUtils.isEmpty(model.getPackageName())) {
-                        intent = getActivity().getPackageManager().getLaunchIntentForPackage(model.getPackageName());
+                    if (intent == null && !TextUtils.isEmpty(model.getPackageName()) && getActivity() != null) {
+                        String packageName = model.getPackageName();
+                        PackageManager packageManager = getActivity().getPackageManager();
+                        intent = packageManager.getLaunchIntentForPackage(packageName);
+                        if (PKG_NAME_TVCAST.equals(packageName) && intent == null) {
+                            intent = packageManager.getLaunchIntentForPackage(PKG_NAME_MIRACAST);
+                        }
                         model.setIntent(intent);
                     }
                     if (intent != null) {
-                        startActivity(intent);
+                        try {
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 } else if (item instanceof InputModel) {
                     InputModel model = (InputModel) item;
@@ -540,6 +553,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             main.setVisibility(View.VISIBLE);
         }
     }
+
     //check if boot to tvapp when power on
     private boolean checkBootToTvApp() {
         if (mTvControl != null && !mTvControl.checkNeedStartTvApp()) {

@@ -16,6 +16,8 @@ import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.UserHandle;
 
+import com.droidlogic.app.SystemControlManager;
+
 import java.lang.reflect.Field;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_FILE_BROWS
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MEDIA_CENTER;
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_WEB_BROWSER;
 
 public class AppDataManage {
     private final Context mContext;
@@ -38,7 +41,7 @@ public class AppDataManage {
             "com.droidlogic.launcher",
             "com.droidlogic.appinstall",
             "com.droidlogic.android.tv",
-            "org.chromium.webview_shell",
+            PKG_NAME_WEB_BROWSER,
             "com.android.tv.settings",
             "com.android.traceur",
             PKG_NAME_FILE_BROWSER,
@@ -249,11 +252,15 @@ public class AppDataManage {
         return localArrayList;
     }
 
-
     private boolean isHideApp(String packName) {
+        final String property = "vendor.tvlauncher.webbrowser.enable";
         for (String name : mHideAppName) {
-            if (name.equals(packName))
+            if (PKG_NAME_WEB_BROWSER.equals(packName)) {
+                boolean webEnable = SystemControlManager.getInstance().getPropertyBoolean(property, false);
+                return !webEnable;
+            } else if (name.equals(packName)) {
                 return true;
+            }
         }
         return false;
     }
