@@ -122,6 +122,14 @@ public class ChannelDataManager {
         return result;
     }
 
+    public boolean putLongValue(Context context, String key, long value) {
+        boolean result = false;
+        if (context != null) {
+            result = DataProviderManager.putLongValue(context, key, value);
+        }
+        return result;
+    }
+
     private boolean isAtscCountry(Context context) {
         boolean result = false;
         if (context != null) {
