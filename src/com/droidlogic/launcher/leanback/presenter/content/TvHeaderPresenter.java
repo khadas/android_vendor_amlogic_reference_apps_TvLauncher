@@ -1,5 +1,6 @@
 package com.droidlogic.launcher.leanback.presenter.content;
 
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -105,7 +106,22 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
         }
 
         private void initSignalSourceList(final IRowSignalSourceProvider rowDataProvider) {
-            signalSourceListView.setAdapter(new ItemBridgeAdapter(rowDataProvider.getListRowAdapter()));
+            ItemBridgeAdapter signalItemBridgeAdapter = new ItemBridgeAdapter(rowDataProvider.getListRowAdapter());
+            signalSourceListView.setAdapter(signalItemBridgeAdapter);
+            signalItemBridgeAdapter.setAdapterListener(new ItemBridgeAdapter.AdapterListener(){
+                @Override
+                public void onCreate(ItemBridgeAdapter.ViewHolder viewHolder) {
+                    viewHolder.itemView.setOnTouchListener(new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View v, MotionEvent event) {
+                            if (event.getAction() ==  MotionEvent.ACTION_DOWN) {
+                                buildChildClickListener(viewHolder.itemView, rowDataProvider.getListRowAdapter().get(viewHolder.getPosition()),  rowDataProvider.getListRowAdapter());
+                            }
+                            return false;
+                        }
+                    });
+                }
+            });
             signalSourceListView.setOnChildViewHolderSelectedListener(new OnChildViewHolderSelectedListener() {
                 @Override
                 public void onChildViewHolderSelected(RecyclerView parent, RecyclerView.ViewHolder child, int position, int subposition) {
@@ -134,7 +150,22 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
             systemFunctionListView.setVerticalSpacing(itemSpace);
             systemFunctionListView.setHorizontalSpacing(itemSpace);
             final FunctionRow functionRow = new FunctionRow(view.getContext());
-            systemFunctionListView.setAdapter(new ItemBridgeAdapter(functionRow.getListRowAdapter()));
+            ItemBridgeAdapter systemItemBridgeAdapter = new ItemBridgeAdapter(functionRow.getListRowAdapter());
+            systemFunctionListView.setAdapter(systemItemBridgeAdapter);
+            systemItemBridgeAdapter.setAdapterListener(new ItemBridgeAdapter.AdapterListener(){
+                @Override
+                public void onCreate(ItemBridgeAdapter.ViewHolder viewHolder) {
+                    viewHolder.itemView.setOnTouchListener(new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View v, MotionEvent event) {
+                            if (event.getAction() ==  MotionEvent.ACTION_DOWN) {
+                                buildChildClickListener(viewHolder.itemView, functionRow.getListRowAdapter().get(viewHolder.getPosition()), null);
+                            }
+                            return false;
+                        }
+                    });
+                }
+            });
             systemFunctionListView.setOnChildViewHolderSelectedListener(new OnChildViewHolderSelectedListener() {
                 @Override
                 public void onChildViewHolderSelected(RecyclerView parent, RecyclerView.ViewHolder child, int position, int subposition) {
