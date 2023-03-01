@@ -5,11 +5,16 @@
     <string name="app_header_app_name">App</string>
     <string name="app_header_input_name">Input</string>
     <string name="app_header_function_name">Function</string>
+    <string name="app_header_settings">Settings</string>
 
     <string name="function_app_filebrowser">File Browser</string>
     <string name="function_app_tvcast">TV Cast</string>
     <string name="function_app_uninstall">Uninstall</string>
     <string name="function_system_setting">Settings</string>
+
+    <string name="fun_shortcut_network">Network</string>
+    <string name="fun_shortcut_language">Language</string>
+    <string name="fun_shortcut_time">Time</string>
 
     <string name="tv_no_channel">No Channel</string>
     <string name="tv_search_channel">Please Search Channel</string>

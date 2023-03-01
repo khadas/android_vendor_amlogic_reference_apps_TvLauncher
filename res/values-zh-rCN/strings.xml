@@ -6,11 +6,16 @@
     <string name="app_header_app_name">应用</string>
     <string name="app_header_input_name">输入源</string>
     <string name="app_header_function_name">功能</string>
+    <string name="app_header_settings">设置</string>
 
     <string name="function_app_filebrowser">文件浏览器</string>
     <string name="function_app_tvcast">TV Cast</string>
     <string name="function_app_uninstall">应用卸载</string>
     <string name="function_system_setting">系统设置</string>
+
+    <string name="fun_shortcut_network">网络</string>
+    <string name="fun_shortcut_language">语言</string>
+    <string name="fun_shortcut_time">时间</string>
 
     <string name="tv_no_channel">无节目</string>
     <string name="tv_search_channel">请先搜索节目</string>

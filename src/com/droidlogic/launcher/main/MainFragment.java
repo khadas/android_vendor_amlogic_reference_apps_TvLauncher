@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.storage.StorageManager;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -51,6 +52,7 @@ import com.droidlogic.launcher.app.AppDataManage;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppMoreModel;
 import com.droidlogic.launcher.app.AppRow;
+import com.droidlogic.launcher.app.ShortcutModel;
 import com.droidlogic.launcher.app.gallery.AppGalleryActivity;
 import com.droidlogic.launcher.base.LeanbackActivity;
 import com.droidlogic.launcher.function.FunctionModel;
@@ -60,6 +62,7 @@ import com.droidlogic.launcher.leanback.listrow.TvHeaderListRow;
 import com.droidlogic.launcher.leanback.listrow.TvRecommendListRow;
 import com.droidlogic.launcher.leanback.presenter.MainPresenterSelector;
 import com.droidlogic.launcher.leanback.presenter.OnItemClickListener;
+import com.droidlogic.launcher.leanback.presenter.content.AppCardPresenter;
 import com.droidlogic.launcher.leanback.presenter.content.SearchPreviewProgramPresenter;
 import com.droidlogic.launcher.livetv.Channel;
 import com.droidlogic.launcher.livetv.MediaModel;
@@ -491,6 +494,27 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     appBean.onClickModel(view);
                 } else if (item instanceof AppMoreModel) {
                     startActivity(new Intent(getContext(), AppGalleryActivity.class));
+                } else if (item instanceof ShortcutModel) {
+                    ShortcutModel shortcutModel = (ShortcutModel) item;
+                    Intent intent = intent = new Intent();
+                    switch (shortcutModel.getIntent()) {
+                        case NETWORK:
+                            intent.setAction(Settings.ACTION_WIFI_SETTINGS);
+                            break;
+                        case LANGUAGE:
+                            intent.setAction(Settings.ACTION_LOCALE_SETTINGS);
+                            break;
+                        case TIME:
+                            intent.setAction(Settings.ACTION_DATE_SETTINGS);
+                            break;
+                        default:
+                            return;
+                    }
+                    try {
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else if (item instanceof PreviewProgram) {
                     startPreviewProgram((PreviewProgram) item);
                 } else if (item instanceof FunctionModel) {
@@ -526,6 +550,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         addTvHeaderView();
         addAppRow();
         loadRecommend();
+        addShortcutRow();
 
         verticalGridView.setAdapter(new ItemBridgeAdapter(mRowsAdapter));
         verticalGridView.post(new Runnable() {
@@ -590,6 +615,16 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private void addAppRow() {
         String headerName = getResources().getString(R.string.app_header_app_name);
         mAppRow = new AppRow(getActivity(), headerName, mRowsAdapter);
+    }
+
+    private void addShortcutRow() {
+        ArrayObjectAdapter settingRowAdapter = new ArrayObjectAdapter(new AppCardPresenter());
+        settingRowAdapter.add(new ShortcutModel(getString(R.string.fun_shortcut_network), R.drawable.icon_shortcut_network, ShortcutModel.INTENT.NETWORK));
+        settingRowAdapter.add(new ShortcutModel(getString(R.string.fun_shortcut_language), R.drawable.icon_shortcut_language, ShortcutModel.INTENT.LANGUAGE));
+        settingRowAdapter.add(new ShortcutModel(getString(R.string.fun_shortcut_time), R.drawable.icon_shortcut_time, ShortcutModel.INTENT.TIME));
+        String headerName = getResources().getString(R.string.app_header_settings);
+        HeaderItem header = new HeaderItem(headerName);
+        mRowsAdapter.add(new ListRow(header, settingRowAdapter));
     }
 
     private ValueAnimator memoryAnimator;

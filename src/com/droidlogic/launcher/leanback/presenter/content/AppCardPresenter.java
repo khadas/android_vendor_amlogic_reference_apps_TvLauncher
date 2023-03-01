@@ -26,6 +26,7 @@ import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppMoreModel;
 import com.droidlogic.launcher.app.IAppInfo;
+import com.droidlogic.launcher.app.ShortcutModel;
 import com.droidlogic.launcher.leanback.presenter.BaseViewHolder;
 import com.droidlogic.launcher.util.ImageTool;
 
@@ -74,10 +75,12 @@ public class AppCardPresenter extends Presenter {
 
         @Override
         protected void bindData(IAppInfo appInfo) {
+            gvAppMore.setAdapter(null);
+            gvAppMore.setVisibility(View.GONE);
+            imgAppIcon.setImageDrawable(null);
+            imgAppBanner.setImageDrawable(null);
             if (appInfo instanceof AppModel) {
                 AppModel appModel = (AppModel) appInfo;
-                gvAppMore.setAdapter(null);
-                gvAppMore.setVisibility(View.GONE);
                 Drawable banner = appModel.getBanner();
                 Drawable icon = appModel.getIcon();
                 imgAppBanner.setImageDrawable(banner);
@@ -89,14 +92,15 @@ public class AppCardPresenter extends Presenter {
                 imgAppIcon.setImageDrawable(icon);
                 tvAppName.setText(appModel.getName());
             } else if (appInfo instanceof AppMoreModel) {
-
-                imgAppIcon.setImageDrawable(null);
-                imgAppBanner.setImageDrawable(null);
                 tvAppName.setText(R.string.app_more);
-
                 AppMoreModel appMoreModel = (AppMoreModel) appInfo;
                 AppMoreAdapter adapter = new AppMoreAdapter(appMoreModel.getAppModelList());
                 gvAppMore.setAdapter(adapter);
+                gvAppMore.setVisibility(View.VISIBLE);
+            } else if (appInfo instanceof ShortcutModel) {
+                ShortcutModel shortcutModel = (ShortcutModel) appInfo;
+                tvAppName.setText(shortcutModel.getName());
+                imgAppIcon.setImageResource(((ShortcutModel) appInfo).getIconRes());
             }
         }
 
