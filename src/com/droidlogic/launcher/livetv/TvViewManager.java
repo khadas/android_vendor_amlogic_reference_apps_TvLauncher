@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.media.tv.TvView;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
@@ -142,6 +143,12 @@ public class TvViewManager {
                 mTvView.setVisibility(View.GONE);
                 mTvView.reset();
             }
+        }
+    }
+
+    public void sendAppPrivateCommand(String command, Bundle bundle) {
+        if (mTvView != null) {
+            mTvView.sendAppPrivateCommand(command, bundle);
         }
     }
 }

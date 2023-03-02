@@ -1,10 +1,12 @@
 package com.droidlogic.launcher.livetv;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
@@ -22,6 +24,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.KeyEvent;
 
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.ChannelInfo;
@@ -47,6 +50,17 @@ public class TvControl {
     public static final String EVENT_SIGNAL_INVALID_SERVICE     = "signal_invalid_service";
     public static final String EVENT_SIGNAL_DATA_SERVICE        = "signal_data_service";
 
+    //ci plus
+    private static final String ACTION_CI_PLUS_INFO = "ci_plus_info";
+    public static final String CI_PLUS_COMMAND = "command";
+    public static final String VALUE_CI_PLUS_COMMAND_SEARCH_REQUEST = "search_request";
+    public static final String VALUE_CI_PLUS_COMMAND_SEARCH_FINISHED = "search_finished";
+    public static final String VALUE_CI_PLUS_COMMAND_HOST_CONTROL = "host_control";
+    public static final String VALUE_CI_PLUS_SEARCH_MODULE = "search_module";
+    public static final String VALUE_CI_PLUS_SEARCH_RESULT_IS_OPERATOR_PROFILE_SUPPORTED = "is_operator_profile_supported";
+    public static final String VALUE_CI_PLUS_CHANNEL = "host_control_channel";
+    public static final String VALUE_CI_PLUS_TUNE_QUIETLY = "tune_quietly";
+
     private static final int TV_MSG_PLAY_TV         = 0;
     private static final int TV_MSG_BOOTUP_TO_TVAPP = 1;
 
@@ -68,6 +82,8 @@ public class TvControl {
     private Uri     mChannelUri;
     private long    mPlayChannelId = -1;
     private String  mPlayInputId;
+
+    private long    mCiTuneChannelId = -1;
 
     private boolean mActivityResumed;
     private boolean mBootComplete      = false;
@@ -419,6 +435,27 @@ public class TvControl {
             else if (eventType.equals(EVENT_CHANNEL_LIST_UPDATE)) {
                 replay(true);
             }
+            else if (eventType.equals(ACTION_CI_PLUS_INFO)) {
+                if (eventArgs != null) {
+                    String command = eventArgs.getString(CI_PLUS_COMMAND, null);
+                    if (TextUtils.isEmpty(command)) {
+                        return;
+                    }
+                    if (command.equals(VALUE_CI_PLUS_COMMAND_SEARCH_REQUEST)) {
+                        //A pop-up box is required to allow the user to choose whether to search for channels
+                        int search_module = eventArgs.getInt(VALUE_CI_PLUS_SEARCH_MODULE);
+                        openSearchRequestByCI(search_module);
+                    } else if (command.equals(VALUE_CI_PLUS_COMMAND_SEARCH_FINISHED)) {
+                        boolean isSupportOperatorProfile = eventArgs.getBoolean(VALUE_CI_PLUS_SEARCH_RESULT_IS_OPERATOR_PROFILE_SUPPORTED);
+                        showSearchResultByCI(isSupportOperatorProfile);
+                    } else if (command.equals(VALUE_CI_PLUS_COMMAND_HOST_CONTROL)) {
+                        long host_control_channel = eventArgs.getLong(VALUE_CI_PLUS_CHANNEL);
+                        if (host_control_channel != -1) {
+                            mCiTuneChannelId = host_control_channel;
+                        }
+                    }
+                }
+            }
         }
 
         @Override
@@ -673,4 +710,78 @@ public class TvControl {
         int deviceId = DroidLogicTvUtils.getHardwareDeviceId(input);
         return (deviceId == DroidLogicTvUtils.DEVICE_ID_AV1 || deviceId == DroidLogicTvUtils.DEVICE_ID_AV2);
     }
+
+    private void openSearchRequestByCI(int searchModule) {
+        new AlertDialog.Builder(mContext)
+                .setTitle(mContext.getString(R.string.ci_message_title))
+                .setMessage(mContext.getString(R.string.ci_scan_request_message))
+                .setPositiveButton(
+                        android.R.string.ok,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(
+                                    DialogInterface dialogInterface, int i) {
+                                Bundle bundle = new Bundle();
+                                bundle.putString(CI_PLUS_COMMAND,VALUE_CI_PLUS_COMMAND_SEARCH_REQUEST);
+                                bundle.putInt(VALUE_CI_PLUS_SEARCH_MODULE, searchModule);
+                                mViewManager.sendAppPrivateCommand(ACTION_CI_PLUS_INFO, bundle);
+                            }
+                        })
+                .setNegativeButton(mContext.getString(R.string.cancel), null)
+                .show();
+    }
+
+    private void showSearchResultByCI(boolean isSupportOperatorProfile) {
+        String ciTuneChannelDisplayName = "";
+        if (isSupportOperatorProfile && mCiTuneChannelId != -1) {
+            Uri channelUri = TvContract.buildChannelUri(mCiTuneChannelId);
+            ChannelInfo info = mChannelDataManager.getChannelInfo(channelUri); //check if channel exist
+            if (info != null) {
+                ciTuneChannelDisplayName = info.getDisplayName();
+            }
+        }
+        new AlertDialog.Builder(mContext)
+                .setTitle(mContext.getString(R.string.ci_message_title))
+                .setMessage((isSupportOperatorProfile && !TextUtils.isEmpty(ciTuneChannelDisplayName))
+                        ? mContext.getString(R.string.ci_scan_operator_profile_message) + " " + ciTuneChannelDisplayName + "?"
+                        : mContext.getString(R.string.ci_scan_result_no_channel_message))
+                .setPositiveButton(
+                        android.R.string.ok,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(
+                                    DialogInterface dialogInterface, int i) {
+                                if (isSupportOperatorProfile) {
+                                    mPlayChannelId = mCiTuneChannelId;
+                                    mChannelDataManager.putLongValue(mContext, mPlayInputId, mCiTuneChannelId);
+                                } else {
+                                    play(-1);
+                                }
+                            }
+                        })
+                .setNegativeButton(
+                        mContext.getString(R.string.cancel),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                if (isSupportOperatorProfile) {
+                                    //The Dtvkit background has switched channels, returning to the previously played channel
+                                    play(-1);
+                                }
+                            }
+                        })
+                .setOnKeyListener(new DialogInterface.OnKeyListener() {
+                        @Override
+                        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                                if (isSupportOperatorProfile) {
+                                    play(-1);
+                                }
+                            }
+                            return false;
+                        }
+                        })
+                .show();
+    }
+
 }

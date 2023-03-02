@@ -65,4 +65,10 @@
     <string name="app_more">App More</string>
     <string name="status_bar_search">Search</string>
     <string name="status_bar_memory_clean">Memory clean</string>
+
+    <string name="cancel">CANCEL</string>
+    <string name="ci_message_title">CI Message</string>
+    <string name="ci_scan_request_message">Do you want scan ci cam channel?</string>
+    <string name="ci_scan_operator_profile_message">Use operator profile </string>
+    <string name="ci_scan_result_no_channel_message">Operator Profile channel not found, click OK switch back to original program</string>
 </resources>
