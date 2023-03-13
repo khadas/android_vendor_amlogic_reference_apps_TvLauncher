@@ -23,10 +23,12 @@ android_app {
 		"reactive-streams-launcher",
 		"rxjava-launcher",
 		"rxandroid-launcher",
+		"gson-launcher",
 		"androidx.palette_palette",
 		"androidx.appcompat_appcompat",
 		"androidx.leanback_leanback",
 		"androidx-constraintlayout_constraintlayout",
+		"tvprovider-launcher"
 	],
 
     privileged: true,

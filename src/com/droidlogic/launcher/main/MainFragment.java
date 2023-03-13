@@ -6,11 +6,15 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.drawable.ClipDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvView;
 import android.net.ConnectivityManager;
@@ -20,10 +24,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.storage.StorageManager;
+import android.provider.BaseColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,8 +41,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.DiffCallback;
 import androidx.leanback.widget.HeaderItem;
@@ -46,8 +51,10 @@ import androidx.leanback.widget.ListRow;
 import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.VerticalGridView;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.tvprovider.media.tv.TvContractCompat;
 
 import com.droidlogic.launcher.R;
+import com.droidlogic.launcher.api.ZeasnApiService;
 import com.droidlogic.launcher.app.AppDataManage;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppMoreModel;
@@ -70,15 +77,19 @@ import com.droidlogic.launcher.livetv.PreviewProgram;
 import com.droidlogic.launcher.livetv.TvControl;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
+import com.droidlogic.launcher.model.ZeasnColumn;
+import com.droidlogic.launcher.model.ZeasnColumnContent;
 import com.droidlogic.launcher.recommend.AppPreviewProgramModel;
 import com.droidlogic.launcher.recommend.RecChannelGroupLoader;
 import com.droidlogic.launcher.recommend.RecommendChannelLoader;
 import com.droidlogic.launcher.search.loader.PreviewProgramLoader;
 import com.droidlogic.launcher.util.AppStateChangeListener;
 import com.droidlogic.launcher.util.AppUtils;
+import com.droidlogic.launcher.util.ImageTool;
 import com.droidlogic.launcher.util.Logger;
 import com.droidlogic.launcher.util.PackageUtil;
 import com.droidlogic.launcher.util.StorageManagerUtil;
+import com.droidlogic.launcher.util.Tools;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,23 +103,29 @@ import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.autosize.utils.AutoSizeUtils;
+import me.jessyan.autosize.utils.ScreenUtils;
 
 import static android.content.Intent.URI_INTENT_SCHEME;
+import static androidx.tvprovider.media.tv.ChannelLogoUtils.storeChannelLogo;
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_ZEASN_MARKET;
 
 public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
     private final String TAG = "MainFragment";
 
     private static final String PACKAGE_LIVE_TV = "com.droidlogic.android.tv";
+    private static final String INTENT_MARKET = "market://";
+
+    private static final int TYPE_MARKET_CHANNEL = 1000;
 
     private static final int MSG_LOAD_DATA = 100;
     private static final int MSG_LOAD_APP = 200;
 
+    private Disposable disposableColumn;
+
     private TimeDisplay mTimeDisplay;
-    private DisplayMetrics mMetrics;
-    private BackgroundManager mBackgroundManager;
     private AppRow mAppRow;
 
     //===this is for live tv===========
@@ -151,6 +168,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        fetchMarketData();
         registerReceiver();
         startTimer();
     }
@@ -209,6 +227,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (disposableColumn != null) {
+            disposableColumn.dispose();
+            disposableColumn = null;
+        }
         unregisterReceiver();
         stopTimer();
         stopMemoryAnim();
@@ -241,8 +263,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private StorageManagerUtil storageManagerUtil;
 
     private void initStorage() {
-        if (storageManagerUtil == null) {
-            storageManagerUtil = new StorageManagerUtil(getContext().getSystemService(StorageManager.class), MainFragment.this);
+        Context context = getContext();
+        if (storageManagerUtil == null && context != null) {
+            storageManagerUtil = new StorageManagerUtil(context.getSystemService(StorageManager.class), MainFragment.this);
             storageManagerUtil.registerListener();
         }
     }
@@ -282,21 +305,29 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         }
     }
 
+    private boolean channelFilter(String pkgName) {
+        Context context = getContext();
+        //market not install
+        return context == null || (!context.getPackageName().equals(pkgName) || PackageUtil.isPkgInstalled(context, PKG_NAME_ZEASN_MARKET));
+    }
+
     private void loadRecommend() {
         disposableRecLoad();
         channelRowRecycleMark();
+        final Context context = getContext();
+        if (context == null) return;
         disposableRec = Observable.create((ObservableOnSubscribe<AppPreviewProgramModel>) emitter -> {
             List<Channel> groupChannels = new RecChannelGroupLoader(getContext()).getDataList();
             if (groupChannels != null) {
                 for (Channel groupByChannel : groupChannels) {
-                    ApplicationInfo applicationInfo = PackageUtil.getApplicationInfoByPkgName(getContext(), groupByChannel.getPackageName());
+                    ApplicationInfo applicationInfo = PackageUtil.getApplicationInfoByPkgName(context, groupByChannel.getPackageName());
                     List<Channel> channels = new RecommendChannelLoader(getContext(), groupByChannel.getPackageName()).getDataList();
-                    if (channels != null && applicationInfo != null) {
+                    if (channels != null && applicationInfo != null && channelFilter(groupByChannel.getPackageName())) {
                         for (Channel channel : channels) {
                             List<PreviewProgram> programs = new PreviewProgramLoader(getContext(), "", channel.getPackageName(), channel.getId()).getDataList();
                             if (programs != null && programs.size() > 0) {
-                                String channelName = applicationInfo.loadLabel(getContext().getPackageManager()) + " (" + channel.getDisplayName() + ")";
-                                AppPreviewProgramModel appPreviewProgramModel = new AppPreviewProgramModel(channelName, channel, programs);
+                                //String channelName = applicationInfo.loadLabel(getContext().getPackageManager()) + " (" + channel.getDisplayName() + ")";
+                                AppPreviewProgramModel appPreviewProgramModel = new AppPreviewProgramModel(channel.getDisplayName(), channel, programs);
                                 emitter.onNext(appPreviewProgramModel);
                                 //break;
                             }
@@ -338,9 +369,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 ArrayObjectAdapter arrayObjectAdapter = new ArrayObjectAdapter(new SearchPreviewProgramPresenter());
                 arrayObjectAdapter.addAll(0, appPreviewProgramModel.getPreviewPrograms());
                 ListRow listRow = new TvRecommendListRow(new HeaderItem(appPreviewProgramModel.getChannelName()), arrayObjectAdapter, appPreviewProgramModel);
-                mRowsAdapter.add(listRow);
+                if (context.getPackageName().equals(appPreviewProgramModel.getChannelPkgName())) {
+                    mRowsAdapter.add(listRow);
+                } else {
+                    mRowsAdapter.add(listRow);
+                }
             }
-
         }, throwable -> Logger.i("loadRecChannel--throwable:" + throwable), () -> {
             Logger.i("loadRecChannel--onComplete");
             channelRowRecycle();
@@ -387,11 +421,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     }
 
     private void prepareBackgroundManager() {
-        mBackgroundManager = BackgroundManager.getInstance(getActivity());
-        mBackgroundManager.attach(this.getActivity().getWindow());
-        mMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
-        mBackgroundManager.setThemeDrawableResourceId(R.drawable.bg);
+        View view = getView();
+        if (view == null) return;
+        int level = (int) (1.0f * AutoSizeUtils.dp2px(view.getContext(), 70) / ScreenUtils.getScreenSize(getContext())[1] * 10000);
+        ImageView statusBg = (ImageView) view.findViewById(R.id.status_bg);
+        ClipDrawable drawable = (ClipDrawable) statusBg.getBackground();
+        drawable.setLevel(level);
     }
 
     abstract static class TvViewRunnable implements Runnable {
@@ -402,11 +437,11 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private final TvViewRunnable resizeTvView = new TvViewRunnable() {
         @Override
         public void run() {
-            if (tvViewParent == null) return;
+            if (tvViewParent == null || getContext() == null) return;
             int width = AutoSizeUtils.dp2px(getContext(), 476);
             int height = AutoSizeUtils.dp2px(getContext(), 316);
             int topMargin = AutoSizeUtils.dp2px(getContext(), 80);
-            int smallWindowsHeight = AutoSizeUtils.dp2px(getContext(), 180);
+            int smallWindowsHeight = AutoSizeUtils.dp2px(getContext(), 160);
             int smallWindowsWidth = smallWindowsHeight * 16 / 9;
             int startMargin = AutoSizeUtils.dp2px(getContext(), 62);
             //int startMarginOrg = AutoSizeUtils.dp2px(getContext(), 62);
@@ -478,7 +513,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 //Log.i("onScrolled", "yScroll:" + yScroll + "\tresize:" + resize + "xxx:" + resizeTvView.resize + "===" + (resizeTvView.resize != resize));
                 resizeTvView.scrollY = yScroll;
                 //mLoadHandler.postDelayed(resizeTvView, 10);
-
                 resizeTvView.run();
             }
         });
@@ -549,7 +583,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         //add function row
         addTvHeaderView();
         addAppRow();
-        loadRecommend();
         addShortcutRow();
 
         verticalGridView.setAdapter(new ItemBridgeAdapter(mRowsAdapter));
@@ -566,6 +599,103 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 initTVControl();
             }
         });
+    }
+
+    private void fetchMarketData() {
+        String mac = Tools.getMacAddress(Tools.ETHERNET0);
+        if (TextUtils.isEmpty(mac)) return;
+        //mac = "02:ad:38:01:42:13";
+        disposableColumn = ZeasnApiService.INSTANCE.fetColumnContent(mac)
+                .map(pairs -> {
+                    dealMarketChannelData(pairs);
+                    return true;
+                })
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(bool -> Logger.i("fetchMarketData", "subscribe"), throwable -> loadRecommend(), this::loadRecommend);
+    }
+
+    private void dealMarketChannelData(List<Pair<ZeasnColumn.DataBean.ChildrenBean, ZeasnColumnContent>> pairs) {
+        eraseMarketChannelData();
+        for (Pair<ZeasnColumn.DataBean.ChildrenBean, ZeasnColumnContent> pair : pairs) {
+            ZeasnColumnContent columnContent = pair.second;
+            List<ZeasnColumnContent.DataBean> contents = columnContent.getData();
+            if (contents != null) {
+                for (ZeasnColumnContent.DataBean content : contents) {
+                    ZeasnColumnContent.DataBean.ContentBean contentBean = content.getContent();
+                    if (contentBean != null) {
+                        createMarketChannel(contentBean.getName(), contentBean.getDataList());
+                    }
+                }
+            }
+        }
+    }
+
+    private void eraseMarketChannelData() {
+        Activity context = getActivity();
+        if (context == null) return;
+        String where = TvContractCompat.Channels.COLUMN_PACKAGE_NAME + " = ? and " + TvContractCompat.Channels.COLUMN_APP_LINK_INTENT_URI + " = ?";
+        String[] selectionArgs = new String[]{context.getPackageName(), INTENT_MARKET};
+        Cursor cursor = context.getContentResolver().query(TvContractCompat.Channels.CONTENT_URI, new String[]{BaseColumns._ID}, where, selectionArgs, null);
+        if (cursor == null || cursor.getCount() == 0) {
+            return;
+        }
+        List<Long> ids = new ArrayList<>();
+        try {
+            while (cursor.moveToNext()) {
+                int index = 0;
+                if (!cursor.isNull(index)) {
+                    ids.add(cursor.getLong(index));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+        }
+        if (ids.size() > 0) {
+            context.getContentResolver().delete(TvContractCompat.Channels.CONTENT_URI, where, selectionArgs);
+        }
+        for (Long id : ids) {
+            context.getContentResolver().delete(TvContractCompat.PreviewPrograms.CONTENT_URI, "channel_id = ?", new String[]{String.valueOf(id)});
+        }
+    }
+
+    private void createMarketChannel(String name, List<ZeasnColumnContent.DataBean.ContentBean.DataListBean> dataList) {
+        Activity activity = getActivity();
+        if (dataList == null || dataList.size() == 0 || activity == null) return;
+        Channel.Builder builder = new Channel.Builder();
+        builder.setType(TvContractCompat.Channels.TYPE_PREVIEW)
+                .setDisplayName(name)
+                .setOriginalNetworkId(0)
+                .setBrowsable(true)
+                .setSearchable(true)
+                .setAppLinkIntentUri(INTENT_MARKET);
+        Uri channelUri = activity.getContentResolver().insert(
+                TvContractCompat.Channels.CONTENT_URI, builder.build().toContentValues());
+        long channelId = ContentUris.parseId(channelUri);
+        Drawable drawable = ContextCompat.getDrawable(activity, R.drawable.icon_market);
+        if (drawable != null) {
+            storeChannelLogo(activity, channelId, ImageTool.drawableToBitmap(drawable));
+        }
+        TvContractCompat.requestChannelBrowsable(getContext(), channelId);
+        addPrograms(channelId, dataList);
+    }
+
+    private void addPrograms(long channelId, List<ZeasnColumnContent.DataBean.ContentBean.DataListBean> dataList) {
+        if (dataList == null) return;
+        for (ZeasnColumnContent.DataBean.ContentBean.DataListBean content : dataList) {
+            androidx.tvprovider.media.tv.PreviewProgram.Builder builder = new androidx.tvprovider.media.tv.PreviewProgram.Builder();
+            builder.setChannelId(channelId)
+                    .setType(TYPE_MARKET_CHANNEL)
+                    .setDescription(content.getBriefDesc())
+                    .setInternalProviderId(content.getPkg())
+                    .setIntentUri(Uri.parse(INTENT_MARKET))
+                    .setPosterArtUri(Uri.parse(content.getIcon()))
+                    .setTitle(content.getName());
+            Uri programUri = getContext().getContentResolver().insert(TvContractCompat.PreviewPrograms.CONTENT_URI,
+                    builder.build().toContentValues());
+        }
     }
 
     private void enableMainLayout() {
@@ -678,6 +808,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             String intentUri = program.getIntentUri();
             if (TextUtils.isEmpty(intentUri)) {
                 startRecommendApp(program);
+            } else if (INTENT_MARKET.equals(intentUri)) {
+                PackageUtil.clickRecommendApp(getContext(), program.getmProviderId(), FunctionModel.PKG_NAME_ZEASN_MARKET);
             } else {
                 Intent intent = Intent.parseUri(intentUri, URI_INTENT_SCHEME);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

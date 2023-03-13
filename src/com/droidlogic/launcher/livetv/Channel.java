@@ -32,6 +32,7 @@ public final class Channel {
     public static final long INVALID_CHANNEL_ID = -1;
     private static final int INVALID_INTEGER_VALUE = -1;
     private static final int IS_SEARCHABLE = 1;
+    private static final int IS_BROWSABLE = 1;
 
     private long mId;
     private String mPackageName;
@@ -54,11 +55,16 @@ public final class Channel {
     private String mNetworkAffiliation;
     private int mSearchable;
     private String mServiceType;
+    private int mBrowsable;
 
     private Channel() {
         mId = INVALID_CHANNEL_ID;
         mOriginalNetworkId = INVALID_INTEGER_VALUE;
         mServiceType = TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO;
+    }
+
+    public void setId(long id) {
+        mId = id;
     }
 
     /** @return The value of {@link TvContract.Channels#_ID} for the channel. */
@@ -181,6 +187,10 @@ public final class Channel {
         return mServiceType;
     }
 
+    public boolean isBrowsable(){
+        return mBrowsable == IS_BROWSABLE;
+    }
+
     @Override
     public String toString() {
         return "Channel{"
@@ -290,6 +300,7 @@ public final class Channel {
                 values.putNull(TvContract.Channels.COLUMN_APP_LINK_INTENT_URI);
             }
         }
+        values.put(TvContract.Channels.COLUMN_BROWSABLE, mBrowsable);
         return values;
     }
 
@@ -318,6 +329,7 @@ public final class Channel {
         mNetworkAffiliation = other.mNetworkAffiliation;
         mSearchable = other.mSearchable;
         mServiceType = other.mServiceType;
+        mBrowsable = other.mBrowsable;
     }
 
     /**
@@ -393,6 +405,9 @@ public final class Channel {
                 builder.setAppLinkText(cursor.getString(index));
             }
         }
+        if (!cursor.isNull(++index)) {
+            builder.setBrowsable(cursor.getInt(index) == IS_BROWSABLE);
+        }
         return builder.build();
     }
 
@@ -424,9 +439,10 @@ public final class Channel {
                             TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI,
                             TvContract.Channels.COLUMN_APP_LINK_TEXT
                     };
-            return CollectionUtils.concatAll(baseColumns, marshmallowColumns);
+            baseColumns = CollectionUtils.concatAll(baseColumns, marshmallowColumns);
         }
-        return baseColumns;
+        String[] extras = new String[] {TvContract.Channels.COLUMN_BROWSABLE};
+        return CollectionUtils.concatAll(baseColumns, extras);
     }
 
     /** The builder class that makes it easy to chain setters to create a {@link Channel} object. */
@@ -716,6 +732,11 @@ public final class Channel {
          */
         public Builder setServiceType(String serviceType) {
             mChannel.mServiceType = serviceType;
+            return this;
+        }
+
+        public Builder setBrowsable(boolean browsable) {
+            mChannel.mBrowsable = browsable ? IS_BROWSABLE : 0;
             return this;
         }
 

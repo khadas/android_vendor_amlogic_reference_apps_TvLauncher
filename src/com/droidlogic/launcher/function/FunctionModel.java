@@ -21,6 +21,7 @@ public class FunctionModel {
     public static final String PKG_NAME_TVCAST = "com.droidlogic.tvcast";
     public static final String PKG_NAME_MEDIA_CENTER = "com.droidlogic.mediacenter";
     public static final String PKG_NAME_WEB_BROWSER = "org.chromium.webview_shell";
+    public static final String PKG_NAME_ZEASN_MARKET = "zeasn.open.technical.tv.store";
 
     private int icon;
     private int bgColor;

@@ -44,4 +44,6 @@
     <string name="app_more">更多应用</string>
     <string name="status_bar_search">内容搜索</string>
     <string name="status_bar_memory_clean">内存释放</string>
+
+    <string name="market_not_install">应用市场未安装</string>
 </resources>

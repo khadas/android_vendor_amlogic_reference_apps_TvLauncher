@@ -9,6 +9,7 @@ import android.content.pm.ResolveInfo;
 import android.os.Environment;
 import android.os.StatFs;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
@@ -20,16 +21,22 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Tools {
     private static String TAG = "Tools";
+
+    public static final String ETHERNET0 = "eth0";
+    public static final String WLAN0 = "wlan0";
 
     private final static String[] hexDigits = {"0", "1", "2", "3", "4", "5",
             "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"};
@@ -39,9 +46,17 @@ public final class Tools {
     }
 
     public static String byteArrayToHexString(byte[] b) {
+        return byteArrayToHexString(b, null);
+    }
+
+    public static String byteArrayToHexString(byte[] b, String separator) {
+        boolean sep = !TextUtils.isEmpty(separator);
         StringBuffer resultSb = new StringBuffer();
         for (int i = 0; i < b.length; i++) {
             resultSb.append(byteToHexString(b[i]));
+            if (sep && i < b.length - 1) {
+                resultSb.append(separator);
+            }
         }
         return resultSb.toString();
     }
@@ -263,6 +278,21 @@ public final class Tools {
         Method removeBondMethod = btClass.getMethod("removeBond");
         Boolean returnValue = (Boolean) removeBondMethod.invoke(btDevice);
         return returnValue.booleanValue();
+    }
+
+    public static String getMacAddress(String interfaceName) {
+        if (TextUtils.isEmpty(interfaceName)) return null;
+        try {
+            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements(); ) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                if (networkInterface.getName().toLowerCase().equals(interfaceName.toLowerCase())) {
+                    return byteArrayToHexString(networkInterface.getHardwareAddress(), ":");
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

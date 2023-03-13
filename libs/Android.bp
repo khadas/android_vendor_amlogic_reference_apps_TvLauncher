@@ -22,6 +22,12 @@
 	   sdk_version: "current",
 	}
 
+	android_library_import {
+    	   name: "tvprovider-launcher",
+    	   aars: ["tvprovider-1.0.0.aar"],
+    	   sdk_version: "current",
+    }
+
 	java_import {
 		name: "glide-annotations",
 		jars: ["annotations-4.12.0.jar"],
@@ -49,3 +55,9 @@
 		host_supported: true,
 		sdk_version: "current",
 	}
+    java_import {
+    		name: "gson-launcher",
+    		jars: ["gson-2.8.5.jar"],
+    		host_supported: true,
+    		sdk_version: "current",
+    }

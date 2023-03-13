@@ -41,7 +41,9 @@ public class RecommendChannelLoader extends BaseLoader<Channel> {
         try {
             while (cursor.moveToNext()) {
                 Channel ch = Channel.fromCursor(cursor);
-                channels.add(ch);
+                if (ch.isBrowsable()) {
+                    channels.add(ch);
+                }
                 Logger.i("get channel:" + ch.getDisplayName());
             }
         } catch (Exception e) {

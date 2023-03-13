@@ -1,179 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout_root"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
-    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/layout_main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".main.MainFragment"
-    android:visibility="invisible"
-    >
-
-    <androidx.leanback.widget.VerticalGridView
-        android:id="@+id/vtl_grid_view"
+    <FrameLayout
+        android:id="@+id/layout_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="68dp"
-        android:clipToPadding="false"
-        android:paddingBottom="60dp"
-        app:focusOutEnd="true"
-        app:focusOutFront="true"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="invisible"
+        tools:context=".main.MainFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/tv_view_parent"
-        android:layout_width="476dp"
-        android:layout_height="316dp"
-        android:layout_marginStart="62dp"
-        android:layout_marginTop="80dp">
-
-        <android.media.tv.TvView
-            android:id="@+id/tv_view"
+        <ImageView
+            android:id="@+id/default_bg"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/bg"
+            tools:ignore="ContentDescription" />
+
+        <androidx.leanback.widget.VerticalGridView
+            android:id="@+id/vtl_grid_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="68dp"
+            android:clipToPadding="false"
+            android:paddingBottom="60dp"
+            app:focusOutEnd="true"
+            app:focusOutFront="true"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tx_tv_prompt"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/tv_view_parent"
+            android:layout_width="476dp"
+            android:layout_height="316dp"
+            android:layout_marginStart="62dp"
+            android:layout_marginTop="80dp">
+
+            <android.media.tv.TvView
+                android:id="@+id/tv_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tx_tv_prompt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                tools:text="DTVKit2" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/status_bg"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            tools:text="DTVKit2" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="@drawable/bg_status_bar"
-        android:scaleType="fitXY"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:id="@+id/tv_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="60dp"
-            android:textColor="@android:color/white"
-            android:textSize="28sp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="2022-01-28 07:25" />
-
-        <ImageView
-            android:id="@+id/iv_network"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="20dp"
-            android:src="@drawable/status_bar_no_net"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_date"
-            app:layout_constraintRight_toLeftOf="@+id/tv_date"
-            app:layout_constraintTop_toTopOf="@+id/tv_date"
-            tools:ignore="ContentDescription" />
-
-        <ImageView
-            android:id="@+id/iv_usb_device"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="20dp"
-            android:src="@drawable/status_bar_storage"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_date"
-            app:layout_constraintRight_toLeftOf="@+id/iv_network"
-            app:layout_constraintTop_toTopOf="@+id/tv_date"
-            tools:ignore="ContentDescription" />
-
-        <ImageView
-            android:id="@+id/iv_tf_card"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="20dp"
-            android:src="@drawable/status_bar_sd_card"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/tv_date"
-            app:layout_constraintRight_toLeftOf="@+id/iv_usb_device"
-            app:layout_constraintTop_toTopOf="@+id/tv_date"
-            app:layout_goneMarginEnd="20dp"
-            tools:ignore="ContentDescription"
-            tools:visibility="visible" />
-
-        <com.droidlogic.launcher.leanback.view.NoEffectLayout
-            android:id="@+id/fun_content_search"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="60dp"
-            android:background="@drawable/bg_status_bar_function_selector"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            app:layout_constraintBottom_toBottomOf="@id/tv_date"
+            android:background="@drawable/clip_bg_status_bar"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tv_date">
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
             <TextView
+                android:id="@+id/tv_date"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:drawableStart="@drawable/status_bar_search"
-                android:gravity="center"
-                android:text="@string/status_bar_search"
-                android:textSize="20sp"
-                tools:ignore="UseCompatTextViewDrawableXml" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="60dp"
+                android:textColor="@android:color/white"
+                android:textSize="28sp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="2022-01-28 07:25" />
 
-        </com.droidlogic.launcher.leanback.view.NoEffectLayout>
+            <ImageView
+                android:id="@+id/iv_network"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="20dp"
+                android:src="@drawable/status_bar_no_net"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_date"
+                app:layout_constraintRight_toLeftOf="@+id/tv_date"
+                app:layout_constraintTop_toTopOf="@+id/tv_date"
+                tools:ignore="ContentDescription" />
 
-        <com.droidlogic.launcher.leanback.view.NoEffectLayout
-            android:id="@+id/fun_memory_clean"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="20dp"
-            android:background="@drawable/bg_status_bar_function_selector"
-            android:padding="4dp"
-            app:layout_constraintBottom_toBottomOf="@id/tv_date"
-            app:layout_constraintLeft_toRightOf="@id/fun_content_search"
-            app:layout_constraintTop_toTopOf="@id/tv_date">
+            <ImageView
+                android:id="@+id/iv_usb_device"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="20dp"
+                android:src="@drawable/status_bar_storage"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_date"
+                app:layout_constraintRight_toLeftOf="@+id/iv_network"
+                app:layout_constraintTop_toTopOf="@+id/tv_date"
+                tools:ignore="ContentDescription" />
 
-            <ProgressBar
-                android:id="@+id/pb_status_bar_memory"
-                style="@style/MemoryProgressBar"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="40dp"
-                android:max="100"
-                android:progress="100"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent" />
+            <ImageView
+                android:id="@+id/iv_tf_card"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="20dp"
+                android:src="@drawable/status_bar_sd_card"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_date"
+                app:layout_constraintRight_toLeftOf="@+id/iv_usb_device"
+                app:layout_constraintTop_toTopOf="@+id/tv_date"
+                app:layout_goneMarginEnd="20dp"
+                tools:ignore="ContentDescription"
+                tools:visibility="visible" />
 
-            <TextView
-                android:id="@+id/tv_status_bar_memory"
+            <com.droidlogic.launcher.leanback.view.NoEffectLayout
+                android:id="@+id/fun_content_search"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:drawableStart="@drawable/status_bar_clean"
-                android:drawablePadding="8dp"
-                android:gravity="right|center_vertical"
+                android:layout_height="40dp"
+                android:layout_marginStart="60dp"
+                android:background="@drawable/bg_status_bar_function_selector"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:textSize="20sp"
-                app:layout_constraintWidth_min="225dp"
-                tools:ignore="UseCompatTextViewDrawableXml"
-                tools:text="100MB / 2048MB" />
+                app:layout_constraintBottom_toBottomOf="@id/tv_date"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tv_date">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:drawableStart="@drawable/status_bar_search"
+                    android:gravity="center"
+                    android:text="@string/status_bar_search"
+                    android:textSize="20sp"
+                    tools:ignore="UseCompatTextViewDrawableXml" />
+
+            </com.droidlogic.launcher.leanback.view.NoEffectLayout>
+
+            <com.droidlogic.launcher.leanback.view.NoEffectLayout
+                android:id="@+id/fun_memory_clean"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/bg_status_bar_function_selector"
+                android:padding="4dp"
+                app:layout_constraintBottom_toBottomOf="@id/tv_date"
+                app:layout_constraintLeft_toRightOf="@id/fun_content_search"
+                app:layout_constraintTop_toTopOf="@id/tv_date">
+
+                <ProgressBar
+                    android:id="@+id/pb_status_bar_memory"
+                    style="@style/MemoryProgressBar"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="40dp"
+                    android:max="100"
+                    android:progress="100"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_status_bar_memory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:drawableStart="@drawable/status_bar_clean"
+                    android:drawablePadding="8dp"
+                    android:gravity="right|center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:textSize="20sp"
+                    app:layout_constraintWidth_min="225dp"
+                    tools:ignore="UseCompatTextViewDrawableXml"
+                    tools:text="100MB / 2048MB" />
 
             </com.droidlogic.launcher.leanback.view.NoEffectLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -184,7 +189,6 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/black_ground"
-        android:visibility="visible">
-    </FrameLayout>
+        android:visibility="visible" />
 
 </RelativeLayout>
