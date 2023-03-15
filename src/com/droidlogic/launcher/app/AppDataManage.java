@@ -37,7 +37,6 @@ public class AppDataManage {
     private final Context mContext;
 
     private final String[] mHideAppName = {
-            "com.droidlogic.exoplayer2.demo",
             "com.droidlogic.launcher",
             "com.droidlogic.appinstall",
             "com.droidlogic.android.tv",
@@ -46,8 +45,7 @@ public class AppDataManage {
             "com.android.traceur",
             PKG_NAME_FILE_BROWSER,
             PKG_NAME_TVCAST,
-            PKG_NAME_MIRACAST,
-            PKG_NAME_MEDIA_CENTER
+            PKG_NAME_MIRACAST
     };
 
     public AppDataManage(Context context) {

@@ -83,4 +83,12 @@ public class ZeasnToken{
         }
     }
 
+    @Override
+    public String toString() {
+        return "ZeasnToken{" +
+                "data=" + data +
+                ", errorCode='" + errorCode + '\'' +
+                ", timestamp='" + timestamp + '\'' +
+                '}';
+    }
 }

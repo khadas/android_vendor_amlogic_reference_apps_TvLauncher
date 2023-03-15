@@ -28,6 +28,12 @@
     	   sdk_version: "current",
     }
 
+	android_library_import {
+    	   name: "exifinterface-launcher",
+    	   aars: ["exifinterface-1.2.0.aar"],
+    	   sdk_version: "current",
+    }
+
 	java_import {
 		name: "glide-annotations",
 		jars: ["annotations-4.12.0.jar"],

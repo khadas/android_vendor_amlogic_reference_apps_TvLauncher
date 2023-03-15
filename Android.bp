@@ -28,7 +28,8 @@ android_app {
 		"androidx.appcompat_appcompat",
 		"androidx.leanback_leanback",
 		"androidx-constraintlayout_constraintlayout",
-		"tvprovider-launcher"
+		"tvprovider-launcher",
+		"exifinterface-launcher"
 	],
 
     privileged: true,
@@ -44,7 +45,7 @@ android_app {
     },
 
     optimize: {
-        enabled: true,
+        enabled: false,
         proguard_flags_files: ["proguard.flags"],
     },
 
