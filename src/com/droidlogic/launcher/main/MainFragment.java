@@ -118,6 +118,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private static final String PACKAGE_LIVE_TV = "com.droidlogic.android.tv";
     private static final String INTENT_MARKET = "market://";
 
+    private final int invalidPosition = -1;
+    private View defaultFocusView;
+    private final int[] tvHolderViewDefaultLocation = new int[]{invalidPosition, invalidPosition};
+
     private static final int TYPE_MARKET_CHANNEL = 1000;
 
     private static final int MSG_LOAD_DATA = 100;
@@ -200,6 +204,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         if (mTvControl != null) {
             mTvControl.resume();
         }
+        resetTvWindowLocation();
     }
 
     @Override
@@ -434,6 +439,14 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         public int scrollY = 0;
     }
 
+    private View getTvHolderView() {
+        View view = getView();
+        if (view != null) {
+            return view.findViewById(R.id.border_view_holder);
+        }
+        return null;
+    }
+
     private final TvViewRunnable resizeTvView = new TvViewRunnable() {
         @Override
         public void run() {
@@ -448,9 +461,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             int smallWindowStartMargin = AutoSizeUtils.dp2px(getContext(), 56);
             FrameLayout.LayoutParams pms = (FrameLayout.LayoutParams) tvViewParent.getLayoutParams();
             int tvPromptHeight = tvPrompt.getHeight();
-            /*Log.i("onScrolled", "yScroll:run" + resize + "width:" + width + "\theight:"
-                    + height + "\th:" + tvPromptHeight);*/
             resize = scrollY > tvPromptHeight;
+            //Log.i("onScrolled", "yScroll:run:" + resize + "-width:" + width + "-height:" + height + "-tvPromptHeight:" + tvPromptHeight);
             if (resize) {
                 pms.width = smallWindowsWidth;
                 pms.height = smallWindowsHeight;
@@ -508,12 +520,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 yScroll += dy;
-                //mLoadHandler.removeCallbacks(resizeTvView);
-                boolean resize = yScroll != 0;
-                //Log.i("onScrolled", "yScroll:" + yScroll + "\tresize:" + resize + "xxx:" + resizeTvView.resize + "===" + (resizeTvView.resize != resize));
-                resizeTvView.scrollY = yScroll;
-                //mLoadHandler.postDelayed(resizeTvView, 10);
-                resizeTvView.run();
+                //resizeTvView.scrollY = yScroll;
+                //Log.i("onScrolled", "onScrolled:" + yScroll);
+                resetTvWindowLocation();
             }
         });
         verticalGridView.setVerticalSpacing((int) getResources().getDimension(R.dimen.main_page_vtl_space));
@@ -590,13 +599,21 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             @Override
             public void run() {
                 //default focus view
-                View defaultFocusView = verticalGridView.findViewById(R.id.border_view_holder);
+                defaultFocusView = verticalGridView.findViewById(R.id.border_view_holder);
                 if (defaultFocusView != null) {
+                    defaultFocusView.getLocationInSurface(tvHolderViewDefaultLocation);
                     defaultFocusView.requestFocus();
                     defaultFocusView.setNextFocusUpId(R.id.fun_content_search);
                 }
                 //initial tvControl
                 initTVControl();
+            }
+        });
+        mRowsAdapter.registerObserver(new ObjectAdapter.DataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                resetTvWindowLocation();
             }
         });
     }
@@ -730,6 +747,22 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             if (tvView != null) {
                 mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
             }
+        }
+    }
+
+    private void resetTvWindowLocation() {
+        defaultFocusView = getTvHolderView();
+        int holderDefaultY = tvHolderViewDefaultLocation[1];
+        if (defaultFocusView != null && holderDefaultY != invalidPosition) {
+            int[] location = new int[2];
+            defaultFocusView.getLocationInWindow(location);
+            resizeTvView.scrollY = holderDefaultY - location[1];
+            //Log.i("onScrolled", "resizeTvView.1scrollY:" + resizeTvView.scrollY);
+            resizeTvView.run();
+        } else if (getContext() != null && defaultFocusView == null && verticalGridView.getSelectedPosition() > 1) {
+            resizeTvView.scrollY = Integer.MAX_VALUE;
+            //Log.i("onScrolled", "resizeTvView.2scrollY:" + resizeTvView.scrollY);
+            resizeTvView.run();
         }
     }
 
