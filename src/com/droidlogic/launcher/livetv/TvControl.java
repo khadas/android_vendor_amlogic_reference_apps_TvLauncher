@@ -465,7 +465,7 @@ public class TvControl {
             if (isAVDevice(inputId)) {
                 isAvNoSignal = false;
             }
-            if (!isChannelBlocked || !isCurrentChannelBlockBlocked()) {
+            if (!isChannelBlocked || !isCurrentChannelBlocked()) {
                 setTvPrompt(TvPrompt.TV_PROMPT_GOT_SIGNAL);
                 if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
                     mViewManager.setStreamVolume(1);
