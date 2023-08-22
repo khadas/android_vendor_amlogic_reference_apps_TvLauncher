@@ -126,13 +126,15 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
                 @Override
                 public void onChildViewHolderSelected(RecyclerView parent, RecyclerView.ViewHolder child, int position, int subposition) {
                     super.onChildViewHolderSelected(parent, child, position, subposition);
-                    scrollBar.update(position, rowDataProvider.getListRowAdapter().size() - 1);
-                    buildChildClickListener(child.itemView, rowDataProvider.getListRowAdapter().get(position), rowDataProvider.getListRowAdapter());
-                    //start childView's marquee effect
-                    BorderEffectLayout borderEffectLayout = (BorderEffectLayout) child.itemView.findViewById(R.id.tv_item_source_info_parent);
-                    final TextView tvSourceInfo = (TextView) child.itemView.findViewById(R.id.tv_item_source_info);
-                    if (borderEffectLayout != null) {
-                        borderEffectLayout.setOnFocusChangeListener((view, gainFocus) -> tvSourceInfo.setSelected(gainFocus));
+                    if (child != null) {
+                        scrollBar.update(position, rowDataProvider.getListRowAdapter().size() - 1);
+                        buildChildClickListener(child.itemView, rowDataProvider.getListRowAdapter().get(position), rowDataProvider.getListRowAdapter());
+                        //start childView's marquee effect
+                        BorderEffectLayout borderEffectLayout = (BorderEffectLayout) child.itemView.findViewById(R.id.tv_item_source_info_parent);
+                        final TextView tvSourceInfo = (TextView) child.itemView.findViewById(R.id.tv_item_source_info);
+                        if (borderEffectLayout != null) {
+                            borderEffectLayout.setOnFocusChangeListener((view, gainFocus) -> tvSourceInfo.setSelected(gainFocus));
+                        }
                     }
                 }
 
