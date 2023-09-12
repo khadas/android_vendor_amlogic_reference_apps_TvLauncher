@@ -85,6 +85,7 @@ import com.droidlogic.launcher.recommend.RecommendChannelLoader;
 import com.droidlogic.launcher.search.loader.PreviewProgramLoader;
 import com.droidlogic.launcher.util.AppStateChangeListener;
 import com.droidlogic.launcher.util.AppUtils;
+import com.droidlogic.launcher.util.DensityTool;
 import com.droidlogic.launcher.util.ImageTool;
 import com.droidlogic.launcher.util.Logger;
 import com.droidlogic.launcher.util.PackageUtil;
@@ -120,8 +121,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private final int invalidPosition = -1;
     private View defaultFocusView;
-    private final int[] tvHolderViewDefaultLocation = new int[]{invalidPosition, invalidPosition};
-
+    private int tvHolderViewDefaultLocation = invalidPosition;
     private static final int TYPE_MARKET_CHANNEL = 1000;
 
     private static final int MSG_LOAD_DATA = 100;
@@ -185,6 +185,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        tvHolderViewDefaultLocation = DensityTool.dp2px(59);
+        //Log.i(TAG, "tvHolderViewDefaultLocation" + tvHolderViewDefaultLocation);
     }
 
     @Override
@@ -461,8 +463,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             int smallWindowStartMargin = AutoSizeUtils.dp2px(getContext(), 56);
             FrameLayout.LayoutParams pms = (FrameLayout.LayoutParams) tvViewParent.getLayoutParams();
             int tvPromptHeight = tvPrompt.getHeight();
-            resize = scrollY > tvPromptHeight;
-            //Log.i("onScrolled", "yScroll:run:" + resize + "-width:" + width + "-height:" + height + "-tvPromptHeight:" + tvPromptHeight);
+            resize = (scrollY > tvPromptHeight) && (tvPromptHeight > 0);
+            Log.i(TAG, "yScroll:run:" + resize + "-width:" + width + "-height:" + height + "-tvPromptHeight:" + tvPromptHeight);
             if (resize) {
                 pms.width = smallWindowsWidth;
                 pms.height = smallWindowsHeight;
@@ -601,7 +603,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 //default focus view
                 defaultFocusView = verticalGridView.findViewById(R.id.border_view_holder);
                 if (defaultFocusView != null) {
-                    defaultFocusView.getLocationInSurface(tvHolderViewDefaultLocation);
                     defaultFocusView.requestFocus();
                     defaultFocusView.setNextFocusUpId(R.id.fun_content_search);
                 }
@@ -752,11 +753,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private void resetTvWindowLocation() {
         defaultFocusView = getTvHolderView();
-        int holderDefaultY = tvHolderViewDefaultLocation[1];
+        int holderDefaultY = tvHolderViewDefaultLocation;
         if (defaultFocusView != null && holderDefaultY != invalidPosition) {
             int[] location = new int[2];
             defaultFocusView.getLocationInWindow(location);
             resizeTvView.scrollY = holderDefaultY - location[1];
+            Log.i(TAG, tvHolderViewDefaultLocation + "--y:" + location[1]);
             //Log.i("onScrolled", "resizeTvView.1scrollY:" + resizeTvView.scrollY);
             resizeTvView.run();
         } else if (getContext() != null && defaultFocusView == null && verticalGridView.getSelectedPosition() > 1) {
