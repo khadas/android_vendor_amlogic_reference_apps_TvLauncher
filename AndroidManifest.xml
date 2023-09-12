@@ -19,6 +19,11 @@
     android:sharedUserId="android.uid.system"
     tools:ignore="MissingLeanbackLauncher">
 
+    <uses-sdk
+    android:minSdkVersion="33"
+    android:targetSdkVersion="33"
+    tools:ignore="GradleOverrides,OldTargetApi" />
+
     <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
