@@ -221,7 +221,10 @@ public class ChannelDataManager {
                 }
                 case "ISDB-T": {
                     if (TvContract.Channels.TYPE_ISDB_T.equals(channelType)
-                            || TvContract.Channels.TYPE_ISDB_TB.equals(channelType)) {
+                            || TvContract.Channels.TYPE_ISDB_TB.equals(channelType)
+                            || TvContract.Channels.TYPE_NTSC.equals(channelType)
+                            || TvContract.Channels.TYPE_SECAM.equals(channelType)
+                            || TvContract.Channels.TYPE_PAL.equals(channelType)) {
                         ret = true;
                     }
                     break;
