@@ -603,7 +603,7 @@ public class TvControl {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_OTP_INPUT_SOURCE_CHANGE);
         filter.addAction(Intent.ACTION_BOOT_COMPLETED);
-        mContext.registerReceiver(otherReceiver, filter);
+        mContext.registerReceiver(otherReceiver, filter, 2/*Context.RECEIVER_EXPORTED*/);
         mBroadcastsRegistered = true;
     }
 
