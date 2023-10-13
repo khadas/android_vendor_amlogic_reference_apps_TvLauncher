@@ -20,7 +20,7 @@
     tools:ignore="MissingLeanbackLauncher">
 
     <uses-sdk
-    android:minSdkVersion="33"
+    android:minSdkVersion="30"
     android:targetSdkVersion="33"
     tools:ignore="GradleOverrides,OldTargetApi" />
 
