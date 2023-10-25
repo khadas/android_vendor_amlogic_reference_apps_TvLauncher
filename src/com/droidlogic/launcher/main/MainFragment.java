@@ -1017,6 +1017,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     }
 
     private int mLoadCount = 0;
+    private int mAppLoadCount = 0;
+
     @SuppressLint("HandlerLeak")
     private Handler mLoadHandler = new Handler() {
         public void handleMessage(Message msg) {
@@ -1030,13 +1032,14 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     }
                     break;
                 case MSG_LOAD_APP:
-                    ArrayList<AppModel> apps = new AppDataManage(getContext()).getLaunchAppList();
-                    if (apps != null && apps.size() > 0) {
+                    if (mAppRow == null || mAppRow.getAdapterSize() <= 2) {
                         if (mAppRow != null) {
                             mAppRow.update();
                         }
-                    } else {
-                        mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
+                        Logger.i("MSG_LOAD_APP:" + mAppLoadCount + "--mAppRow:" + mAppRow);
+                        if (mAppLoadCount++ < 10) {
+                            mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
+                        }
                     }
                     break;
             }

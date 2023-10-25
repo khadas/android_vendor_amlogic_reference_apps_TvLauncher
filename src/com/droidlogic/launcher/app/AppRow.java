@@ -105,7 +105,7 @@ public class AppRow {
         }
     }
 
-    private int getAdapterSize() {
+    public int getAdapterSize() {
         int size = 0;
         for (int i = 0; i < mListRowAdapter.size(); i++) {
             Object item = mListRowAdapter.get(i);
