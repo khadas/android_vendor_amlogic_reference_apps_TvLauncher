@@ -1,4 +1,3 @@
-
 package com.droidlogic.launcher.app;
 
 import android.content.ComponentName;
@@ -131,7 +130,6 @@ public class AppModel implements IAppInfo {
             Intent intent = new Intent("android.intent.action.MAIN");
             ComponentName componentName = new ComponentName(packageName, launcherName);
             intent.setComponent(componentName);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         } catch (Exception e) {
             e.printStackTrace();
