@@ -654,9 +654,9 @@ public class TvControl {
                             startTvApp();
                         }
                     } else {
-                        //Logger.d(TAG, "bootvideo is not stopped, wait it");
+                        Logger.d(TAG, "bootvideo is not stopped, wait it");
                         mTvHandler.removeMessages(TV_MSG_BOOTUP_TO_TVAPP);
-                        mTvHandler.sendEmptyMessageDelayed(TV_MSG_BOOTUP_TO_TVAPP, 200);
+                        mTvHandler.sendEmptyMessageDelayed(TV_MSG_BOOTUP_TO_TVAPP, 50);
                     }
                     break;
                 default:
