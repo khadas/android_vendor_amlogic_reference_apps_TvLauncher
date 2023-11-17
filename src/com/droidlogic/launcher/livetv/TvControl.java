@@ -423,7 +423,7 @@ public class TvControl {
 
         public void onEvent(String inputId, String eventType, Bundle eventArgs) {
             Logger.d(TAG, "====onEvent==inputId =" + inputId + ", ===eventType =" + eventType);
-            if (eventType.equals(EVENT_SIGNAL_SCRAMBLED_SERVICE) || eventType.equals(DroidLogicTvUtils.AV_SIG_SCRAMBLED)) {
+            if (eventType.equals(EVENT_SIGNAL_SCRAMBLED_SERVICE)) {
                 setTvPrompt(TvPrompt.TV_PROMPT_IS_SCRAMBLED);
             }
             else if (eventType.equals(EVENT_SIGNAL_DATA_SERVICE)) {
