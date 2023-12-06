@@ -147,12 +147,10 @@ public class TvControl {
 
         registerTvBroadcasts();
 
-        if (mTvConfig.needPreviewFeture()) {
-            //need to init channel when tv provider is ready
-            mViewManager.enable(true);
-            if (!mTvStartPlaying) {
-                play(-1);
-            }
+        //need to init channel when tv provider is ready
+        mViewManager.enable(true);
+        if (!mTvStartPlaying) {
+            play(-1);
         }
 
         mActivityResumed = true;
@@ -160,10 +158,7 @@ public class TvControl {
 
     public void pause() {
         mActivityResumed = false;
-
-        if (mTvConfig.needPreviewFeture()) {
-            releasePlayingTv();
-        }
+        releasePlayingTv();
     }
 
     public void stop() {
