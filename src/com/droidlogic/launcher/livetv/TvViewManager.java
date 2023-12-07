@@ -7,6 +7,7 @@ import android.media.tv.TvView;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings.Global;
 import android.view.View;
 import android.widget.TextView;
 
@@ -26,6 +27,9 @@ public class TvViewManager {
 
     private static final int TV_WINDOW_RIGHT_LEFT = 1280 - TV_WINDOW_WIDTH;
     private static final int TV_WINDOW_BOTTOM_TOP = 720 - TV_WINDOW_HEIGHT;
+
+    private static final String DROIDLOGIC_LAUNCHER_FOREGROUND =
+        "droidlogic_launcher_foreground";
 
     private Context mContext;
     private TvView mTvView;
@@ -135,6 +139,8 @@ public class TvViewManager {
     }
 
     public void enable(boolean enable) {
+        updateForegroundState(enable);
+
         if (mTvView != null) {
             if (enable) {
                 mTvView.setVisibility(View.VISIBLE);
@@ -151,4 +157,14 @@ public class TvViewManager {
             mTvView.sendAppPrivateCommand(command, bundle);
         }
     }
+
+    /**
+     * Whether the pip window of launcher is enabled.
+     *
+     */
+    private void updateForegroundState(boolean foreground) {
+        Global.putInt(mContext.getContentResolver(),
+            DROIDLOGIC_LAUNCHER_FOREGROUND, foreground ? 1 : 0);
+    }
+
 }
