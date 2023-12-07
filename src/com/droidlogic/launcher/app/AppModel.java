@@ -130,6 +130,7 @@ public class AppModel implements IAppInfo {
             Intent intent = new Intent("android.intent.action.MAIN");
             ComponentName componentName = new ComponentName(packageName, launcherName);
             intent.setComponent(componentName);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             context.startActivity(intent);
         } catch (Exception e) {
             e.printStackTrace();
