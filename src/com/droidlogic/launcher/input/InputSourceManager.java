@@ -441,7 +441,7 @@ public class InputSourceManager {
 
     private boolean isInputEnabled(TvInputInfo input) {
         HdmiDeviceInfo hdmiInfo = input.getHdmiDeviceInfo();
-        if (hdmiInfo != null) {
+        if (hdmiInfo != null && !TextUtils.isEmpty(input.getParentId())) {
             //if (DEBUG) Logger.d(TAG, "isInputEnabled:  hdmiInfo="+ hdmiInfo);
             return true;
         }
