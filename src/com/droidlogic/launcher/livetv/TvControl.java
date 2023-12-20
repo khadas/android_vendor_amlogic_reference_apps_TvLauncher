@@ -20,6 +20,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings.Global;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
@@ -60,6 +61,9 @@ public class TvControl {
     public static final String VALUE_CI_PLUS_SEARCH_RESULT_IS_OPERATOR_PROFILE_SUPPORTED = "is_operator_profile_supported";
     public static final String VALUE_CI_PLUS_CHANNEL = "host_control_channel";
     public static final String VALUE_CI_PLUS_TUNE_QUIETLY = "tune_quietly";
+
+    private static final String DROIDLOGIC_LAUNCHER_FOREGROUND =
+        "droidlogic_launcher_foreground";
 
     private static final int TV_MSG_PLAY_TV         = 0;
     private static final int TV_MSG_BOOTUP_TO_TVAPP = 1;
@@ -136,6 +140,7 @@ public class TvControl {
     }
 
     public void resume() {
+        setForegroundState(true);
         if (mTvConfig.checkNeedStartTvApp(true, mDelayedSourceChange != null)) {
             launchTvApp(-1);
             return;
@@ -157,6 +162,7 @@ public class TvControl {
     }
 
     public void pause() {
+        setForegroundState(false);
         mActivityResumed = false;
         releasePlayingTv();
     }
@@ -326,6 +332,15 @@ public class TvControl {
         } catch (ActivityNotFoundException e) {
             Logger.e(TAG, " can't start LiveTv:" + e);
         }
+    }
+
+    /**
+     * Whether the pip window of launcher is enabled.
+     *
+     */
+    private void setForegroundState(boolean foreground) {
+        Global.putInt(mContext.getContentResolver(),
+            DROIDLOGIC_LAUNCHER_FOREGROUND, foreground ? 1 : 0);
     }
 
     public void stopMusicPlayer() {
