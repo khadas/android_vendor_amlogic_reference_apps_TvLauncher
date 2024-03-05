@@ -22,7 +22,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings.Global;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.KeyEvent;
@@ -112,20 +111,24 @@ public class TvControl {
      * play a channel in small window
      * */
     public void play(long id) {
-        mPlayInputId   = getCurrentInputSourceId();
-        mPlayChannelId = id;
-        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
-        mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
+        if (mTvConfig.needPreviewFeature()) {
+            mPlayInputId = getCurrentInputSourceId();
+            mPlayChannelId = id;
+            mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+            mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
+        }
     }
 
     /*
     * play a source input channel in small window
     * */
     public void play(String inputId) {
-        mPlayInputId   = inputId;
-        mPlayChannelId = -1;
-        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
-        mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
+        if (mTvConfig.needPreviewFeature()) {
+            mPlayInputId = inputId;
+            mPlayChannelId = -1;
+            mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+            mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
+        }
     }
 
     public void launchTvApp(long id) {
@@ -146,16 +149,18 @@ public class TvControl {
             return;
         }
 
-        if (mTvConfig.isTvFeture()) {
+        if (mTvConfig.isTvFeature()) {
             stopMusicPlayer();
         }
 
         registerTvBroadcasts();
 
-        //need to init channel when tv provider is ready
-        mViewManager.enable(true);
-        if (!mTvStartPlaying) {
-            play(-1);
+        if (mTvConfig.needPreviewFeature()) {
+            //need to init channel when tv provider is ready
+            mViewManager.enable(true);
+            if (!mTvStartPlaying) {
+                play(-1);
+            }
         }
 
         mActivityResumed = true;
@@ -164,7 +169,9 @@ public class TvControl {
     public void pause() {
         setForegroundState(false);
         mActivityResumed = false;
-        releasePlayingTv();
+        if (mTvConfig.needPreviewFeature()) {
+            releasePlayingTv();
+        }
     }
 
     public void stop() {

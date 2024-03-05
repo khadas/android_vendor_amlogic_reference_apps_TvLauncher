@@ -55,7 +55,6 @@ import androidx.tvprovider.media.tv.TvContractCompat;
 
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.api.ZeasnApiService;
-import com.droidlogic.launcher.app.AppDataManage;
 import com.droidlogic.launcher.app.AppModel;
 import com.droidlogic.launcher.app.AppMoreModel;
 import com.droidlogic.launcher.app.AppRow;
@@ -74,6 +73,7 @@ import com.droidlogic.launcher.leanback.presenter.content.SearchPreviewProgramPr
 import com.droidlogic.launcher.livetv.Channel;
 import com.droidlogic.launcher.livetv.MediaModel;
 import com.droidlogic.launcher.livetv.PreviewProgram;
+import com.droidlogic.launcher.livetv.TvConfig;
 import com.droidlogic.launcher.livetv.TvControl;
 import com.droidlogic.launcher.livetv.TvRow;
 import com.droidlogic.launcher.model.TvViewModel;
@@ -163,6 +163,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     private TextView tvPrompt;
 
+    private boolean needPreviewFeature;
+
     public MainFragment() {
     }
 
@@ -173,6 +175,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        needPreviewFeature = new TvConfig(getContext()).needPreviewFeature();
         fetchMarketData();
         registerReceiver();
         startTimer();
@@ -404,7 +407,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 killTvApp(); // for atv no channel
             }
             mInputSource.setSearchType(name);
-            mTvControl.launchTvApp(id);
+            if (mTvControl != null) {
+                mTvControl.launchTvApp(id);
+            }
         }
     }
 
@@ -412,9 +417,13 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         if (name.equals(mInputSource.getATVInputName()) && !mInputSource.isAtvSearch()) {
             killTvApp(); // for atv no channel
         }
-        mTvControl.releasePlayingTv();
+        if (mTvControl != null) {
+            mTvControl.releasePlayingTv();
+        }
         mInputSource.switchInput(inputId, name);
-        mTvControl.play(inputId);
+        if (mTvControl != null) {
+            mTvControl.play(inputId);
+        }
     }
 
     private void initTime() {
@@ -456,7 +465,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private final TvViewRunnable resizeTvView = new TvViewRunnable() {
         @Override
         public void run() {
-            if (tvViewParent == null || getContext() == null) return;
+            if (!needPreviewFeature || tvViewParent == null || getContext() == null) return;
             int width = AutoSizeUtils.dp2px(getContext(), 476);
             int height = AutoSizeUtils.dp2px(getContext(), 316);
             int topMargin = AutoSizeUtils.dp2px(getContext(), 80);
@@ -536,6 +545,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mRowsAdapter = new ArrayObjectAdapter(new MainPresenterSelector(mInputSource, new OnItemClickListener() {
             @Override
             public void onPresenterItemClick(View view, Object item) {
+                Logger.i("onPresenterItemClick:"+item);
                 if (item instanceof MediaModel) {
                     MediaModel model = (MediaModel) item;
                     startTvApp(model.getId(), model.getInputId(), model.getType());
@@ -590,7 +600,9 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                     InputModel model = (InputModel) item;
                     startPlayInputSource(model.getId(), model.getName());
                 } else if (item instanceof TvViewModel) {
-                    mTvControl.releasePlayingTv();
+                    if (mTvControl != null) {
+                        mTvControl.releasePlayingTv();
+                    }
                     mInputSource.startInputAPP(null);
                 }
             }
@@ -757,7 +769,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     //check if boot to tvapp when power on
     private boolean checkBootToTvApp() {
-        if (mTvControl != null && !mTvControl.checkNeedStartTvApp()) {
+        if (!new TvConfig(getActivity()).checkNeedStartTvApp(false, false)) {
             Log.d(TAG, "start launch");
             enableMainLayout();
             return false;
@@ -771,7 +783,12 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         //initial tvControl
         if (mTvControl == null) {
             tvViewParent = (ViewGroup) getActivity().findViewById(R.id.tv_view_parent);
-            tvView = (TvView) getActivity().findViewById(R.id.tv_view);
+            if (needPreviewFeature) {
+                tvView = (TvView) getActivity().findViewById(R.id.tv_view);
+                tvViewParent.setVisibility(View.VISIBLE);
+            } else {
+                tvViewParent.setVisibility(View.GONE);
+            }
             tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
             if (tvView != null) {
                 mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
@@ -780,6 +797,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     }
 
     private void resetTvWindowLocation() {
+        if (!needPreviewFeature) return;
         defaultFocusView = getTvHolderView();
         int holderDefaultY = tvHolderViewDefaultLocation;
         if (defaultFocusView != null && holderDefaultY != invalidPosition) {

@@ -13,11 +13,10 @@
     android:paddingBottom="20dp"
     tools:ignore="RtlHardcoded,RtlSymmetry">
 
-    <com.droidlogic.launcher.leanback.view.BorderEffectLayout
+    <com.droidlogic.launcher.leanback.view.TvViewBorder
         android:id="@+id/border_view_holder"
         android:layout_width="480dp"
         android:layout_height="320dp"
-        android:background="#000"
         app:animEnable="false"/>
 
     <FrameLayout

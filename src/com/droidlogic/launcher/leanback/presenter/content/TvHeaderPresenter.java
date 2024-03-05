@@ -76,7 +76,7 @@ public class TvHeaderPresenter extends BasePresenter implements ITvHeader {
 
             //input source or live channel
             signalSourceListView = (VerticalGridView) view.findViewById(R.id.vtl_view_source_list);
-            if (new TvConfig(view.getContext()).isTvFeture()) {
+            if (new TvConfig(view.getContext()).isTvFeature()) {
                 rowDataProvider = new InputRow(inputSource);
             } else {
                 rowDataProvider = new TvRow(view.getContext());

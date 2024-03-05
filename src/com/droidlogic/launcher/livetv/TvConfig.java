@@ -23,16 +23,16 @@ public class TvConfig {
         mContext = context;
     }
 
-    public boolean isMboxFeture () {
+    public boolean isMboxFeature() {
         return mSystemControlManager.getPropertyBoolean("ro.vendor.platform.has.mbxuimode", false);
     }
 
-    public boolean isTvFeture () {
+    public boolean isTvFeature() {
         return TextUtils.equals(mSystemControlManager.getPropertyString("ro.vendor.platform.is.tv", ""), "1");
     }
 
-    public boolean needPreviewFeture () {
-        return isTvFeture() && mSystemControlManager.getPropertyBoolean("vendor.tv.need.droidlogic.preview_window", false);
+    public boolean needPreviewFeature() {
+        return isTvFeature() && mSystemControlManager.getPropertyBoolean("vendor.tv.need.droidlogic.preview_window", false);
     }
 
     public boolean isBootvideoStopped() {
