@@ -2,6 +2,7 @@ package com.droidlogic.launcher.livetv;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -25,6 +26,7 @@ import android.text.TextUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.KeyEvent;
+import android.view.WindowManager;
 
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.ChannelInfo;
@@ -378,9 +380,10 @@ public class TvControl {
     public void setTvPrompt(int mode) {
         String text = null;
         Drawable background = null;
-
+        ((Activity) mContext).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         switch (mode) {
             case TvPrompt.TV_PROMPT_GOT_SIGNAL:
+                ((Activity) mContext).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 break;
             case TvPrompt.TV_PROMPT_NO_SIGNAL:
                 if (mTvInputId != null && mTvInputId.startsWith(DTVKIT_PACKAGE)) {
@@ -409,6 +412,7 @@ public class TvControl {
                 background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
             case TvPrompt.TV_PROMPT_RADIO:
+                ((Activity) mContext).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 text = mContext.getResources().getString(R.string.str_audio_only);
                 background = mContext.getResources().getDrawable(R.drawable.black);
                 break;
