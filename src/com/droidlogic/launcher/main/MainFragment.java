@@ -466,8 +466,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         @Override
         public void run() {
             if (!needPreviewFeature || tvViewParent == null || getContext() == null) return;
-            int width = AutoSizeUtils.dp2px(getContext(), 476);
-            int height = AutoSizeUtils.dp2px(getContext(), 316);
+            int width = AutoSizeUtils.dp2px(getContext(), 528);
+            int height = AutoSizeUtils.dp2px(getContext(), 297);
             int topMargin = AutoSizeUtils.dp2px(getContext(), 80);
             int smallWindowsHeight = AutoSizeUtils.dp2px(getContext(), 160);
             int smallWindowsWidth = smallWindowsHeight * 16 / 9;

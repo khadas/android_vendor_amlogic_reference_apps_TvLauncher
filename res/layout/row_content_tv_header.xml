@@ -15,14 +15,14 @@
 
     <com.droidlogic.launcher.leanback.view.TvViewBorder
         android:id="@+id/border_view_holder"
-        android:layout_width="480dp"
-        android:layout_height="320dp"
+        android:layout_width="532dp"
+        android:layout_height="301dp"
         app:animEnable="false"/>
 
     <FrameLayout
         android:id="@+id/vtl_view_source_list_parent"
-        android:layout_width="227dp"
-        android:layout_height="320dp"
+        android:layout_width="200dp"
+        android:layout_height="301dp"
         android:layout_toRightOf="@+id/border_view_holder">
 
         <androidx.leanback.widget.VerticalGridView
@@ -49,8 +49,8 @@
 
     <androidx.leanback.widget.VerticalGridView
         android:id="@+id/vtl_view_system_function"
-        android:layout_width="439dp"
-        android:layout_height="320dp"
+        android:layout_width="407dp"
+        android:layout_height="301dp"
         android:layout_marginLeft="13dp"
         android:layout_toRightOf="@id/vtl_view_source_list_parent"
         android:padding="0dp"

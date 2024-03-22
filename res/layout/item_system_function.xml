@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.droidlogic.launcher.leanback.view.BorderEffectLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="213dp"
+    android:layout_width="197dp"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:layout_height="153dp">
+    android:layout_height="144dp">
 
     <LinearLayout
         android:id="@+id/item_llt_parent"
