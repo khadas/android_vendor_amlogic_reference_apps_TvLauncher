@@ -323,12 +323,14 @@ public class TvControl {
 
     public void releasePlayingTv() {
         //Logger.d(TAG, "releasePlayingTv");
-        isChannelBlocked = false;
-        if (mTvStartPlaying) {
-            mViewManager.enable(false);
+        if (mTvConfig.needPreviewFeature()) {
+            isChannelBlocked = false;
+            if (mTvStartPlaying) {
+                mViewManager.enable(false);
+            }
+            mTvHandler.removeMessages(TV_MSG_PLAY_TV);
+            mTvStartPlaying = false;
         }
-        mTvHandler.removeMessages(TV_MSG_PLAY_TV);
-        mTvStartPlaying = false;
     }
 
     public void startOtpSource(Intent intent) {

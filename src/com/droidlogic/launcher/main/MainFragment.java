@@ -790,9 +790,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 tvViewParent.setVisibility(View.GONE);
             }
             tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
-            if (tvView != null) {
-                mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
-            }
+            mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
         }
     }
 
