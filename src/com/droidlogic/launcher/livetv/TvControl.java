@@ -51,6 +51,7 @@ public class TvControl {
     public static final String EVENT_SIGNAL_SCRAMBLED_SERVICE   = "signal_scrambled_service";
     public static final String EVENT_SIGNAL_INVALID_SERVICE     = "signal_invalid_service";
     public static final String EVENT_SIGNAL_DATA_SERVICE        = "signal_data_service";
+    public static final String EVENT_SW_UPDATE_FOUND    = "OadSwUpdateFound";
 
     //ci plus
     private static final String ACTION_CI_PLUS_INFO = "ci_plus_info";
@@ -345,6 +346,13 @@ public class TvControl {
         }
     }
 
+    private void startLiveTvWithEventArgs(Bundle eventArgs) {
+        Intent intent = new Intent();
+        intent.putExtra("eventArgs", eventArgs);
+        intent.setComponent(ComponentName.unflattenFromString(COMPONENT_TV_APP));
+        mContext.startActivity(intent);
+    }
+
     /**
      * Whether the pip window of launcher is enabled.
      *
@@ -478,6 +486,10 @@ public class TvControl {
                         }
                     }
                 }
+            }
+            else if (eventType.equals(EVENT_SW_UPDATE_FOUND)) {
+                Toast.makeText(mContext, R.string.toast_oad_sw_update_found, Toast.LENGTH_LONG).show();
+                startLiveTvWithEventArgs(eventArgs);
             }
         }
 

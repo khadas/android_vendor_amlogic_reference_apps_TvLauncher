@@ -35,6 +35,7 @@
     <string name="str_channel_delete">Deleted Channel</string>
     <string name="toast_livetv_warn">LiveTv is releasing, please wait</string>
     <string name="toast_otp_input_change">TV has received request to switch source</string>
+    <string name="toast_oad_sw_update_found">TV has received oad sw update</string>
 
     <string name="input_long_label_for_tuner">TV (antenna/cable)</string>
     <string name="input_atv">ATV</string>
