@@ -106,7 +106,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.autosize.utils.AutoSizeUtils;
 import me.jessyan.autosize.utils.ScreenUtils;
-
+import me.jessyan.autosize.AutoSizeConfig;
 import static android.content.Intent.URI_INTENT_SCHEME;
 import static androidx.tvprovider.media.tv.ChannelLogoUtils.storeChannelLogo;
 import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
@@ -438,6 +438,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     private void prepareBackgroundManager() {
         View view = getView();
         if (view == null) return;
+        AutoSizeConfig.getInstance().setExcludeFontScale(true);
         int level = (int) (1.0f * AutoSizeUtils.dp2px(view.getContext(), 70) / ScreenUtils.getScreenSize(getContext())[1] * 10000);
         ImageView statusBg = (ImageView) view.findViewById(R.id.status_bg);
         ClipDrawable drawable = (ClipDrawable) statusBg.getBackground();
