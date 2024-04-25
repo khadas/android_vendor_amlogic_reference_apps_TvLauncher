@@ -541,6 +541,7 @@ public class TvControl {
                 }
             } else if (reason == TvInputManager.VIDEO_UNAVAILABLE_REASON_AUDIO_ONLY) {
                 if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
+                    mVideoAvailable = true;
                     setTvPrompt(TvPrompt.TV_PROMPT_RADIO);
                     if (inputId != null && inputId.startsWith(DTVKIT_PACKAGE)) {
                         mViewManager.setStreamVolume(1);
