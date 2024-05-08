@@ -271,8 +271,10 @@ public class TvControl {
 
         TvInputInfo currentInputInfo = getInputSourceInfo(inputId);
         if (TextUtils.isEmpty(inputId) || currentInputInfo == null) {
-            Logger.i(TAG, "input " + inputId + " is not exist");
-            setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
+            Logger.i(TAG, "input " + inputId + " is not exist mBootComplete:" + mBootComplete);
+            if (TextUtils.isEmpty(inputId) || (mBootComplete && currentInputInfo == null)) {
+                setTvPrompt(TvPrompt.TV_PROMPT_NO_CHANNEL);
+            }
             return;
         }
 
