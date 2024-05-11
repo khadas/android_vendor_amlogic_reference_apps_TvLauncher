@@ -53,6 +53,7 @@ import androidx.leanback.widget.VerticalGridView;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.tvprovider.media.tv.TvContractCompat;
 
+import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.api.ZeasnApiService;
 import com.droidlogic.launcher.app.AppModel;
@@ -266,6 +267,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             initView(getView());
             prepareBackgroundManager();
             initStorage();
+
+            DroidLogicTvUtils.setCurrentInputId(getContext(), mInputSource.getInputList().get(0).getId());
         }
     }
 
