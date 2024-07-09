@@ -177,6 +177,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         needPreviewFeature = new TvConfig(getContext()).needPreviewFeature();
+        mInputSource = new InputSourceManager(getContext(), new SourceStatusListener(), mLoadHandler);
         fetchMarketData();
         registerReceiver();
         startTimer();
@@ -260,7 +261,6 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         if (!mInitLauncher) {
             mInitLauncher = true;
             tvHeaderListRow = new TvHeaderListRow(new ArrayObjectAdapter());
-            mInputSource = new InputSourceManager(getActivity(), new SourceStatusListener(), mLoadHandler);
             mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATA, 1000);
             mLoadHandler.sendEmptyMessageDelayed(MSG_LOAD_APP, 1000);
 
@@ -796,7 +796,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 tvViewParent.setVisibility(View.GONE);
             }
             tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
-            mTvControl = new TvControl(getActivity(), tvView, tvPrompt);
+            mTvControl = new TvControl(getActivity(), tvView, tvPrompt, mInputSource);
         }
     }
 

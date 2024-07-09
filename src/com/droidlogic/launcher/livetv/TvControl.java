@@ -32,6 +32,8 @@ import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.launcher.R;
+import com.droidlogic.launcher.input.InputInfo;
+import com.droidlogic.launcher.input.InputSourceManager;
 import com.droidlogic.launcher.util.Logger;
 
 import java.util.List;
@@ -73,6 +75,7 @@ public class TvControl {
     private TvViewManager   mViewManager;
     private TvConfig        mTvConfig;
     private Context         mContext;
+    private InputSourceManager mInputSourceManager;
 
     private SystemControlManager mSystemControlManager = SystemControlManager.getInstance();
 
@@ -95,13 +98,14 @@ public class TvControl {
     private boolean mBootComplete      = false;
     private boolean mVideoAvailable    = false;
 
-    public TvControl(Context context, TvView mTvView, TextView prompt) {
+    public TvControl(Context context, TvView mTvView, TextView prompt, InputSourceManager inputSourceManager) {
         mContext            = context;
         mViewManager        = new TvViewManager(context, mTvView, prompt);
         mTvConfig           = new TvConfig(context);
         mTvInputManager     = (TvInputManager) mContext.getSystemService(Context.TV_INPUT_SERVICE);
 		mChannelDataManager = new ChannelDataManager(context);
         COMPONENT_TV_APP    = COMPONENT_LIVE_TV;
+        mInputSourceManager = inputSourceManager;
 
         mViewManager.setCallback(new TvViewInputCallback());
     }
@@ -114,8 +118,28 @@ public class TvControl {
      * play a channel in small window
      * */
     public void play(long id) {
+        Logger.d(TAG, "play id:" + id);
         if (mTvConfig.needPreviewFeature()) {
-            mPlayInputId = getCurrentInputSourceId();
+            String currentInputId = getCurrentInputSourceId();
+            Logger.d(TAG, "play currentInputId-1-:" + currentInputId);
+            List<InputInfo> inputInfoList = mInputSourceManager.getInputList();
+            if (inputInfoList != null && !inputInfoList.isEmpty()) {
+                boolean inputIdExit = false;
+                for (InputInfo inputInfo : inputInfoList) {
+                    if (inputInfo.id.equals(currentInputId)) {
+                        inputIdExit = true;
+                        break;
+                    }
+                }
+                Logger.d(TAG, "play inputIdExit:" + inputIdExit);
+                if (!inputIdExit) {
+                    InputInfo firstInputInfo = inputInfoList.get(0);
+                    mInputSourceManager.switchInput(firstInputInfo.id, firstInputInfo.name);
+                    currentInputId = firstInputInfo.id;
+                }
+            }
+            Logger.d(TAG, "play currentInputId-2-:" + currentInputId);
+            mPlayInputId = currentInputId;
             mPlayChannelId = id;
             mTvHandler.removeMessages(TV_MSG_PLAY_TV);
             mTvHandler.sendEmptyMessage(TV_MSG_PLAY_TV);
