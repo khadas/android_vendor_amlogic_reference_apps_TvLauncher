@@ -13,7 +13,11 @@ android_app {
 	libs: [
 		"droidlogic",
 		"droidlogic-tv",
+		"droidlogic.tv.software.core",
 	],
+	uses_libs: [
+            "droidlogic.tv.software.core",
+        ],
 	static_libs: [
 		"autosize",
 		"glide-annotations",
@@ -50,7 +54,7 @@ android_app {
     },
 
     certificate: "platform",
-    required: ["com.droidlogic.launcher.xml"],
+    required: ["com.droidlogic.launcher.xml", "droidlogic.tv.software.core"],
 
 }
 
