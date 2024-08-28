@@ -1,6 +1,11 @@
 
 package com.droidlogic.launcher.app;
 
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_FILE_BROWSER;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_WEB_BROWSER;
+
 import android.app.ActivityManager;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
@@ -16,7 +21,8 @@ import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.UserHandle;
 
-import com.droidlogic.app.SystemControlManager;
+import com.droidlogic.launcher.main.TvCompat;
+import com.droidlogic.launcher.util.Logger;
 
 import java.lang.reflect.Field;
 import java.text.Collator;
@@ -26,12 +32,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_FILE_BROWSER;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MEDIA_CENTER;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_WEB_BROWSER;
 
 public class AppDataManage {
     private final Context mContext;
@@ -104,7 +104,7 @@ public class AppDataManage {
                 localAppBean.setBanner(banner);
             } catch (Exception e) {
                 //Log.d("APP", "---GET APP e:" + e);
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             localAppBean.setUser(info.getUser());
             localAppBean.setIcon(info.getBadgedIcon(iconDpi));
@@ -254,7 +254,8 @@ public class AppDataManage {
         final String property = "vendor.tvlauncher.webbrowser.enable";
         for (String name : mHideAppName) {
             if (PKG_NAME_WEB_BROWSER.equals(packName)) {
-                boolean webEnable = SystemControlManager.getInstance().getPropertyBoolean(property, false);
+                boolean webEnable = TvCompat.getPropertyBoolean(property, false);
+                Logger.i("webEnable:" + webEnable);
                 return !webEnable;
             } else if (name.equals(packName)) {
                 return true;

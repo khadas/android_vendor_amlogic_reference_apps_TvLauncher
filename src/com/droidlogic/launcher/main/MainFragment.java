@@ -1,6 +1,12 @@
 package com.droidlogic.launcher.main;
 
 
+import static android.content.Intent.URI_INTENT_SCHEME;
+import static androidx.tvprovider.media.tv.ChannelLogoUtils.storeChannelLogo;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
+import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_ZEASN_MARKET;
+
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -53,7 +59,6 @@ import androidx.leanback.widget.VerticalGridView;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.tvprovider.media.tv.TvContractCompat;
 
-import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.launcher.R;
 import com.droidlogic.launcher.api.ZeasnApiService;
 import com.droidlogic.launcher.app.AppModel;
@@ -105,14 +110,9 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import me.jessyan.autosize.AutoSizeConfig;
 import me.jessyan.autosize.utils.AutoSizeUtils;
 import me.jessyan.autosize.utils.ScreenUtils;
-import me.jessyan.autosize.AutoSizeConfig;
-import static android.content.Intent.URI_INTENT_SCHEME;
-import static androidx.tvprovider.media.tv.ChannelLogoUtils.storeChannelLogo;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_MIRACAST;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_TVCAST;
-import static com.droidlogic.launcher.function.FunctionModel.PKG_NAME_ZEASN_MARKET;
 
 public class MainFragment extends Fragment implements StorageManagerUtil.Listener {
 
@@ -176,7 +176,10 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        needPreviewFeature = new TvConfig(getContext()).needPreviewFeature();
+        TvConfig tvConfig = TvCompat.buildTvConfig(getContext());
+        if (tvConfig != null) {
+            needPreviewFeature = tvConfig.needPreviewFeature();
+        }
         mInputSource = new InputSourceManager(getContext(), new SourceStatusListener(), mLoadHandler);
         fetchMarketData();
         registerReceiver();
@@ -267,10 +270,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             initView(getView());
             prepareBackgroundManager();
             initStorage();
-
-            if (TextUtils.isEmpty(DroidLogicTvUtils.getCurrentInputId(getContext()))) {
-                DroidLogicTvUtils.setCurrentInputId(getContext(), mInputSource.getInputList().get(0).getId());
-            }
+            TvCompat.setCurrentInputId(getContext(), mInputSource);
         }
     }
 
@@ -551,7 +551,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
         mRowsAdapter = new ArrayObjectAdapter(new MainPresenterSelector(mInputSource, new OnItemClickListener() {
             @Override
             public void onPresenterItemClick(View view, Object item) {
-                Logger.i("onPresenterItemClick:"+item);
+                Logger.i("onPresenterItemClick:" + item);
                 if (item instanceof MediaModel) {
                     MediaModel model = (MediaModel) item;
                     startTvApp(model.getId(), model.getInputId(), model.getType());
@@ -775,7 +775,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
 
     //check if boot to tvapp when power on
     private boolean checkBootToTvApp() {
-        if (!new TvConfig(getActivity()).checkNeedStartTvApp(false, false)) {
+        TvConfig tvConfig = TvCompat.buildTvConfig(getContext());
+        if (tvConfig == null || !tvConfig.checkNeedStartTvApp(false, false)) {
             Log.d(TAG, "start launch");
             enableMainLayout();
             return false;
@@ -796,7 +797,7 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
                 tvViewParent.setVisibility(View.GONE);
             }
             tvPrompt = (TextView) getActivity().findViewById(R.id.tx_tv_prompt);
-            mTvControl = new TvControl(getActivity(), tvView, tvPrompt, mInputSource);
+            mTvControl = TvCompat.buildTvControl(getActivity(), tvView, tvPrompt, mInputSource);
         }
     }
 

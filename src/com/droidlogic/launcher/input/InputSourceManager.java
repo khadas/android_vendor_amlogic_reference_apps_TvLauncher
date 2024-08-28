@@ -3,6 +3,7 @@ package com.droidlogic.launcher.input;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.hardware.hdmi.HdmiControlManager;
 import android.hardware.hdmi.HdmiDeviceInfo;
 import android.hardware.hdmi.HdmiTvClient;
@@ -12,12 +13,14 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.tv.TvScanConfig;
 import com.droidlogic.launcher.R;
+import com.droidlogic.launcher.main.TvCompat;
 import com.droidlogic.launcher.util.Logger;
 
 import java.util.ArrayList;
@@ -227,15 +230,19 @@ public class InputSourceManager {
 
     public void startInputAPP(String id) {
         try {
-            if (id == null) {
-                id = DroidLogicTvUtils.getCurrentInputId(mContext);;
-            }
-
             Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
+            List<ResolveInfo> resolveInfoList = mContext.getPackageManager().queryIntentActivities(intent, 0);
+            if (resolveInfoList == null || resolveInfoList.isEmpty()) {
+                Toast.makeText(mContext, "Application not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (id == null) {
+                id = TvCompat.getCurrentInputId(mContext);
+            }
             intent.putExtra("from_tv_source", true);
             intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, id);
             mContext.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
+        } catch (Exception e) {
             Logger.e(TAG, " can't start LiveTv:" + e);
         }
     }

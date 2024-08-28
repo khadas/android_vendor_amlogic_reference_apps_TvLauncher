@@ -9,6 +9,7 @@ import com.droidlogic.app.DataProviderManager;
 import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvDataBaseManager;
+import com.droidlogic.launcher.main.TvCompat;
 
 import java.util.ArrayList;
 
@@ -17,12 +18,12 @@ public class ChannelDataManager {
     public static final String TV_DROIDLOGIC_PACKAGE = "com.droidlogic.tvinput";
     public static final String DTVKIT_PACKAGE = "com.droidlogic.dtvkit.inputsource";
 
-    private Context mContext;
-    private TvDataBaseManager mTvDataBaseManager;
+    private final Context mContext;
+    private final TvDataBaseManager mTvDataBaseManager;
 
     public ChannelDataManager(Context context) {
         mContext = context;
-        mTvDataBaseManager = new TvDataBaseManager(mContext);
+        mTvDataBaseManager =  TvCompat.buildTvDataBaseManager(context);
     }
 
     public long getCurrentChannelId() {
@@ -34,6 +35,7 @@ public class ChannelDataManager {
     }
 
     public ChannelInfo getChannelInfo(Uri channelUri) {
+        if (mTvDataBaseManager == null) return null;
         return mTvDataBaseManager.getChannelInfo(channelUri);
     }
 
@@ -114,7 +116,7 @@ public class ChannelDataManager {
         return result;
     }
 
-    private  long getLong(Context context, String key, long def) {
+    private long getLong(Context context, String key, long def) {
         long result = def;
         if (context != null) {
             result = DataProviderManager.getLongValue(context, key, def);
@@ -153,8 +155,7 @@ public class ChannelDataManager {
 
             if (isAtscCountry(mContext)) {
                 channelId = getLong(mContext, signalType, -1);
-            }
-            else{
+            } else {
                 if (!TextUtils.equals(DroidLogicTvUtils.getSearchType(mContext), "ATV")) {
                     channelId = getLong(mContext, DroidLogicTvUtils.DTV_CHANNEL_INDEX, -1);
                 } else {
@@ -165,7 +166,7 @@ public class ChannelDataManager {
             channelId = getLong(mContext, inputId, -1);
         }
 
-        Uri channelUri   = TvContract.buildChannelUri(channelId);
+        Uri channelUri = TvContract.buildChannelUri(channelId);
         ChannelInfo info = getChannelInfo(channelUri); //check if channnel exist
         if (info != null && isDtvKitInput(inputId)) {
             //check if channel match current tuner type
@@ -253,7 +254,7 @@ public class ChannelDataManager {
 
     private ChannelInfo getFirstChannel(String inputId) {
         ChannelInfo channel = null;
-
+        if (mTvDataBaseManager == null) return null;
         ArrayList<ChannelInfo> channelList = mTvDataBaseManager.getChannelList(inputId, ChannelInfo.COMMON_PROJECTION, null, null);
         if (channelList != null && channelList.size() > 0) {
             int i;
@@ -284,8 +285,7 @@ public class ChannelDataManager {
                     if (!TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
                         break;
                     }
-                }
-                else {
+                } else {
                     if (!TvContract.Channels.TYPE_OTHER.equals(channel.getType())) {
                         break;
                     }
