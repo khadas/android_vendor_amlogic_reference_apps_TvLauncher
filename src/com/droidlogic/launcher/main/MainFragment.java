@@ -268,12 +268,8 @@ public class MainFragment extends Fragment implements StorageManagerUtil.Listene
             prepareBackgroundManager();
             initStorage();
 
-            try {
-                if (TextUtils.isEmpty(DroidLogicTvUtils.getCurrentInputId(getContext()))) {
-                    DroidLogicTvUtils.setCurrentInputId(getContext(), mInputSource.getInputList().get(0).getId());
-                }
-            } catch (Exception e) {
-                Logger.e("setCurrentInputId:" + e);
+            if (TextUtils.isEmpty(DroidLogicTvUtils.getCurrentInputId(getContext()))) {
+                DroidLogicTvUtils.setCurrentInputId(getContext(), mInputSource.getInputList().get(0).getId());
             }
         }
     }
